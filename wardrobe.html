@@ -1,0 +1,23 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Šatník 3D</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#1c211b;font-family:Arial,sans-serif;color:#eee;font-size:13px}
+canvas{display:block}
+#panel{position:absolute;left:10px;top:10px;bottom:10px;width:300px;overflow:auto;background:rgba(20,24,20,.88);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px}
+#panel h3{margin:10px 0 4px;font-size:12px;color:#9fd8b0;text-transform:uppercase;letter-spacing:.04em}
+#panel label{display:inline-block;margin:2px 6px 2px 0;white-space:nowrap;cursor:pointer}
+#panel select,#panel button{background:#2a302a;color:#eee;border:1px solid #556;border-radius:5px;padding:4px 6px;margin:2px 0}
+#panel button.on{background:#3a6b4a;border-color:#7cffb2}
+#keys{font-family:monospace;font-size:11px;color:#e9c879;word-break:break-all;margin-top:6px}
+.hint{position:absolute;right:12px;bottom:10px;color:#aaa;font-size:12px}
+#animbar{position:absolute;left:330px;right:12px;bottom:34px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;pointer-events:none}
+#animbar>*{pointer-events:auto}
+#animbar button,#animbar select{background:rgba(20,24,20,.88);color:#eee;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+#animbar button.on{background:#3a6b4a;border-color:#7cffb2}
+#animbar .sep{width:10px}
+@media (max-width:700px){#panel{width:auto;right:10px;bottom:auto;max-height:45vh}#animbar{left:10px}}
+</style></head><body><a class="home-link" href="./index.html" title="Rozcestník dema">⌂ demo</a><style>.home-link{position:fixed;right:12px;top:10px;z-index:20;padding:4px 10px;border-radius:6px;background:rgba(20,24,20,.85);border:1px solid rgba(255,255,255,.18);color:#cfe9d6;font:13px Arial,sans-serif;text-decoration:none}.home-link:hover{border-color:#7cffb2}</style>
+<div id="panel"></div>
+<div id="animbar"></div>
+<div class="hint">tažení = otáčení · kolečko = zoom</div>
+<script type="module" src="./src/tools/wardrobe.js"></script>
+</body></html>

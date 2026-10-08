@@ -1,0 +1,6 @@
+{
+ "status": "OK",
+ "data": "{\"ver\": 48, \"plan\": \"X\", \"userId\": 1, \"lastFullPlanVersion\": 4, \"vision\": 10, \"visionType\": 0, \"actors\": [], \"blocked\": [{\"x\": 15, \"y\": 15, \"text\": \"\", \"hash\": \"15|15\"}], \"controlled\": [], \"extra\": [], \"spell\": []}",
+ "redirect": null,
+ "counter": 0
+}

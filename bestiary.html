@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bestiář – 3D modely</title>
+<meta name="description" content="Nestvůry z bestiáře Hrdinů fantasy: hotové 3D modely a co ještě chybí.">
+<style>
+:root { --bg: #161a15; --card: #20261f; --card2: #262d25; --line: rgba(255,255,255,.1); --text: #e9ece6; --muted: #a2aa9e;
+  --accent: #8fd6a3; --gold: #e9c879; --warn: #f0a94b; --miss: #e8735f; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 28px 16px 56px; }
+a { color: var(--accent); }
+.home-link { position: fixed; right: 12px; top: 10px; z-index: 20; padding: 4px 10px; border-radius: 6px; background: rgba(20,24,20,.85);
+  border: 1px solid rgba(255,255,255,.18); color: #cfe9d6; font-size: 13px; text-decoration: none; }
+.home-link:hover { border-color: #7cffb2; }
+h1 { margin: 0 0 4px; font-size: 26px; }
+h1 span { color: var(--accent); }
+.lead { margin: 0 0 18px; color: var(--muted); max-width: 90ch; }
+.lead code { color: var(--gold); }
+
+/* summary + filters */
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+.chip { display: inline-flex; gap: 8px; align-items: baseline; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card); color: var(--text); cursor: pointer; font: inherit; }
+.chip b { font-size: 16px; }
+.chip.on { border-color: var(--accent); background: #24372a; }
+.chip.done b { color: var(--accent); } .chip.part b { color: var(--warn); } .chip.miss b { color: var(--miss); }
+.progress { flex: 1 1 260px; min-width: 200px; height: 10px; border-radius: 6px; background: #2c332b; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+input[type=search] { flex: 0 1 240px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; }
+
+/* live viewer */
+.viewer { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 0; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; overflow: hidden; margin-bottom: 26px; }
+.stage { position: relative; min-height: 380px; background: #0f130e; }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.stage .empty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px;
+  color: var(--miss); font-size: 15px; background: repeating-linear-gradient(135deg, #1a1412 0 14px, #1f1715 14px 28px); }
+.stage.missing .empty { display: flex; }
+.stage .empty img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: .6; }
+.stage .empty .msg { position: relative; padding: 12px 18px; border-radius: 10px; background: rgba(24,12,10,.84); }
+.anims { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+.anims button { background: rgba(20,24,20,.85); color: #eee; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; padding: 4px 9px; font: 12px inherit; cursor: pointer; }
+.anims button.on { background: #3a6b4a; border-color: #7cffb2; }
+.stage.missing .anims { display: none; }
+.info { padding: 16px 18px; border-left: 1px solid var(--line); }
+.info h2 { margin: 0; font-size: 21px; }
+.info .en { color: var(--muted); margin-bottom: 8px; }
+.info dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 10px 0; font-size: 13px; }
+.info dt { color: var(--muted); } .info dd { margin: 0; }
+.info code { color: var(--gold); font-size: 12px; }
+.info p.desc { color: #cfd5ca; margin: 10px 0 0; }
+.info .art { float: right; width: 128px; margin: 0 0 10px 14px; border-radius: 8px; border: 1px solid var(--line); }
+
+/* status badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.badge.done { background: rgba(143,214,163,.16); color: var(--accent); }
+.badge.part { background: rgba(240,169,75,.16); color: var(--warn); }
+.badge.miss { background: rgba(232,115,95,.18); color: var(--miss); }
+
+/* groups + cards */
+.group { margin: 28px 0 0; }
+.group h3 { margin: 0; font-size: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.group h3 small { font-weight: 400; color: var(--muted); font-size: 13px; }
+.group .how { margin: 2px 0 10px; color: var(--muted); font-size: 13px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+.card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column; transition: border-color .15s, transform .15s; }
+.card:hover, .card:focus-visible { transform: translateY(-2px); border-color: var(--accent); outline: none; }
+.card.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.card .pic { position: relative; aspect-ratio: 4 / 3; background: #10140f; display: flex; align-items: center; justify-content: center; }
+.card .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card .pic .wait { color: #5b6457; font-size: 12px; }
+.card .txt { padding: 7px 9px 9px; }
+.card .nm { font-weight: 600; font-size: 13px; line-height: 1.25; }
+.card .key { color: var(--muted); font-size: 11px; }
+.card .badge { position: absolute; top: 6px; left: 6px; }
+.card.part { border-color: rgba(240,169,75,.55); }
+.card.part .note { color: var(--warn); font-size: 11px; margin-top: 3px; }
+.card.miss { border: 1px dashed rgba(232,115,95,.75); background: #261c1a; }
+.card.miss .pic { background: repeating-linear-gradient(135deg, #2a1d1a 0 10px, #2f201d 10px 20px); flex-direction: column; gap: 4px; color: var(--miss); }
+.card.miss .pic .q { font-size: 30px; font-weight: 700; line-height: 1; }
+.card.miss .pic .lb { font-size: 11px; color: #c99a8f; }
+/* missing model with artwork: the picture, dimmed, with a red label */
+.card.miss .pic.art img { position: absolute; inset: 0; object-position: 50% 22%; filter: saturate(.7) brightness(.72); }
+.card.miss .pic.art .q, .card.miss .pic.art .lb { display: none; }
+.card.miss .pic.art .lt { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 6px; background: rgba(42,16,12,.86);
+  color: var(--miss); font-size: 11px; font-weight: 700; text-align: center; letter-spacing: .02em; }
+.card.miss .pic.art.noart .q, .card.miss .pic.art.noart .lb { display: inline; }
+.card.miss .pic.art.noart .lt { position: static; background: none; }
+.card .mini { position: absolute; top: 6px; right: 6px; width: 30px; height: 44px; object-fit: cover; object-position: 50% 20%;
+  border-radius: 4px; border: 1px solid rgba(255,255,255,.3); box-shadow: 0 1px 4px rgba(0,0,0,.6); }
+.card.miss .note { color: #d9a093; font-size: 11px; margin-top: 3px; }
+.hidden { display: none !important; }
+@media (max-width: 760px) { .viewer { grid-template-columns: 1fr; } .info { border-left: 0; border-top: 1px solid var(--line); } .stage { min-height: 300px; } }
+</style>
+</head>
+<body>
+<a class="home-link" href="./index.html" title="Rozcestník dema">⌂ demo</a>
+<main>
+  <h1>Bestiář <span>3D</span></h1>
+  <p class="lead">Všechny nestvůry z bestiáře hof a jejich 3D model. <span class="badge done">hotovo</span> = vlastní model nebo postava,
+    která sedí; <span class="badge part">doplněk</span> = postava je, chybí jí část (křídla, hlava, ocas…);
+    <span class="badge miss">chybí</span> = model není, v aréně se zatím ukáže zástupce. Obrázky jsou předlohy z hof
+    (<code>img/beast</code>, náhledy dělá <code>tools/bestiar-obrazky.py</code>). Seznam generuje
+    <code>tools/bestiar-modely.py</code> z dat hof, podrobnosti v <code>docs/bestiar-modely.md</code>.</p>
+
+  <div class="bar" id="bar">
+    <button class="chip on" data-f="all">Vše <b id="n-all">0</b></button>
+    <button class="chip done" data-f="done">Hotovo <b id="n-done">0</b></button>
+    <button class="chip part" data-f="part">Doplněk <b id="n-part">0</b></button>
+    <button class="chip miss" data-f="miss">Chybí <b id="n-miss">0</b></button>
+    <div class="progress" id="progress" title="hotovo / doplněk / chybí"></div>
+    <input type="search" id="q" placeholder="Hledat nestvůru…" aria-label="Hledat nestvůru">
+  </div>
+
+  <section class="viewer">
+    <div class="stage" id="stage">
+      <canvas id="live"></canvas>
+      <div class="empty" id="empty"></div>
+      <div class="anims" id="anims"></div>
+    </div>
+    <div class="info" id="info"></div>
+  </section>
+
+  <div id="groups"></div>
+</main>
+<script type="module" src="./src/tools/bestiaryViewer.js"></script>
+</body>
+</html>

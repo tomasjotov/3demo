@@ -1,0 +1,13 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Avatar Viewer</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#1c211b;font-family:Arial,sans-serif;color:#eee}
+canvas{display:block}
+.bar{position:absolute;left:14px;top:14px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 28px)}
+.bar button{background:rgba(20,24,20,.85);color:#eee;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+.bar button.on{background:#3a6b4a;border-color:#7cffb2}
+.hint{position:absolute;left:14px;bottom:12px;color:#aaa;font-size:12px}
+</style></head><body><a class="home-link" href="./index.html" title="Rozcestník dema">⌂ demo</a><style>.home-link{position:fixed;right:12px;top:10px;z-index:20;padding:4px 10px;border-radius:6px;background:rgba(20,24,20,.85);border:1px solid rgba(255,255,255,.18);color:#cfe9d6;font:13px Arial,sans-serif;text-decoration:none}.home-link:hover{border-color:#7cffb2}</style>
+<div class="bar" id="bar"></div>
+<div class="hint">Náhled procedurálních avatarů · tažení myší = otáčení · kolečko = zoom</div>
+<script type="module" src="./src/tools/avatarViewer.js"></script>
+</body></html>

@@ -1,0 +1,17 @@
+# závislosti a buildy (vytvoří npm install / npm run build / npm run export:demo)
+node_modules/
+dist/
+deploy/
+
+# lokální zálohy a pracovní výstupy
+backup/
+Claude outputs/
+*.zip
+
+# systém / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log
