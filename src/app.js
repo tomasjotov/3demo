@@ -43,6 +43,7 @@ export function createApp(opts = {}) {
     if (mode === 'local') {
         world = new World(mapData, opts.beasts ? [...characterData, ...beastDemo] : characterData, objectData);
         if (opts.night) demoNight(world, opts.night);
+        if (opts.effects) demoEffects(world);
         game = new Game(world, input);
         renderer = new Renderer(world, input, game, { container });
         renderer.buildWorld(world);
@@ -96,6 +97,24 @@ function demoNight(world, darkness) {
     give('guard', { type: 'LANTERN', power: 8, radius: 8 });
     give('merchant', { type: 'MAGIC', power: 10, radius: 10 });
     give('bandit', { type: 'TORCH', hand: 'R', power: 10, radius: 10 });
+}
+
+// Offline effect test (?effects): smoke, fog, poison gas, force wall and a fire area that explodes again every 5 s.
+function demoEffects(world) {
+    const p = world.getPlayer();
+    const area = (cx, cy, r, text) => {
+        const out = [];
+        for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r + r) out.push({ x: cx + x, y: cy + y, text });
+        return out;
+    };
+    const base = [...area(p.x + 3, p.y - 2, 1, 'SMOKE'), ...area(p.x - 3, p.y - 2, 1, 'FOG'), ...area(p.x + 3, p.y + 3, 1, 'POISON'),
+        { x: p.x - 2, y: p.y + 2, text: 'KINETIC' }, { x: p.x - 2, y: p.y + 3, text: 'KINETIC' }];
+    const fire = area(p.x, p.y + 4, 1, 'FIRE');
+    let on = false;
+    const toggle = () => { on = !on; world.effects = on ? [...base, ...fire] : base; };
+    world.effects = base;
+    setTimeout(toggle, 1500);
+    setInterval(toggle, 5000);
 }
 
 function statusText(mode, world, game) {

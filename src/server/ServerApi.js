@@ -1,4 +1,6 @@
 import { t } from '../i18n.js';
+import { DIR_VEC } from '../game/Character.js';
+import { rToDir } from './mappings.js';
 import { expandRecording } from './PlanAdapter.js';
 
 /*
@@ -104,8 +106,18 @@ export class MockServer {
             const a0 = this.pack0 || (this.pack0 = { x: data.actors[0].x, y: data.actors[0].y });
             data.actors = [...data.actors, ...demoBeasts(a0)];
         }
-        if (this.ride) data.actors = data.actors.map(a => /theralis/i.test(a.name)
-            ? { ...a, positionType: a.moveType === 'run' ? 'HORSE_RIDE_RUN' : 'HORSE_RIDE' } : a);
+        if (this.ride) {
+            data.actors = data.actors.map(a => /theralis/i.test(a.name)
+                ? { ...a, positionType: a.moveType === 'run' ? 'HORSE_RIDE_RUN' : 'HORSE_RIDE' } : a);
+            // on horseback the server adds the cell behind the rider (PersonWear.getLargeY2)
+            const t = data.actors.find(a => /theralis/i.test(a.name));
+            const v = t && DIR_VEC[rToDir(t.r)];
+            if (v) {                                         // right after the rider's own cell (server order)
+                const i = data.controlled.findIndex(c => c.x === t.x && c.y === t.y);
+                const back = { x: t.x - v[0], y: t.y - v[1] };
+                data.controlled = i < 0 ? [...data.controlled, back] : [...data.controlled.slice(0, i + 1), back, ...data.controlled.slice(i + 1)];
+            }
+        }
         return data;
     }
 

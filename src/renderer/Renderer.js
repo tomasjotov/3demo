@@ -6,6 +6,7 @@ import { CameraController } from './CameraController.js';
 import { ModelManager } from './ModelManager.js';
 import { MouseController } from '../input/MouseController.js';
 import { LightRenderer } from './LightRenderer.js';
+import { EffectRenderer, EFFECT_TYPES } from './EffectRenderer.js';
 
 // Tile marker size: 90 % of a tile (square, axis-aligned with the tile).
 const MARK = .9;
@@ -60,6 +61,7 @@ export class Renderer {
         this.sun = sun;
         this.scene.add(sun, sun.target);
         this.lightRenderer = new LightRenderer(this.scene, this.hemi, sun);
+        this.effectRenderer = new EffectRenderer(this.scene);   // smoke, fog, poison, fire areas, explosions
         this.onResize = () => this.resize();
         addEventListener('resize', this.onResize);
         if (typeof ResizeObserver !== 'undefined' && this.container !== document.body) {
@@ -119,6 +121,9 @@ export class Renderer {
             this.lightRenderer.setAreaLights(this._areaLights || []);
         }
         this.lightRenderer.update(world, p ? { x: p.renderX, z: p.renderY } : null, delta);
+        // area effects: server plan (PlanArena.spell "x,y:TYPE") or the offline demo (world.effects)
+        this.effectRenderer.setEffects(this.game.serverOverlays?.spell ?? world.effects ?? [], this._areaLights);
+        this.effectRenderer.update(delta, this.hemi.intensity / 2.1);
         this.drawOverlays(world);
     }
 
@@ -222,7 +227,10 @@ export class Renderer {
     drawServerOverlays(o) {
         for (const c of o.ring) this.selectionGroup.add(this.tileMesh(c.x, c.y, 0x2fd67a, .95, MARK, 'ring', .003));
         for (const c of o.extra) this.marker(this.selectionGroup, c.x, c.y, 0xb06cff, .28, MARK, 0xd6b3ff, .7);
-        for (const c of o.spell) this.marker(this.selectionGroup, c.x, c.y, 0xff4fd8, .35, MARK, 0xff9be9, .9);
+        for (const c of o.spell) {                       // cells with a 3D effect (smoke, fire …) get only a faint mark
+            const fx = EFFECT_TYPES.includes(String(c.text).toUpperCase());
+            this.marker(this.selectionGroup, c.x, c.y, 0xff4fd8, fx ? .12 : .35, MARK, 0xff9be9, fx ? .35 : .9);
+        }
         for (const c of o.pointers) this.selectionGroup.add(this.tileMesh(c.x, c.y, 0xffffff, .95, .98, 'ring', .009));
     }
 

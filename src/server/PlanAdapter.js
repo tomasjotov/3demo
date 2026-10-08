@@ -64,7 +64,10 @@ export function splitControlled(actors, controlled, known = new Map()) {
     const cells = new Map();
     actors.forEach((a, i) => {
         let body = segs[i];
-        const n = known.get(a.id);
+        // on horseback the server adds the cell behind the rider → known size + 1 (not learned)
+        const ride = /^HORSE_RIDE/.test(a.positionType || '');
+        const n0 = known.get(a.id);
+        const n = ride ? (n0 ?? 1) + 1 : n0;
         const prevActive = i > 0 && actors[i - 1].active;
         if (a.active) {
             const m = n ?? (body.length === 2 ? 1 : body.length);
@@ -73,7 +76,7 @@ export function splitControlled(actors, controlled, known = new Map()) {
         } else if (prevActive && n !== undefined && body.length === n + 1) {
             pointers.push(body[0]);                 // previous actor's pointer landed here
             body = body.slice(1);
-        } else if (body.length) {
+        } else if (body.length && !ride) {
             known.set(a.id, body.length);
         }
         if (!body.some(p => p.x === a.x && p.y === a.y)) body.unshift({ x: a.x, y: a.y });

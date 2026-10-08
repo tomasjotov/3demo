@@ -8,7 +8,9 @@ import { charactersBase } from '../config.js';
 import { syncCarriedLights, updateCarriedLights, removeCarriedLights } from './CarriedLights.js';
 
 const ZERO = new THREE.Vector3();
-const HORSE_SCALE = .82;          // a ridden server actor keeps its 1×1 footprint – a slightly smaller horse
+// Ridden server actor: on horseback the server gives it 2 cells (own + behind, like the horse NPC) → full-size horse
+// centred on both cells; an older server keeps 1 cell → slightly smaller horse.
+const horseScale = c => ((c.serverCells?.length || 1) >= 2 ? 1 : .82);
 const IDENTITY = new THREE.Quaternion();
 const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 
@@ -77,7 +79,7 @@ export class CharacterRenderer {
     updateServerMount(c, delta) {
         if (c.riding && !c.horse && c.avatar) {
             const avatar = new ProceduralHorse('horse');
-            avatar.root.scale.setScalar(HORSE_SCALE);
+            avatar.root.scale.setScalar(horseScale(c));
             avatar.root.position.set(c.renderX, 0, c.renderY);
             this.scene.add(avatar.root);
             c.horse = { avatar, renderObject: avatar.root, state: 'idle', direction: c.direction, speed: c.speed, runMultiplier: 1 };
@@ -89,6 +91,7 @@ export class CharacterRenderer {
             c.mountedOn = h;
             Object.assign(h, { state: c.horseGait || 'idle', direction: c.direction, facing: c.renderDirection || c.direction, speed: c.speed });
             h.renderObject.position.set(c.renderX, 0, c.renderY);
+            h.renderObject.scale.setScalar(horseScale(c));
             h.avatar.update(h, delta);
         } else {
             c.mountedOn = null;                               // dismount (rider glides down below)

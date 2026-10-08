@@ -431,3 +431,5 @@ Hotovo v `three1/src/server/`, spuštění `?server` (živý hof přes Vite prox
 - **Poloha v aréně (hof, V26):** GM menu u aktéra (`ArenaHtml`): povalit | Stát | Běh | Leh | Klek | **jízda na koni | nájezd** |
   zápas − | chytit | zápas + | reset. Hráč vidí u vlastních aktérů v 1. kole v přípravné fázi jen volbu polohy
   (Stát … nájezd); `ArenaController.arenaSendActorValue` mu povolí jen příkaz `POSITION` pro vlastního aktéra v tomto okamžiku.
+- **Kůň na 2 pole (V37):** `PersonWear.getLargeY2()` vrací při `HORSE_RIDE*` alespoň 1 (pole za jezdcem). `controlled[]` tak obsahuje
+  2 pole jezdce; klient s tím počítá při dělení polí mezi aktéry.

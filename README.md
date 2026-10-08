@@ -523,3 +523,20 @@ bestiáře v tabulce `BEASTS` v `avatar/creatures.js`):
 - Svítí sám po vložení editorem: síla 10, dosah 10 (`objectCatalog.js` = hof `PlanLight.objectPower`). Průchodný jako ostatní
   předměty; starý 2D plán ho ukazuje jako svícen. Překlad názvu v paletě: res `PLAN3D_OBJ_FIRE01` (Oheň / Campfire).
 - Offline prototyp: táborák na poli 22, 9 je teď `fire01`.
+
+### V37 – kůň na 2 pole
+- hof `PersonWear.getLargeY2()`: na koni (`HORSE_RIDE*`) má aktér 2 pole – své a pole za sebou (jako NPC `horse-1`);
+  footprint se počítá při každém dotazu (`createMatrix`), takže platí hned po změně polohy (kolize, `controlled[]`, 2D).
+- Klient: tělo jezdce = 2 pole (`splitControlled` přičte koně k naučené velikosti, aby zaměřené pole nepovažoval za tělo),
+  kůň v plné velikosti vycentrovaný na obě pole; starší server (1 pole) → menší kůň. Mock `?ride` přidává pole za jezdcem.
+
+### V38 – kouř, mlha, jed, hořící pole a výbuchy v aréně (`EffectRenderer.js`)
+- Plošné efekty ze serveru (`PlanArena.spell` = buňky `x,y:TYP`, stejné jako kreslí 2D plán) mají 3D podobu:
+  `SMOKE` hustý šedý kouř do výšky ~2 m, `FOG` světlá přízemní mlha (slabý kouř), `POISON` žlutozelený plyn, `FIRE` hořící
+  pole (plameny, žhavá zem, jiskry), `KINETIC` silová zeď (průsvitný třpytivý blok), `BLUNT` kamenný blok.
+  Obláčky jsou sprity se sdíleným materiálem, plynule narostou, vlní se a zmizí; v noci jsou tmavší, oheň svítí dál.
+- Nové hořící pole na už zobrazeném plánu začne **výbuchem**: ohnivá koule z obláčků (žlutá → oranžová → rudá → saze),
+  záblesk, tlaková vlna po zemi, odletující jiskry a stoupající kouř (~2,5 s). `explode(x, y, r)` jde volat i přímo.
+- Světelné kouzlo posílá server také jako buňku `FIRE` ve svém středu – tu 3D klient přeskočí (kreslí ho jako světlo).
+  Buňky s 3D efektem mají v překryvu jen slabou růžovou značku.
+- Test: `game.html?effects` (offline: kouř, mlha, jed, silová zeď a hořící pole, které každých 5 s znovu vybuchne).

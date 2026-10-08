@@ -6,6 +6,7 @@ import { createApp } from './app.js';
  *   game.html?server     hof server via Vite proxy /hof → localhost:8080 (login in hof first)
  *   game.html?mock       replay of recorded server data (public/fixtures); ?mock&looks with demo layered avatars, &ride = on horseback
  *   &night[=N]           darkness N (default 8) with demo light sources (torch, lantern, light spell); offline also keys N / V
+ *   &effects             offline: smoke, fog, poison gas, force wall and an exploding fire area around the hero
  * index.html is the hub page linking all demo pages.
  * Embedded in hof: see src/embed.js and docs/napojeni-na-server.md.
  */
@@ -20,5 +21,6 @@ window.__rpg = createApp({
     mockLooks: params.has('looks'),
     mockRide: params.has('ride'),
     beasts: params.has('beasts'),
-    night: params.has('night') ? (Number(params.get('night')) || 8) : 0
+    night: params.has('night') ? (Number(params.get('night')) || 8) : 0,
+    effects: params.has('effects')
 });
