@@ -480,3 +480,46 @@ přímou trasu stejně jako server). Klik / Ctrl+klik na jinou postavu = `select
   `giant-crab` (široký krunýř, oči na stopkách, velká klepeta), `giant-spider-crab` (krabopavouk na dlouhých nohou).
 - Létající: `aku` (vosa) a `sirii` (vážka) se vznášejí s bzučícími křídly, útok = vzlet → střemhlavý výpad s žihadlem / kusadly.
 - Leh = tělo na zemi, nohy roztažené; smrt = na zádech se skrčenýma nohama.
+
+### V35 – všechny zbylé nestvůry bestiáře
+Od V35 má 3D model každá nestvůra bestiáře. Nové rigy (`src/renderer/`, registrace v `creatureRigs.js`, výběr podle klíče
+bestiáře v tabulce `BEASTS` v `avatar/creatures.js`):
+- `ProceduralSerpent` – páteř z článků přepočítaná každý snímek (vlnění při plazení, stočení do klubka, esovitý krk při útoku).
+  Hadi (`python`, `crystal-snake`, `sea-serpent`, `winged-serpent` s blanitými křídly u hlavy), `hydra` (5 krků, hlavy útočí
+  postupně, ocas s palicí), `goblin-snake` a `serpent-guardian` (vzpřímený lidský trup s šavlí), červi a plži (`sandworm` s tlamou
+  z okvětních plátků, `forest-wurm`, `corpse-wurm`, `swamp-worm`, `aakf`, `leech-shuddery`, `cave-slug`, `maggot-lair-1`, `-2`),
+  stonožky (`nugotha` s křídly, `sterenda`). Zavrtávací červi vyhrabávají hlínu.
+- `ProceduralCentaur` (dědí z `ProceduralHoofed`) – koňské tělo s lidským trupem a kopím: vzepětí → kopyta → bodnutí kopím.
+  Lidský trup je společný v `hybridParts.js`; stejný trup má i `urxuquer` (pavouk s lidským trupem v `ProceduralArthropod`).
+- `ProceduralFlyer` – letí nad polem: `eagle`, `phoenix` (plameny), `gryffon` (orlí přední půlka, lví zadní), `harpy`,
+  `giant-bat`, `vampire-bat-form`, `vampire-elder-bat-form`. Útok = střemhlavý výpad s drápy / zobákem.
+- `ProceduralDragon` – `dragon`, `dragon-young`, `dragon-elder`, `dragonlich`, `skeleton-dragon`, `wyvern` (dvě nohy, křídla
+  místo předních), `gargoyle` (kamenná). Útok kousnutím, drápy a dechem.
+- `ProceduralElemental` – postavy z hmoty: zemní elementálové (3), `golem`, `automaton`, vyšší a obří ohnivý, vyšší vodní a
+  vzdušný elementál, `vestrad`, `swarm-devil` (roj hmyzu) a `maggot-man` (postava z červů).
+- `ProceduralAmorphous` – bez kostry: vzdušný vír (`air-elemental`, `-giant`), vodní sloup (`water-elemental`, `-giant`),
+  ohnivý sloup (`fire-elemental`), `cave-slime`, `living-jelly` (průsvitná kostka s kostmi a mincemi), `chasfon` (koule
+  blesků), oblaka (`cloud-form`, upír a prastarý upír v podobě oblaku) a `vermin` (7 krys na poli).
+- `ProceduralAquatic` – `shark` (pluje nad zemí), chobotnice `octopuss-1` až `-3` a `kraken` (chapadla z 14–16 kostí, útok
+  přední chapadla: zvednutí → šlehnutí → obtočení), `klobg` (dlouhý jazyk), `manyhead` (pětihlavá krysa), `illusion-beast`,
+  `illusion-beast-2` (průsvitný hadí drak).
+- `ProceduralPlant` – rostliny a stromové bytosti: `drischea` (strom s tlamou v kmeni, kořeny jako drápy), `gwanga` (ostnatý
+  stvol s chapadly, chodí na kořenech), `hungry-wine` (vinná réva s rudýma očima a rukama z úponků), `mirocus` (truhla s
+  jazykem a zuby), `rack` (ostnatý kámen, který se otevře tlamou), `skorfan` (kláda s čelistmi), `suotix` (pařez s chapadly
+  zakončenými svítícími houbami), `waaz` (houba s chapadly), `evil-tree`, `tree-folk`, `nature-wrath` (stromové obry na
+  kořenových nohou) a `forest-phantom` (lebka v mechové kápi s glévií, vznáší se).
+- Humanoidi s doplňkem a gugové: nová těla v `avatar/beastBodies.js` (díly `beastParts.js`), tabulka `BEAST_BODIES`
+  v `creatures.js`: 20 gugů, sukuby a inkubové (`demon-pride-1` až `-5`), páni draunugů (`demon-devourer-3` až `-5`), `fairy`,
+  `fallen-angel` (křídla), `faun` (kozí nohy), `cobold`, `werewolf`, `werewolf-elder` (vlčí hlava), `minotaur` (býčí hlava),
+  `headless`, `mermaid`, `triton` (rybí ocas), `ubeg` (hmyzí hlava), `gorilla`.
+- `bestiary.html`: všechny nestvůry hotové; `tools/bestiar-modely.py` řadí hybridy ke skutečným rigům.
+- Známé nedostatky: kalhoty a nákolenice se kreslí přes kozí nohy (faun, sukuby), dospělý drak má asi 8 m (text uvádí 12 m,
+  `scale` ve variantě), wyvern má podle textu 2 nohy (obrázek ukazuje 4).
+
+### V36 – oheň jako objekt editoru (`fire01`)
+- Nový objekt `fire01` (Oheň, skupina Předměty): kruh kamenů, popel a žhavé uhlíky, polena opřená do jehlanu, statické jádro
+  plamene (`PropFactory`, GLB + náhled v `public/assets/models/objects`). Živé plameny, jiskry a záři kreslí za běhu
+  `LightProps` (`buildFixtureLight('FIRE')`), typ světla `FIRE` (oranžová, silné mihotání).
+- Svítí sám po vložení editorem: síla 10, dosah 10 (`objectCatalog.js` = hof `PlanLight.objectPower`). Průchodný jako ostatní
+  předměty; starý 2D plán ho ukazuje jako svícen. Překlad názvu v paletě: res `PLAN3D_OBJ_FIRE01` (Oheň / Campfire).
+- Offline prototyp: táborák na poli 22, 9 je teď `fire01`.

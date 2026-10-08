@@ -4,7 +4,7 @@ import { mat, mesh } from './TreeFactory.js';
 /*
  * PropFactory — procedural 3D counterparts of the old 2D editor objects
  * (img/iso/objects/*.png): stump, stone/brick blocks, walls, column, rock,
- * chest, barrel, boxes, vase, lantern, candlestick.
+ * chest, barrel, boxes, vase, lantern, candlestick; new 3D objects: campfire (fire01).
  *
  * Sizes follow the 2D sprites relative to a tile (1 × 1) and a 1.9 tall human.
  * Textures are generated on a canvas (brick, sandstone, stone) and are
@@ -241,6 +241,55 @@ export const PROP_BUILDERS = {
         mesh(lathe([[0, 0], [.08, 0], [.08, .015], [.03, .04], [.018, .08], [.018, .3], [.05, .32], [.05, .34], [0, .34]], 12), brass, body);
         mesh(new THREE.CylinderGeometry(.022, .022, .12, 8), mat(0xf2ead6, .6), body, 0, .4, 0);
         mesh(new THREE.ConeGeometry(.018, .05, 6), flame, body, 0, .485, 0);
+        return g;
+    },
+
+    // Campfire: ring of stones, glowing ember bed, logs leaning into a cone and a static flame core.
+    // The moving flames, sparks and the light itself are added at runtime (LightProps buildFixtureLight 'FIRE').
+    fire01() {
+        const { g, body } = group('fire01');
+        const ash = mat(0x3a3430, 1), char = mat(0x1e1a18, .95), bark = mat(0x5a3a22, .95), cut = mat(0xb08a5a, .9);
+        const ember = new THREE.MeshStandardMaterial({ color: 0xff7a2a, emissive: 0xff4a10, emissiveIntensity: 1.4, roughness: .8 });
+        ember.name = 'prop_ember';
+        const flame = new THREE.MeshStandardMaterial({ color: 0xffd27a, emissive: 0xff8a20, emissiveIntensity: 2.2, roughness: .4 });
+        flame.name = 'prop_flame';
+        let a = 7;
+        const rnd = () => ((a = (a * 16807) % 2147483647) / 2147483647);
+        // stone ring
+        for (let i = 0; i < 10; i++) {
+            const t = i / 10 * Math.PI * 2 + rnd() * .2, r = .36 + rnd() * .03;
+            const st = mesh(new THREE.DodecahedronGeometry(.075 + rnd() * .025, 0), mat(i % 3 ? 0x8b867c : 0x6f6a62, .95), body,
+                Math.cos(t) * r, .04, Math.sin(t) * r);
+            st.scale.set(1.15, .7, .95);
+            st.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+        }
+        // ash and the ember bed
+        mesh(new THREE.CylinderGeometry(.31, .33, .02, 16), ash, body, 0, .01, 0);
+        mesh(new THREE.SphereGeometry(.2, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2), ember, body, 0, .015, 0).scale.y = .22;
+        for (let i = 0; i < 9; i++) {
+            const t = rnd() * Math.PI * 2, r = rnd() * .2;
+            mesh(new THREE.DodecahedronGeometry(.025 + rnd() * .02, 0), i % 2 ? ember : char, body, Math.cos(t) * r, .04, Math.sin(t) * r);
+        }
+        // logs leaning together (tepee) + two lying across
+        const logGeo = new THREE.CylinderGeometry(.032, .042, .42, 7);
+        for (let i = 0; i < 5; i++) {
+            const t = i / 5 * Math.PI * 2 + .3;
+            const pivot = new THREE.Group();
+            pivot.position.set(Math.cos(t) * .24, .02, Math.sin(t) * .24);
+            pivot.rotation.y = -t;
+            body.add(pivot);
+            const log = mesh(logGeo, i % 2 ? bark : char, pivot, -.13, .14, 0);
+            log.rotation.z = .95;
+            mesh(new THREE.CircleGeometry(.032, 7), cut, log, 0, .211, 0).rotation.x = -Math.PI / 2;
+        }
+        for (const [x, z, ry] of [[.02, .12, .3], [-.04, -.1, -.2]]) {
+            const log = mesh(new THREE.CylinderGeometry(.045, .05, .62, 7), bark, body, x, .07, z);
+            log.rotation.set(0, ry, Math.PI / 2);
+        }
+        // static flame core (shows in the editor preview; the live flames are drawn over it)
+        mesh(new THREE.ConeGeometry(.13, .5, 7), flame, body, 0, .3, 0);
+        mesh(new THREE.ConeGeometry(.08, .3, 6), flame, body, .09, .2, -.05);
+        mesh(new THREE.ConeGeometry(.08, .28, 6), flame, body, -.09, .19, .06);
         return g;
     }
 };

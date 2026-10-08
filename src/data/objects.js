@@ -11,7 +11,7 @@ const props = [
     { id: 'palm2', type: 'palm', x: 26, y: 17, solid: true },
     { id: 'cactus1', type: 'cactus', x: 12, y: 15, solid: true },
     { id: 'cactus2', type: 'cactus', x: 18, y: 17, solid: true },
-    { id: 'campfire', type: 'campfire', x: 22, y: 9, solid: false },
+    { id: 'campfire', type: 'fire01', x: 22, y: 9, solid: false },
     // orchard by the houses
     { id: 'apple1', type: 'apple', variant: 1, x: 7, y: 4, solid: true },
     { id: 'apple2', type: 'apple', variant: 2, x: 12, y: 4, solid: true },

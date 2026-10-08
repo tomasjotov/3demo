@@ -7,12 +7,14 @@ import { G, mat, metalMat } from '../avatar/kit.js';
  * for the flame flicker. Flames and orbs are unlit (MeshBasic, additive) so they glow in the dark.
  *
  * Light types (hof PlanLight.type): TORCH, LANTERN, MAGIC_ITEM (glowing item), MAGIC (light spell
- * on the person), AREA (light placed on the plan), DARK (negative light).
+ * on the person), AREA (light placed on the plan), DARK (negative light); objects of the plan editor:
+ * CANDLE (candlestick), FIRE (campfire).
  */
 export const LIGHT_LOOK = {
     TORCH: { color: 0xff8a2e, flicker: .16 },
     LANTERN: { color: 0xffbf6a, flicker: .05 },
     CANDLE: { color: 0xffb554, flicker: .09 },
+    FIRE: { color: 0xff7a24, flicker: .2 },
     MAGIC_TORCH: { color: 0xd6e6ff, flicker: .02 },
     MAGIC_ITEM: { color: 0xcfe0ff, flicker: .02 },
     MAGIC: { color: 0xbfd6ff, flicker: .03 },
@@ -211,8 +213,71 @@ function prop(root, anchor, fl, look, { upright = [], glass = null }) {
     return p;
 }
 
-// Light of a static plan object (lantern / candlestick model drawn by ObjectRenderer): only a halo + the anchor.
+// Campfire (fire01): flame tongues licking up at their own pace, rising sparks, big halo; the stones, logs and
+// embers are the static model of ObjectRenderer.
+function buildCampfire(y) {
+    const look = lightLook('FIRE');
+    const root = new THREE.Group();
+    const tongues = [];
+    for (let i = 0; i < 7; i++) {
+        const a = i / 7 * Math.PI * 2, r = i ? .11 : 0;
+        const fl = flame(i % 3 ? look.color : 0xffa83a, i ? 1.6 + (i % 3) * .35 : 3.2);
+        fl.position.set(Math.cos(a) * r, .06, Math.sin(a) * r);
+        fl.userData.parts.glow.scale.multiplyScalar(.4);            // one big halo for the whole fire instead
+        fl.userData.parts.glow.material.opacity = .3;
+        root.add(fl);
+        tongues.push({ fl, ph: i * 1.7, sp: 7 + i * 1.3 });
+    }
+    const glow = haloSprite(look.color, 1.6, .35);
+    glow.position.y = y;
+    root.add(glow);
+    const sparkMat = glowMat(0xffc060, .9);
+    const sparkGeo = new THREE.SphereGeometry(.012, 4, 3);
+    const sparks = [];
+    for (let i = 0; i < 10; i++) {
+        const m = new THREE.Mesh(sparkGeo, sparkMat);
+        root.add(m);
+        sparks.push({ m, life: i / 10, x: 0, z: 0, vx: 0, vz: 0 });
+    }
+    const anchor = new THREE.Object3D();
+    anchor.position.y = y + .1;
+    root.add(anchor);
+    const p = prop(root, anchor, null, look, {});
+    const base = p.update;
+    p.update = (dt, t) => {
+        base(dt, t);
+        const k = p.intensity;
+        for (const T of tongues) {
+            const s = .8 + (k - 1) * 1.6 + Math.sin(t * T.sp + T.ph) * .18 + Math.sin(t * 2.3 + T.ph) * .08;
+            const { outer, inner } = T.fl.userData.parts;
+            outer.scale.set(1, Math.max(.5, s), 1);
+            inner.scale.set(1, Math.max(.5, s * .9), 1);
+            T.fl.rotation.z = Math.sin(t * 3.1 + T.ph) * .12;
+            T.fl.rotation.x = Math.sin(t * 2.7 + T.ph * 1.3) * .12;
+        }
+        glow.material.opacity = .3 + (k - 1);
+        for (const S of sparks) {
+            S.life += dt * .9;
+            if (S.life >= 1) {
+                S.life -= 1;
+                const a = Math.random() * Math.PI * 2, r = Math.random() * .12;
+                S.x = Math.cos(a) * r; S.z = Math.sin(a) * r;
+                S.vx = (Math.random() - .5) * .25; S.vz = (Math.random() - .5) * .25;
+            }
+            const l = S.life;
+            S.m.position.set(S.x + S.vx * l + Math.sin(t * 5 + S.vx * 40) * .03, .25 + l * 1.3, S.z + S.vz * l);
+            S.m.scale.setScalar(1 - l * .8);
+        }
+        sparkMat.opacity = .9;
+    };
+    p.dispose = () => sparkGeo.dispose();
+    return p;
+}
+
+// Light of a static plan object (lantern / candlestick / campfire model drawn by ObjectRenderer): a halo (the campfire
+// also its live flames) + the anchor.
 export function buildFixtureLight(type, y) {
+    if (type === 'FIRE') return buildCampfire(y);
     const look = lightLook(type);
     const root = new THREE.Group();
     const glow = haloSprite(look.color, type === 'CANDLE' ? .35 : .6, .6);

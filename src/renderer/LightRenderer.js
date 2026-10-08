@@ -74,12 +74,12 @@ export class LightRenderer {
         this.areaGroup.name = 'area-lights';
         scene.add(this.areaGroup);
         this.areaProps = new Map();      // key → { light, prop }
-        this.objectProps = [];           // lantern / candlestick objects of the plan
+        this.objectProps = [];           // lantern / candlestick / campfire objects of the plan
     }
 
     // Static objects with catalog `light` (rebuilt with the terrain).
     setObjectLights(objects = []) {
-        for (const e of this.objectProps) this.areaGroup.remove(e.prop.root);
+        for (const e of this.objectProps) { this.areaGroup.remove(e.prop.root); e.prop.dispose?.(); }
         this.objectProps = [];
         for (const o of objects) {
             const light = CATALOG_BY_ID[o.type]?.light;

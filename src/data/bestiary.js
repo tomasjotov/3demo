@@ -14,12 +14,12 @@ export const BESTIARY_GROUPS = [
  {
   "id": "humanoid+",
   "title": "Humanoidi s doplňkem",
-  "how": "současná kostra + nová část (hlava, křídla, ocas, materiál)"
+  "how": "hotovo (V35): těla nestvůr v avatar/beastBodies.js (hlavy, křídla, ocasy, kozí nohy)"
  },
  {
   "id": "gug",
   "title": "Gugové (démoni hněvu, rozkladu, obžerství, posedlosti)",
-  "how": "nové tělo humanoida v bodies.js (lookBase gug)"
+  "how": "hotovo (V35): těla v avatar/beastBodies.js"
  },
  {
   "id": "feline",
@@ -34,7 +34,7 @@ export const BESTIARY_GROUPS = [
  {
   "id": "hoofed",
   "title": "Kopytníci – ProceduralHoofed",
-  "how": "hotovo (V33); jezdecký kůň zůstává ProceduralHorse"
+  "how": "hotovo (V33), kentaur (V35); jezdecký kůň zůstává ProceduralHorse"
  },
  {
   "id": "heavy",
@@ -53,54 +53,59 @@ export const BESTIARY_GROUPS = [
  },
  {
   "id": "dragon",
-  "title": "Draci a wyverni",
-  "how": "plazí kostra + křídla"
+  "title": "Draci, wyvern a gargoyla – ProceduralDragon",
+  "how": "hotovo (V35)"
  },
  {
   "id": "flyer",
-  "title": "Ptáci a netopýři",
-  "how": "nová kostra s křídly (letí nad polem)"
+  "title": "Ptáci a netopýři – ProceduralFlyer",
+  "how": "hotovo (V35), létají nad polem"
  },
  {
   "id": "serpent",
-  "title": "Hadi, červi, stonožky",
-  "how": "jedna článková kostra (vlnění), varianty hlavy a nožiček"
+  "title": "Hadi, červi, stonožky – ProceduralSerpent",
+  "how": "hotovo (V35), včetně hydry a hadího strážce"
  },
  {
   "id": "arthropod",
   "title": "Pavouci, hmyz, štíři, krabi – ProceduralArthropod",
-  "how": "hotovo (V34), včetně létajícího hmyzu"
+  "how": "hotovo (V34), včetně létajícího hmyzu; urxuquer (V35)"
  },
  {
   "id": "aquatic",
-  "title": "Vodní tvorové",
-  "how": "žralok, chobotnice (chapadla)"
+  "title": "Vodní a zvláštní tvorové – ProceduralAquatic",
+  "how": "hotovo (V35)"
+ },
+ {
+  "id": "elemental",
+  "title": "Elementálové, golemové a roje v lidské podobě – ProceduralElemental",
+  "how": "hotovo (V35)"
  },
  {
   "id": "amorphous",
-  "title": "Beztvaří a elementálové",
-  "how": "efekty / částice, bez kostry"
+  "title": "Beztvaří: víry, vodní a ohnivé sloupy, sliz, oblaka, havěť – ProceduralAmorphous",
+  "how": "hotovo (V35)"
  },
  {
   "id": "plant",
-  "title": "Rostliny a houby",
-  "how": "statický model s animovanými úponky"
+  "title": "Rostliny a stromové bytosti – ProceduralPlant",
+  "how": "hotovo (V35)"
  },
  {
   "id": "unknown",
-  "title": "Nejasné",
-  "how": "chybí popis vzhledu"
+  "title": "Nezařazené",
+  "how": "chybí v tabulce skupin"
  }
 ];
 
 export const BESTIARY = [
     {"key": "aakf", "cz": "Aakf", "en": "Aakf", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "crawler", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Červ aakf je černý nebo šedý tvor dlouhý kolem čtyř metrů."},
     {"key": "air-elemental-giant", "cz": "Vzdušný elementál obří", "en": "Giant Air Elemental", "group": "amorphous", "note": "vzdušný vír (tornádo)", "lookBase": "fiend-blue", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Pokud se krajinou žene tornádo, vězte, že je to obří vzdušný elementál."},
-    {"key": "air-elemental-greater", "cz": "Vzdušný elementál vyšší", "en": "Greater Air Elemental", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "brute-blue", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Silnější forma vzdušného elementála, kterou je těžší ovládat."},
+    {"key": "air-elemental-greater", "cz": "Vzdušný elementál vyšší", "en": "Greater Air Elemental", "group": "elemental", "note": "tělo z energie / ohně / vody (průsvitné)", "lookBase": "brute-blue", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Silnější forma vzdušného elementála, kterou je těžší ovládat."},
     {"key": "air-elemental", "cz": "Vzdušný elementál", "en": "Air Elemental", "group": "amorphous", "note": "vzdušný vír (tornádo)", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Vzdušný elementál je vzduchový trychtýř vysoký asi dva metry, ve kterém poletuje prach, listí a kamení."},
     {"key": "aku", "cz": "Aku", "en": "Aku", "group": "arthropod", "note": "létající hmyz (vážka, vosa)", "lookBase": "giantbee", "lookVariant": "", "hair": "", "beard": "", "size": -2, "desc": "Aku jsou přerostlí příbuzní včel a vos."},
     {"key": "ant", "cz": "Mravenec", "en": "Ant", "group": "arthropod", "note": "hmyz (6 nohou)", "lookBase": "giantratdark", "lookVariant": "", "hair": "", "beard": "", "size": -1, "desc": "Obří mravenci žijí a chovají se podobně jako jejich drobní příbuzní, jen jsou mnohem větší – běžně měří kolem metru, někdy i víc."},
-    {"key": "automaton", "cz": "Automaton", "en": "Automaton", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Automaton dokážou vyrobit jen mistři alchymie a mechaniky."},
+    {"key": "automaton", "cz": "Automaton", "en": "Automaton", "group": "elemental", "note": "tělo z kamene / kovu (hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Automaton dokážou vyrobit jen mistři alchymie a mechaniky."},
     {"key": "banshee", "cz": "Banší", "en": "Banshee", "group": "humanoid", "note": "", "lookBase": "shadow", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Banší je děsivý nehmotný nemrtvý, který vzniká z duše ženy, jejíž smrt provázel hluboký žal, zrada nebo nenaplněná láska."},
     {"key": "basilisk", "cz": "Bazilišek", "en": "Basilisk", "group": "reptile", "note": "osminohý ještěr", "lookBase": "lizard-large-dark", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Bazilišek je osminohý ještěr s vypouklýma, hypnotizujícíma očima."},
     {"key": "bear-large", "cz": "Medvěd velký", "en": "Large Bear", "group": "bear", "note": "", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 7, "desc": "Větší druhy medvědů, jako je grizzly, lední nebo severský medvěd."},
@@ -114,7 +119,7 @@ export const BESTIARY = [
     {"key": "cave-bear", "cz": "Medvěd jeskynní", "en": "Cave Bear", "group": "bear", "note": "", "lookBase": "giant-dark-beast", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Jeskynní medvěd patří k nejstrašlivějším šelmám světa."},
     {"key": "cave-slime", "cz": "Sliz, jeskynní", "en": "Cave Slime", "group": "amorphous", "note": "sliz / rosol", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Jeskynní sliz vypadá jako kaluž hnědozeleného slizu."},
     {"key": "cave-slug", "cz": "Slimák jeskynní", "en": "Cave Slug", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Slimák jeskynní je šedý až černý obří plž bez ulity."},
-    {"key": "centaur", "cz": "Kentaur", "en": "Centaur", "group": "humanoid+", "note": "koňské tělo s lidským trupem (kostra koně + horní půlka avatara)", "lookBase": "horse-1", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": ""},
+    {"key": "centaur", "cz": "Kentaur", "en": "Centaur", "group": "hoofed", "note": "kentaur: koňské tělo s lidským trupem a kopím (ProceduralCentaur)", "lookBase": "horse-1", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": ""},
     {"key": "chasfon", "cz": "Chasfon", "en": "Chasfon", "group": "amorphous", "note": "oblak / jev (částice)", "lookBase": "turkey-1", "lookVariant": "", "hair": "", "beard": "", "size": -4, "desc": "Chasfon je podivný tvor, či spíše jev, který vzniká jako vedlejší produkt mocných kouzel nebo magických jevů, případně v místech, kde se protínají elementální sféry."},
     {"key": "chimera", "cz": "Chiméra", "en": "Chimera", "group": "feline", "note": "lví tělo, více hlav", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 5, "desc": "Chiméra je velký a hrozivý tvor s mohutným, svalnatým tělem lva pokrytým hustou srstí."},
     {"key": "cloud-form", "cz": "Přeměna na oblak", "en": "Cloud Form", "group": "amorphous", "note": "oblak / jev (částice)", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Podobu oblaku tvor získá působením kouzla nebo lektvaru."},
@@ -181,25 +186,25 @@ export const BESTIARY = [
     {"key": "dryad", "cz": "Dryáda", "en": "Dryad", "group": "humanoid", "note": "", "lookBase": "female", "lookVariant": "base19", "hair": "", "beard": "", "size": null, "desc": "Dryády jsou na první pohled k nerozeznání od lidských nebo elfích žen."},
     {"key": "dune-reaper", "cz": "Pouštní zabiják", "en": "Dune Reaper", "group": "arthropod", "note": "štír (klepeta, ocas)", "lookBase": "giantspider-bluespotted", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Tento nebezpečný hmyz žije v poušti, kde se zahrabává do písku a trpělivě čeká na kořist."},
     {"key": "eagle", "cz": "Orel královský", "en": "Royal Eagle", "group": "flyer", "note": "", "lookBase": "wyvern-gray", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Orel královský patří k nejúžasnějším tvorům."},
-    {"key": "earth-elemental-giant", "cz": "Zemní elementál obří", "en": "Giant Earth Elemental", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Jedna z největších forem zemního elementála kolosální velikosti."},
-    {"key": "earth-elemental-greater", "cz": "Zemní elementál vyšší", "en": "Greater Earth Elemental", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 7, "desc": "Větší a nezvladatelnějí forma zemního elementála."},
-    {"key": "earth-elemental", "cz": "Zemní elementál", "en": "Earth Elemental", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Tento elementál se zjevuje v podobě obra poskládaného z velkých balvanů."},
+    {"key": "earth-elemental-giant", "cz": "Zemní elementál obří", "en": "Giant Earth Elemental", "group": "elemental", "note": "tělo z kamene / kovu (hranaté)", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Jedna z největších forem zemního elementála kolosální velikosti."},
+    {"key": "earth-elemental-greater", "cz": "Zemní elementál vyšší", "en": "Greater Earth Elemental", "group": "elemental", "note": "tělo z kamene / kovu (hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 7, "desc": "Větší a nezvladatelnějí forma zemního elementála."},
+    {"key": "earth-elemental", "cz": "Zemní elementál", "en": "Earth Elemental", "group": "elemental", "note": "tělo z kamene / kovu (hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Tento elementál se zjevuje v podobě obra poskládaného z velkých balvanů."},
     {"key": "elephant", "cz": "Slon", "en": "Elephant", "group": "heavy", "note": "těžký čtyřnožec (sloupové nohy)", "lookBase": "lizard-large-dark", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Slon je kolosální zvíře vysoké až čtyři metry a těžké mnoho tun, s šedou nebo hnědou kůží."},
-    {"key": "evil-tree", "cz": "Oživlý strom", "en": "Evil Tree", "group": "humanoid+", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Většina stromů celý život pokojně stojí a roste, nanejvýš upustí větev nebo nastaví vetřelci kořen."},
+    {"key": "evil-tree", "cz": "Oživlý strom", "en": "Evil Tree", "group": "plant", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Většina stromů celý život pokojně stojí a roste, nanejvýš upustí větev nebo nastaví vetřelci kořen."},
     {"key": "fairy", "cz": "Lesní víla", "en": "Fairy", "group": "humanoid+", "note": "křídla", "lookBase": "female", "lookVariant": "base04", "hair": "", "beard": "", "size": null, "desc": "Lesní víly jsou křehká stvoření, která žijí výhradně v hvozdech."},
     {"key": "fallen-angel", "cz": "Padlý anděl", "en": "Fallen Angel", "group": "humanoid+", "note": "křídla", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": null, "desc": "Padlý anděl je jedním z nejhorších nepřátel, jaké si lze představit."},
     {"key": "faun", "cz": "Faun", "en": "Faun", "group": "humanoid+", "note": "kozí nohy, růžky", "lookBase": "male", "lookVariant": "base-orc", "hair": "hair-horns", "beard": "hair-horns", "size": null, "desc": "Faun, též satyr nebo rokyta, je napůl kozel a napůl člověk: od pasu nahoru má lidské tělo, dole kozí nohy, na hlavě malé růžky a špičaté uši."},
     {"key": "fire-bull", "cz": "Ohnivý býk", "en": "Fire Bull", "group": "hoofed", "note": "skot: kostra koně, těžší tělo, rohy", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 5, "desc": "Ohnivého býka splete s obyčejným zvířetem jen slepec."},
     {"key": "fire-dog", "cz": "Ohnivý pes", "en": "Fire Dog", "group": "canine", "note": "", "lookBase": "undeaddog", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Ohnivý pes je démon ohně podobný obřímu psu s červenočernou srstí, špičatýma ušima a obřími tesáky, obklopený plameny."},
-    {"key": "fire-elemental-giant", "cz": "Ohnivý elementál obří", "en": "Giant Fire Elemental", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "male", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Tento elementál spálí vše na popel."},
-    {"key": "fire-elemental-greater", "cz": "Ohnivý elementál vyšší", "en": "Greater Fire Elemental", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "brute-red", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Žár tohoto elementál je tak strašný, že mu lze jen těžko odolat."},
+    {"key": "fire-elemental-giant", "cz": "Ohnivý elementál obří", "en": "Giant Fire Elemental", "group": "elemental", "note": "tělo z energie / ohně / vody (průsvitné)", "lookBase": "male", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Tento elementál spálí vše na popel."},
+    {"key": "fire-elemental-greater", "cz": "Ohnivý elementál vyšší", "en": "Greater Fire Elemental", "group": "elemental", "note": "tělo z energie / ohně / vody (průsvitné)", "lookBase": "brute-red", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Žár tohoto elementál je tak strašný, že mu lze jen těžko odolat."},
     {"key": "fire-elemental", "cz": "Ohnivý elementál", "en": "Fire Elemental", "group": "amorphous", "note": "hořící sloup", "lookBase": "slime-lava", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Čistá forma elementu ohně, která se projevuje jako hořící, pohybující se sloup."},
     {"key": "forest-giant", "cz": "Obr lesní", "en": "Forest Giant", "group": "humanoid", "note": "", "lookBase": "troll", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Lesní obr je kolohnát asi tři metry vysoký, divokého vzhledu, s dlouhými vlasy a často i vousy."},
-    {"key": "forest-phantom", "cz": "Lesní přízrak", "en": "Forest Phantom", "group": "humanoid+", "note": "postava ze dřeva, kůry a listí", "lookBase": "plaguefiend", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Lesní přízrak má člověku podobnou postavu z listí, kůry a kořenů."},
+    {"key": "forest-phantom", "cz": "Lesní přízrak", "en": "Forest Phantom", "group": "plant", "note": "postava ze dřeva, kůry a listí", "lookBase": "plaguefiend", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Lesní přízrak má člověku podobnou postavu z listí, kůry a kořenů."},
     {"key": "forest-wurm", "cz": "Lesní červ", "en": "Forest Wurm", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "lizard-large-dark", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Lesní červ je obrovské hnědozelené zvíře; přestože se mu říká červ, se skutečnými červy má jen málo společného."},
     {"key": "frost-giant", "cz": "Obr ledový", "en": "Frost Giant", "group": "humanoid", "note": "", "lookBase": "giant-air", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Ledový obr se tyčí do výšky tří metrů."},
     {"key": "gargantula", "cz": "Gargantula", "en": "Gargantula", "group": "arthropod", "note": "pavouk (8 nohou, gargantula 6)", "lookBase": "giantspider-poison", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Gargantula je obrovský černý pavouk pokrytý ostrými štětinami, se dvěma shluky očí a šesti nohama."},
-    {"key": "gargoyle", "cz": "Gargoyla", "en": "Gargoyle", "group": "humanoid+", "note": "kamenná šelma s netopýřími křídly a ocasem", "lookBase": "wyvern-gray", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Nehybná gargoyla vypadá jako prapodivná socha z šedého nebo černého kamene, která připomíná spojení šelmy, netopýra a skřeta: má tělo šelmy s dlouhým ocasem, netopýří křídla a hlavu s tesáky podobnou skřetí."},
+    {"key": "gargoyle", "cz": "Gargoyla", "en": "Gargoyle", "group": "dragon", "note": "kamenná šelma s netopýřími křídly a ocasem", "lookBase": "wyvern-gray", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Nehybná gargoyla vypadá jako prapodivná socha z šedého nebo černého kamene, která připomíná spojení šelmy, netopýra a skřeta: má tělo šelmy s dlouhým ocasem, netopýří křídla a hlavu s tesáky podobnou skřetí."},
     {"key": "gauton", "cz": "Gauton", "en": "Gauton", "group": "biped", "note": "dvounohý ještěr", "lookBase": "dragon-red", "lookVariant": "", "hair": "", "beard": "", "size": 9, "desc": "Gauton je obrovský ještěr vysoký šest až osm metrů, se zelenohnědou kůží, dvěma silnýma nohama, zakrnělými předními packami a velkou hlavou dlouhou kolem dvou metrů."},
     {"key": "ghat", "cz": "Ghat", "en": "Ghat", "group": "biped", "note": "shrbený obojživelný ještěr s velkými drápy (podle obrázku chodí po dvou)", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Ghat je zelenošedý ještěr s tlamou plnou ostnatých zubů, mohutným tělem a tlapami s ostrými drápy a plovacími blánami."},
     {"key": "ghost-warrior", "cz": "Přízračný válečník", "en": "Ghost Warrior", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": null, "desc": "Přízračný válečník je neklidný duch bojovníka, který padl v bitvě a nikdy nenašel pokoj."},
@@ -214,7 +219,7 @@ export const BESTIARY = [
     {"key": "giant-spider-crab", "cz": "Giga Krabopavouk", "en": "Giant Spider Crab", "group": "arthropod", "note": "krab", "lookBase": "gigacrab", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Tento výtvor, v němž šílený tvůrce spojil obřího kraba s pavoukem, můžeme najít v hlubokých bažinách."},
     {"key": "giant-strider", "cz": "Obří sekáč", "en": "Giant Strider", "group": "arthropod", "note": "pavouk (8 nohou, gargantula 6)", "lookBase": "giantspider-poison", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Obří sekáči jsou strašliví pavoukovci, kterých naštěstí žije jen několik."},
     {"key": "goblin-snake", "cz": "Skřetohad", "en": "Goblin Snake", "group": "serpent", "note": "had (článkové tělo)", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Skřetohad je děsivé spojení skřeta a hada."},
-    {"key": "golem", "cz": "Golem", "en": "Golem", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Golem je nejjednodušší stroj, jaký dokážou alchymisté vyrobit."},
+    {"key": "golem", "cz": "Golem", "en": "Golem", "group": "elemental", "note": "tělo z kamene / kovu (hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Golem je nejjednodušší stroj, jaký dokážou alchymisté vyrobit."},
     {"key": "gorgon", "cz": "Gorgona", "en": "Gorgon", "group": "humanoid", "note": "", "lookBase": "gorgon", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "V dávných časech stvořili rozhněvaní bohové příšerné bytosti Temnot, napůl ženy a napůl hady, a vypustili je do světa, aby ztrestaly neposlušné smrtelníky."},
     {"key": "gorilla", "cz": "Gorila", "en": "Gorilla", "group": "humanoid+", "note": "opičí proporce (dlouhé ruce, chůze po kotnících)", "lookBase": "black-walker", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Na rozdíl od malých opic mohou být gorily nebezpečné."},
     {"key": "gryffon", "cz": "Gryf", "en": "Griffin", "group": "flyer", "note": "", "lookBase": "wyvern-gray", "lookVariant": "", "hair": "", "beard": "", "size": 5, "desc": "Gryf je velký tvor podobný ptáku, s mohutnými křídly, zobákem a tělem krytým hnědou srstí."},
@@ -233,13 +238,13 @@ export const BESTIARY = [
     {"key": "hungry-wine", "cz": "Hladové víno", "en": "Hungry Vine", "group": "plant", "note": "rostlina / houba / kámen", "lookBase": "carniverous-plant", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Hladové víno je nebezpečná masožravá popínavá rostlina, kterou najdeme od pralesů až po obyčejné lesy."},
     {"key": "hunting-hellbeast", "cz": "Pekelný honič", "en": "Hunting Hellbeast", "group": "canine", "note": "", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Pekelný honič je strašlivá nestvůra z pekla, jejíž jméno vzbuzuje hrůzu."},
     {"key": "hydra", "cz": "Hydra", "en": "Hydra", "group": "serpent", "note": "had s více hlavami", "lookBase": "dragon-undead", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Hydra je stvoření s tělem obrovského hada a několika dračími hlavami."},
-    {"key": "illusion-beast-2", "cz": "Iluzní tvor II", "en": "Illusion Beast II", "group": "unknown", "note": "potřebuji popis vzhledu", "lookBase": "direwolf", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": ""},
-    {"key": "illusion-beast", "cz": "Iluzní tvor", "en": "Illusion Beast", "group": "unknown", "note": "potřebuji popis vzhledu", "lookBase": "direwolf", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Tvor vytvořený iluzním kouzlem."},
+    {"key": "illusion-beast-2", "cz": "Iluzní tvor II", "en": "Illusion Beast II", "group": "aquatic", "note": "průsvitný hadí drak (iluze)", "lookBase": "direwolf", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": ""},
+    {"key": "illusion-beast", "cz": "Iluzní tvor", "en": "Illusion Beast", "group": "aquatic", "note": "průsvitný hadí drak (iluze)", "lookBase": "direwolf", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Tvor vytvořený iluzním kouzlem."},
     {"key": "illusion-figure", "cz": "Iluzní postava", "en": "Illusion Figure", "group": "humanoid", "note": "", "lookBase": "shadow", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Tvor vytvořený iluzním kouzlem."},
     {"key": "izrod", "cz": "Izrod", "en": "Izrod", "group": "humanoid", "note": "", "lookBase": "ghoul", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Izrodi jsou potomci lidí, kteří žili v zakletých bažinách tak dlouho, že dnes připomínají spíš nestvůry než lidské bytosti."},
     {"key": "jazgath", "cz": "Jazgath", "en": "Jazgath", "group": "humanoid", "note": "", "lookBase": "brute-green", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Jazgath je odpudivý tvor s tmavou, zelenohnědou kůží pokrytou drobnými výrůstky."},
     {"key": "karialis", "cz": "Karialis", "en": "Karialis", "group": "reptile", "note": "obrněný, hřbetní pláty, ostnatý ocas s palicí", "lookBase": "lizard-large-dark", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Karialis je mohutný šedohnědý tvor s hlavou velkou asi jako člověk, masivním trupem a ostnatým ocasem zakončeným jako palcát."},
-    {"key": "klobg", "cz": "Klobg", "en": "Klobg", "group": "unknown", "note": "potřebuji popis vzhledu", "lookBase": "zombie-2", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Klobg žije v bažinách a močálech."},
+    {"key": "klobg", "cz": "Klobg", "en": "Klobg", "group": "aquatic", "note": "shrbený zelený tvor s dlouhým jazykem", "lookBase": "zombie-2", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Klobg žije v bažinách a močálech."},
     {"key": "kraken", "cz": "Kraken", "en": "Kraken", "group": "aquatic", "note": "vodní tvor (žralok / chobotnice s chapadly)", "lookBase": "daemon-pitlord", "lookVariant": "", "hair": "", "beard": "", "size": 30, "desc": "Nejstrašnějším stvořením hlubin je bezpochyby kraken."},
     {"key": "leech-shuddery", "cz": "Pijavice hrozivá", "en": "Dread Leech", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "carniverous-plant", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Pijavice hrozivá je velmi nepříjemný a nebezpečný tvor, který žije v bažinách a kalných vodách."},
     {"key": "leopard", "cz": "Levhart", "en": "Leopard", "group": "feline", "note": "", "lookBase": "wolf-timber", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Levhart (panter, pardál) Levharti se dokážou přizpůsobit téměř jakémukoli prostředí od nížin až vysoko do hor."},
@@ -249,17 +254,17 @@ export const BESTIARY = [
     {"key": "lost-soul", "cz": "Zbloudilá duše", "en": "Lost Soul", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": null, "desc": "Zbloudilá duše je jedním z nejubožejších a zároveň nejznepokojivějších nemrtvých."},
     {"key": "maggot-lair-1", "cz": "Jeskynní červ", "en": "Cave Maggot", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "crawler", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Jeskynní červi jsou asi metr dlouzí, nepříjemní a velmi žraví tvorové."},
     {"key": "maggot-lair-2", "cz": "Jeskynní červ - matka", "en": "Cave Maggot Mother", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "giantspider-poison", "lookVariant": "", "hair": "", "beard": "", "size": 8, "desc": "Jeskynní červi jsou asi metr dlouzí, nepříjemní a velmi žraví tvorové."},
-    {"key": "maggot-man", "cz": "Červicec", "en": "Maggot Man", "group": "humanoid+", "note": "postava z roje hmyzu / červů (částice)", "lookBase": "ghoul", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Červivec je tvor podobný člověku, ale složený z hemžících se červů, které drží pohromadě magie."},
+    {"key": "maggot-man", "cz": "Červicec", "en": "Maggot Man", "group": "elemental", "note": "postava z roje hmyzu / červů", "lookBase": "ghoul", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Červivec je tvor podobný člověku, ale složený z hemžících se červů, které drží pohromadě magie."},
     {"key": "manticore", "cz": "Mantikora", "en": "Manticore", "group": "feline", "note": "lví tělo, křídla, štíří ocas", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Mantikora je výsledkem nečistých alchymistických pokusů."},
     {"key": "mantis", "cz": "Kudlanka tropická", "en": "Tropical Mantis", "group": "arthropod", "note": "kudlanka", "lookBase": "giantspider-bluespotted", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Kudlanka tropická má tmavě zelené tělo a dvě klepeta, kterými lapá své oběti."},
-    {"key": "manyhead", "cz": "Mnohohlavec", "en": "Manyhead", "group": "unknown", "note": "potřebuji popis vzhledu", "lookBase": "skeleton-shambler", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Tato nestvůra vznikla jako vedlejší účinek šílených pokusů s magií, případně v magických zónách a podobných místech."},
+    {"key": "manyhead", "cz": "Mnohohlavec", "en": "Manyhead", "group": "aquatic", "note": "krysí tvor s pěti hlavami", "lookBase": "skeleton-shambler", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Tato nestvůra vznikla jako vedlejší účinek šílených pokusů s magií, případně v magických zónách a podobných místech."},
     {"key": "mermaid", "cz": "Mořská panna", "en": "Mermaid", "group": "humanoid+", "note": "rybí ocas místo nohou", "lookBase": "female", "lookVariant": "base14", "hair": "hair05", "beard": "hair05", "size": null, "desc": "Mořské panny neboli nereidy jsou ženské protějšky tritonů."},
     {"key": "minotaur", "cz": "Minotaur", "en": "Minotaur", "group": "humanoid+", "note": "býčí hlava, rohy, kopyta", "lookBase": "uruk-crusher", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Minotauři jsou tvorové s býčí hlavou, lidským tělem a kopyty."},
     {"key": "mirocus", "cz": "Mirocus", "en": "Mirocus", "group": "plant", "note": "rostlina / houba / kámen", "lookBase": "carniverous-plant", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Mirocuse kdysi stvořil dávný čaroděj, aby ochránil své artefakty před nenechavými rukama."},
     {"key": "mug-man", "cz": "Blátivec", "en": "Mud Man", "group": "humanoid", "note": "", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Blátivec bývá zaměňován za elementála, protože je stvořen z bláta a hlíny."},
     {"key": "mummy", "cz": "Mumie", "en": "Mummy", "group": "humanoid", "note": "", "lookBase": "mummy", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Mumie jsou nemluvní strážci, kteří slouží i po smrti a chrání svatá místa před vetřelci."},
     {"key": "narghoul", "cz": "Narghúl", "en": "Narghoul", "group": "humanoid", "note": "", "lookBase": "ghoul-2", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Narghúl je podivné stvoření, zčásti živé a zčásti nemrtvé."},
-    {"key": "nature-wrath", "cz": "Zloba přírody", "en": "Nature Wrath", "group": "humanoid+", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-green", "lookVariant": "", "hair": "", "beard": "", "size": 20, "desc": "Pokud někdo opravdu rozzlobí samotnou přírodu, ta povstane v podobě hněvu a smete vše, co se jí postaví do cesty."},
+    {"key": "nature-wrath", "cz": "Zloba přírody", "en": "Nature Wrath", "group": "plant", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-green", "lookVariant": "", "hair": "", "beard": "", "size": 20, "desc": "Pokud někdo opravdu rozzlobí samotnou přírodu, ta povstane v podobě hněvu a smete vše, co se jí postaví do cesty."},
     {"key": "necrotaur", "cz": "Nekrotaur", "en": "Necrotaur", "group": "bear", "note": "", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Nekrotaur vzniká oživením velkého zvířete, například medvěda."},
     {"key": "nightmare", "cz": "Noční můra", "en": "Nightmare", "group": "hoofed", "note": "kůň + úprava (černá srst a žhavé oči / roh / mohutnější šelma)", "lookBase": "horse-1", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Zdálky si noční můru snadno spletete se vznešeným koněm: má antracitově černou srst, hrdou hlavu a hustou hřívu."},
     {"key": "nugotha", "cz": "Nugotha", "en": "Nugotha", "group": "serpent", "note": "stonožka (článkové tělo s nožičkami)", "lookBase": "giantspider-striped", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Nugotha je obří zelenohnědá stonožka s dravými kusadly plnými zelenkavého jedu."},
@@ -283,7 +288,7 @@ export const BESTIARY = [
     {"key": "sagat", "cz": "Sagat", "en": "Sagat", "group": "biped", "note": "dvounohý ještěr", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Sagat je velmi rychlý ještěr, který obývá teplejší kraje od plání po hluboké lesy."},
     {"key": "sandworm", "cz": "Písečný červ", "en": "Sandworm", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "giant-dark-beast", "lookVariant": "", "hair": "", "beard": "", "size": 20, "desc": "Tento gigantický tvor žije na pouštích, kde nemá sobě rovného."},
     {"key": "sea-serpent", "cz": "Mořský had", "en": "Sea Serpent", "group": "serpent", "note": "had (článkové tělo)", "lookBase": "dragon-red", "lookVariant": "", "hair": "", "beard": "", "size": 20, "desc": "Mořský had patří k největším tvorům vůbec."},
-    {"key": "serpent-guardian", "cz": "Hadí strážce", "en": "Serpent Guardian", "group": "humanoid+", "note": "hadí tělo s lidským trupem", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Hadí strážce je had s lidským trupem a dvěma pažemi, ve kterých může třímat zbraně."},
+    {"key": "serpent-guardian", "cz": "Hadí strážce", "en": "Serpent Guardian", "group": "serpent", "note": "hadí tělo s lidským trupem", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Hadí strážce je had s lidským trupem a dvěma pažemi, ve kterých může třímat zbraně."},
     {"key": "shadow-of-dead", "cz": "Stín zemřelého", "en": "Shadow of the Dead", "group": "humanoid", "note": "", "lookBase": "shadow", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Stín je nemrtvý, kterého tvoří zbytek umírající duše."},
     {"key": "shark", "cz": "Žralok", "en": "Shark", "group": "aquatic", "note": "vodní tvor (žralok / chobotnice s chapadly)", "lookBase": "lizard-large-dark", "lookVariant": "", "hair": "", "beard": "", "size": 7, "desc": "Žraloci patří k nejnebezpečnějším tvorům, které lze na moři potkat."},
     {"key": "shooter-1", "cz": "Střelec I", "en": "Shooter I", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad střelce."},
@@ -308,7 +313,7 @@ export const BESTIARY = [
     {"key": "suotix", "cz": "Suotix", "en": "Suotix", "group": "plant", "note": "rostlina / houba / kámen", "lookBase": "carniverous-plant", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Suotix je tvor na pomezí rostliny a živočicha."},
     {"key": "swamp-hag", "cz": "Bahenní víla", "en": "Swamp Hag", "group": "humanoid", "note": "", "lookBase": "female", "lookVariant": "base-orc", "hair": "", "beard": "", "size": null, "desc": "Setkání s bahenními vílami nepatří k nejhezčím zážitkům."},
     {"key": "swamp-worm", "cz": "Bahenní červ", "en": "Swamp Worm", "group": "serpent", "note": "červ / plž (článkové tělo bez hlavy)", "lookBase": "crawler", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Tento tlustý zelený červ si libuje v kalné bahnité vodě."},
-    {"key": "swarm-devil", "cz": "Děsivý roj", "en": "Swarm Devil", "group": "humanoid+", "note": "postava z roje hmyzu / červů (částice)", "lookBase": "brute-green", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Děsivý roj vzniká kouzlem, které spojí hmyz, například vosy, do podoby postavy."},
+    {"key": "swarm-devil", "cz": "Děsivý roj", "en": "Swarm Devil", "group": "elemental", "note": "postava z roje hmyzu / červů", "lookBase": "brute-green", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Děsivý roj vzniká kouzlem, které spojí hmyz, například vosy, do podoby postavy."},
     {"key": "swordsman-1", "cz": "Šermíř I", "en": "Swordsman I", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base00", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad šermíře."},
     {"key": "swordsman-2", "cz": "Šermíř II", "en": "Swordsman II", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad šermíře."},
     {"key": "swordsman-3", "cz": "Šermíř III", "en": "Swordsman III", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad šermíře."},
@@ -316,7 +321,7 @@ export const BESTIARY = [
     {"key": "swordsman-5", "cz": "Šermíř V", "en": "Swordsman V", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base00", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad šermíře."},
     {"key": "terrorbird", "cz": "Hrůzopták", "en": "Terrorbird", "group": "biped", "note": "obří pták s křídly", "lookBase": "dragon-red", "lookVariant": "", "hair": "", "beard": "", "size": 20, "desc": "Hrůzopták patří k vůbec největším zvířatům, jaká kdy žila."},
     {"key": "tiger", "cz": "Tygr", "en": "Tiger", "group": "feline", "note": "", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Tygr je velká hnědožlutá šelma s charakteristickými černými pruhy."},
-    {"key": "tree-folk", "cz": "Stromový lid", "en": "Tree Folk", "group": "humanoid+", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Stromový muž, který se nehýbe, je k nerozeznání od stromu."},
+    {"key": "tree-folk", "cz": "Stromový lid", "en": "Tree Folk", "group": "plant", "note": "postava ze dřeva, kůry a listí", "lookBase": "fiend-brown", "lookVariant": "", "hair": "", "beard": "", "size": 12, "desc": "Stromový muž, který se nehýbe, je k nerozeznání od stromu."},
     {"key": "triton", "cz": "Triton", "en": "Triton", "group": "humanoid+", "note": "rybí ocas místo nohou", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": 1, "desc": "Tritoni se vzdáleně podobají lidem, ale tělo mají pokryté šupinami a místo nohou rybí ocas."},
     {"key": "troll", "cz": "Troll", "en": "Troll", "group": "humanoid", "note": "", "lookBase": "troll", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Trollové jsou obři vysocí kolem pěti metrů."},
     {"key": "ubeg", "cz": "Ubeg", "en": "Ubeg", "group": "humanoid+", "note": "hmyzí hlava s kusadly", "lookBase": "black-walker", "lookVariant": "", "hair": "", "beard": "", "size": 4, "desc": "Ubegové jsou velcí hnědí tvorové s kusadly a hmyzíma očima."},
@@ -324,7 +329,7 @@ export const BESTIARY = [
     {"key": "undead-bull", "cz": "Nemrtvý býk", "en": "Undead Bull", "group": "hoofed", "note": "skot: kostra koně, těžší tělo, rohy", "lookBase": "hound-large", "lookVariant": "", "hair": "", "beard": "", "size": 5, "desc": "Nemrtvý býk je děsivá stvůra, mohutnější než kterýkoli živý býk: tělo měří přes čtyři metry na délku a přes dva na výšku."},
     {"key": "unicorn", "cz": "Jednorožec", "en": "Unicorn", "group": "hoofed", "note": "kůň + úprava (černá srst a žhavé oči / roh / mohutnější šelma)", "lookBase": "horse-1", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Jednorožec dokáže na první pohled uchvátit každého, kdo jej spatří."},
     {"key": "urax", "cz": "Urax", "en": "Urax", "group": "arthropod", "note": "pavouk (8 nohou, gargantula 6)", "lookBase": "giantspider-poison", "lookVariant": "", "hair": "", "beard": "", "size": 5, "desc": "Urax je obrovský tmavý pavouk s tělem pokrytým štětinami."},
-    {"key": "urxuquer", "cz": "Urxuquer", "en": "Urxuquer", "group": "humanoid+", "note": "pavoukočlověk (lidský trup na pavoučím těle)", "lookBase": "giantspider-black", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Urxuqueři jsou strašliví pavoukolidé, které stvořil jeden z temných bohů, aby mu sloužili a ovládli svět."},
+    {"key": "urxuquer", "cz": "Urxuquer", "en": "Urxuquer", "group": "arthropod", "note": "pavoukočlověk (lidský trup na pavoučím těle)", "lookBase": "giantspider-black", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Urxuqueři jsou strašliví pavoukolidé, které stvořil jeden z temných bohů, aby mu sloužili a ovládli svět."},
     {"key": "uth", "cz": "Uth", "en": "Uth", "group": "biped", "note": "dvounohý ještěr", "lookBase": "turkey-1", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Uthové jsou draví tvorové, kteří žijí v malých stádech nebo samotářsky na savanách a v řídkých listnatých lesích."},
     {"key": "vampire-bat-form", "cz": "Upír (v podobě netopýra)", "en": "Vampire (bat form)", "group": "flyer", "note": "", "lookBase": "dragonfly", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Upír ve formě netopýra."},
     {"key": "vampire-cloud-form", "cz": "Upír (v podobě oblaku)", "en": "Vampire (cloud form)", "group": "amorphous", "note": "oblak / jev (částice)", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Upír ve formě oblaku mlhy."},
@@ -335,7 +340,7 @@ export const BESTIARY = [
     {"key": "vampire-wolf-form", "cz": "Upír (v podobě vlka)", "en": "Vampire (wolf form)", "group": "canine", "note": "", "lookBase": "direwolf", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Upír ve formě vlka."},
     {"key": "vampire", "cz": "Upír", "en": "Vampire", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base09", "hair": "hair03", "beard": "hair03", "size": null, "desc": "Upír patří mezi vládnoucí nemrtvé: je to duše, která si dokáže udržet či znovu vytvořit vlastní tělesnou schránku."},
     {"key": "vermin", "cz": "Havěť", "en": "Vermin", "group": "amorphous", "note": "roj krys (několik malých zvířat na poli)", "lookBase": "giantrat", "lookVariant": "", "hair": "", "beard": "", "size": -8, "desc": "Havěť zahrnuje krysy, potkany nebo jiné., poměrně neškodné tvory, kteří jednotlivě nemají šanci ohrozit postavy."},
-    {"key": "vestrad", "cz": "Vestrad", "en": "Vestrad", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": null, "desc": "Vestrad, známý také jako Bleskohřmot, je démonická bytost z jiskřící energie, která se probouzí z temných hlubin a vládne moci blesků."},
+    {"key": "vestrad", "cz": "Vestrad", "en": "Vestrad", "group": "elemental", "note": "tělo z energie / ohně / vody (průsvitné)", "lookBase": "male", "lookVariant": "base-blue", "hair": "", "beard": "", "size": null, "desc": "Vestrad, známý také jako Bleskohřmot, je démonická bytost z jiskřící energie, která se probouzí z temných hlubin a vládne moci blesků."},
     {"key": "waaz", "cz": "Waaz", "en": "Waaz", "group": "plant", "note": "rostlina / houba / kámen", "lookBase": "carniverous-plant", "lookVariant": "", "hair": "", "beard": "", "size": 1, "desc": "Waaz je podivná houba, která roste v jeskyních, temných lesích a bažinách."},
     {"key": "war-horse", "cz": "Kůň válečný", "en": "War Horse", "group": "hoofed", "note": "je – ProceduralHorse (zatím vždy se sedlem)", "lookBase": "horse-1", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Válečný kůň je obzvlášť silný kůň vycvičený pro boj."},
     {"key": "warrior-1", "cz": "Válečník I", "en": "Warrior I", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad válečníka, který nemá zásadní zaměření."},
@@ -344,7 +349,7 @@ export const BESTIARY = [
     {"key": "warrior-4", "cz": "Válečník IV", "en": "Warrior IV", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad elitního válečníka, který nemá zásadní zaměření."},
     {"key": "warrior-5", "cz": "Válečník V", "en": "Warrior V", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad elitního válečníka, který nemá zásadní zaměření."},
     {"key": "water-elemental-giant", "cz": "Vodní elementál obří", "en": "Giant Water Elemental", "group": "amorphous", "note": "vodní sloup / vlna", "lookBase": "fiend-blue", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Pokud do našeho světa pronikne tento elementál, bude běsnit jako bouře."},
-    {"key": "water-elemental-greater", "cz": "Vodní elementál vyšší", "en": "Greater Water Elemental", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "brute-blue", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": ""},
+    {"key": "water-elemental-greater", "cz": "Vodní elementál vyšší", "en": "Greater Water Elemental", "group": "elemental", "note": "tělo z energie / ohně / vody (průsvitné)", "lookBase": "brute-blue", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": ""},
     {"key": "water-elemental", "cz": "Vodní elementál", "en": "Water Elemental", "group": "amorphous", "note": "vodní sloup / vlna", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": ""},
     {"key": "werewolf-elder", "cz": "Vlkodlak prastarý", "en": "Elder Werewolf", "group": "humanoid+", "note": "vlčí hlava (hlava z vlka V29) na humanoidovi", "lookBase": "black-walker", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Prastaří vlkodlaci jsou velmi vzácní, mocní a nesmírně nebezpeční."},
     {"key": "werewolf", "cz": "Vlkodlak", "en": "Werewolf", "group": "humanoid+", "note": "vlčí hlava (hlava z vlka V29) na humanoidovi", "lookBase": "black-walker", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Lykantropie je božský dar Lianey: dlouhověkost, schopnost měnit se ve zvíře a odolávat zranění i nemocem."},

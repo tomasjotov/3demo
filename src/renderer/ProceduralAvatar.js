@@ -5,6 +5,7 @@ import { bodyFor } from '../avatar/bodies.js';
 import { layerBuilder, gearOf, hairColorOf } from '../avatar/layers.js';
 import { presetLook, PRESET_NAMES, lookSignature } from '../avatar/looks.js';
 import { boneMats, bonePelvis, boneLeg, boneTorso, boneArm, boneNeck, boneSkull, jawTarget, undeadFace, fleshRibs, mummyWraps } from '../avatar/undead.js';
+import { beastSkinMat, beastLeg, beastHead, buildBeast, animateBeast } from '../avatar/beastParts.js';
 
 /*
  * ProceduralAvatar — runtime low-poly humanoid composed of LAYERS like the 2D sprite
@@ -26,6 +27,9 @@ import { boneMats, bonePelvis, boneLeg, boneTorso, boneArm, boneNeck, boneSkull,
  *
  * The bare body comes from avatar/bodies.js (lookBase/lookVariant), each layer key adds meshes
  * to the joints (avatar/layers.js). Weapon and shield layers also choose the combat poses.
+ * Monster bodies of the bestiary add parts on the same joints (avatar/beastParts.js): wings, animal heads,
+ * goat / digitigrade legs, a fish tail instead of legs, horns, tongue, tendrils …; their arm / leg lengths,
+ * hunch, knuckle walk and hovering adjust the poses below.
  *
  * Every animation state produces a *pose* (flat object of joint angles).
  * State changes cross-fade from a snapshot of the previous pose, so cyclic
@@ -143,6 +147,9 @@ export class ProceduralAvatar {
         this.type = preset ? typeOrLook : (look.base || 'male');
         this.body = bodyFor(look.base, look.variant);
         if (look.belly) this.body.belly = true;
+        this.legK = this.body.leg || 1;                 // leg / arm length of monster bodies
+        this.armK = this.body.arm || 1;
+        this.hipY = HIP_Y - .78 * (1 - this.legK);     // ankles stay on the ground
         this.root = new THREE.Group();
         this.root.name = `avatar-${this.type}`;
         this.scale = opts.scale || look.scale || this.body.scale || 1;
@@ -173,8 +180,8 @@ export class ProceduralAvatar {
 
     // ---------------------------------------------------------------- rig + bare body
     buildRig() {
-        const b = this.body, J = this.j, k = b.limb || 1;
-        const skin = mat(b.skin), under = b.underwear != null ? mat(b.underwear) : skin;
+        const b = this.body, J = this.j, k = b.limb || 1, L = this.legK, A = this.armK;
+        const skin = b.skinTex ? beastSkinMat(b) : mat(b.skin), under = b.underwear != null ? mat(b.underwear) : skin;
         const add = (parent, g, m, x = 0, y = 0, z = 0) => {
             const mesh = new THREE.Mesh(g, m);
             mesh.position.set(x, y, z);
@@ -191,19 +198,20 @@ export class ProceduralAvatar {
             return g;
         };
         this.dims = b.female ? { chestR: .228, waistR: .18, shoulderX: .262, hipX: .118 } : { chestR: .25, waistR: .2, shoulderX: .285, hipX: .112 };
-        const D = this.dims;
+        if (b.bulk) for (const key in this.dims) this.dims[key] *= b.bulk;      // broad monster torso (armour layers follow)
+        const D = this.dims, bulk = b.bulk || 1;
         const M = b.bone ? boneMats(b) : null;           // skeleton: bones instead of the flesh body (avatar/undead.js)
 
         J.body = grp(this.root);
-        J.pelvis = grp(J.body, 0, HIP_Y, 0);
+        J.pelvis = grp(J.body, 0, this.hipY, 0);
 
         // pelvis (underwear) -------------------------------------------------
         if (b.bone) {
             bonePelvis(add, J, b, D, M);
         } else {
-            add(J.pelvis, G.cyl(.19, b.female ? .215 : .205, .2, 12), under, 0, -.02, 0).scale.z = .8;
+            add(J.pelvis, G.cyl(.19, b.female ? .215 : .205, .2, 12), under, 0, -.02, 0).scale.set(bulk, 1, .8 * bulk);
         }
-        if (b.tail) {
+        if (b.tail === true) {
             let seg = J.pelvis, r = .07;
             J.tail = [];
             for (let i = 0; i < 5; i++) {
@@ -219,14 +227,16 @@ export class ProceduralAvatar {
         for (const side of [1, -1]) {
             const s = side === 1 ? 'l' : 'r';
             const hip = grp(J.pelvis, D.hipX * side, -.05, 0);
-            const knee = grp(hip, 0, -.4, 0);
-            const ankle = grp(knee, 0, -.38, 0);
+            const knee = grp(hip, 0, -.4 * L, 0);
+            const ankle = grp(knee, 0, -.38 * L, 0);
             J[s + 'Hip'] = hip; J[s + 'Knee'] = knee; J[s + 'Ankle'] = ankle;
             if (b.bone) { boneLeg(add, J, s, side, M); continue; }
+            if (b.legs === 'fish') { hip.visible = false; continue; }               // fish tail instead (beastParts)
+            if (b.legs) { beastLeg(add, J, s, side, b, b.legColor ? mat(b.legColor) : skin, k, L); continue; }
             add(hip, G.sph(.098 * k, 10, 8), under);
-            add(hip, G.cyl(.094 * k, .074 * k, .4, 10), skin, 0, -.2, 0);
+            add(hip, G.cyl(.094 * k, .074 * k, .4 * L, 10), skin, 0, -.2 * L, 0);
             add(knee, G.sph(.074 * k, 10, 8), skin);
-            add(knee, G.cyl(.07 * k, .057 * k, .36, 10), skin, 0, -.18, 0);
+            add(knee, G.cyl(.07 * k, .057 * k, .36 * L, 10), skin, 0, -.18 * L, 0);
             add(ankle, G.box(.11, .07, .23), skin, 0, -.055, .05);
         }
 
@@ -249,14 +259,14 @@ export class ProceduralAvatar {
         for (const side of [1, -1]) {
             const s = side === 1 ? 'l' : 'r';
             const sh = grp(J.spine, D.shoulderX * side, .38, 0, 'XZY');
-            const el = grp(sh, 0, -.26, 0);
-            const hand = grp(el, 0, -.25, 0);
+            const el = grp(sh, 0, -.26 * A, 0);
+            const hand = grp(el, 0, -.25 * A, 0);
             J[s + 'Sh'] = sh; J[s + 'El'] = el; J[s + 'Hand'] = hand;
             if (b.bone) { boneArm(add, J, s, side, M); continue; }
             add(sh, G.sph(.088 * k, 10, 8), skin);
-            add(sh, G.cyl(.072 * k, .06 * k, .25, 10), skin, 0, -.125, 0);
+            add(sh, G.cyl(.072 * k, .06 * k, .25 * A, 10), skin, 0, -.125 * A, 0);
             add(el, G.sph(.06 * k, 8, 6), skin);
-            add(el, G.cyl(.058 * k, .05 * k, .23, 10), skin, 0, -.115, 0);
+            add(el, G.cyl(.058 * k, .05 * k, .23 * A, 10), skin, 0, -.115 * A, 0);
             add(hand, G.sph(.058, 10, 8), skin, 0, -.025, .005).scale.set(.95, 1.1, 1.15);
             add(hand, G.sph(.026, 6, 5), skin, -.045 * side, -.005, .04);             // thumb
         }
@@ -277,6 +287,15 @@ export class ProceduralAvatar {
             boneSkull(add, grp, J, M);
             return;
         }
+        this.beast = b.beast ? {} : null;               // parts state of a bestiary body (avatar/beastParts.js)
+        if (b.head) beastHead(add, grp, J, b, skin, this.beast);       // animal head / skull / none instead of the face
+        else this.buildFace(add, grp, b, skin, F);
+        if (this.beast) buildBeast(add, grp, J, b, D, skin, this.beast);
+    }
+
+    // Human face (also goblins, orcs, demons, undead flesh) in the face group F.
+    buildFace(add, grp, b, skin, F) {
+        const J = this.j;
         add(J.neck, G.cyl(.072, .085, .16, 10), skin, 0, .05, 0);
         add(F, G.sph(.2, 18, 14), skin).scale.set(1, 1.04, .94);
         add(F, G.sph(.13, 12, 8, 0, TAU, Math.PI * .5, Math.PI * .5), skin, 0, -.07, .045).scale.set(1.05, .9, 1);
@@ -287,7 +306,8 @@ export class ProceduralAvatar {
             if (!b.sockets) {
                 const eye = grp(F, .074 * side, .02, .158);
                 add(eye, G.sph(.042, 10, 8), mat(b.eyeWhite, { roughness: .4 }));
-                add(eye, G.sph(.024, 8, 6), mat(b.eye, { roughness: .3 }), 0, 0, .03);
+                add(eye, G.sph(.024, 8, 6), b.glowEyes ? mat(b.glowEyes, { emissive: b.glowEyes, emissiveIntensity: 2.4, roughness: .3 })
+                    : mat(b.eye, { roughness: .3 }), 0, 0, .03);
                 add(eye, G.sph(.011, 6, 4), mat(0x0d0d0f), 0, 0, .049);
                 J.eyes.push(eye);
                 const brow = add(F, G.box(.085, .02, .022), mat(b.brow), .076 * side, .084, .18);
@@ -305,8 +325,8 @@ export class ProceduralAvatar {
             }
         }
         if (!b.nasal) add(F, G.cyl(.012, .034, .085, 6), skin, 0, -.02, .2).rotation.x = .35;   // nose
-        if (!b.sockets) add(F, G.box(.075, .014, .012), mat(0x6a3030), 0, -.092, .178);          // mouth
-        if (b.wraps) mummyWraps(add, J, b, D);
+        if (!b.sockets && !b.fangs) add(F, G.box(.075, .014, .012), mat(0x6a3030), 0, -.092, .178);   // mouth (fangs: beastParts)
+        if (b.wraps) mummyWraps(add, J, b, this.dims);
     }
 
     buildFx() {
@@ -343,7 +363,8 @@ export class ProceduralAvatar {
         this.layerObjects = [];
         this.j.cape = null;
 
-        const layers = look.layers || [];
+        const B = this.body;                            // animal heads wear no hair, hooves / paws / fish tails no shoes
+        const layers = (look.layers || []).filter(k => !(B.head && (k.startsWith('hair') || k.startsWith('beard'))) && !(B.legs && k.startsWith('feet')));
         const J = this.j, objs = this.layerObjects, tint = look.tint || {};
         const hairKey = layers.find(k => k.startsWith('hair'));
         const helmetKey = layers.find(k => k.startsWith('helmet-'));
@@ -581,6 +602,7 @@ export class ProceduralAvatar {
                 ? { lShX: -.32 + swing, lShY: 0, lShZ: .2, lElX: -.55 }
                 : { lShX: -.55 + swing, lShY: .15, lShZ: .22, lElX: -1.1 });
         }
+        if (this.beast) this.beastPose(P, state);
         // In the saddle every action (attack, defence, hit …) keeps the legs around the horse.
         if (c.mountedOn && state !== 'ride') Object.assign(P, SEATED);
 
@@ -603,6 +625,33 @@ export class ProceduralAvatar {
             P.spineY = tgt.spineY + (state === 'walk' || state === 'run' ? P.spineY * .4 : 0);
         }
         return P;
+    }
+
+    // Posture of monster bodies in the upright states: hunch, knuckle walk, hovering, gliding on a fish tail.
+    beastPose(P, state) {
+        const b = this.body;
+        if (state === 'kneel' || state === 'lie' || state === 'death' || state === 'ride') return;
+        const moving = state === 'walk' || state === 'run';
+        if (b.hunch) {
+            const h = b.hunch;
+            P.spineX += h; P.neckX -= h * .45; P.headX -= h * .5; P.hipsY -= h * .1;
+            P.lHipX -= h * .35; P.rHipX -= h * .35; P.lKnX += h * .6; P.rKnX += h * .6; P.lAnX -= h * .25; P.rAnX -= h * .25;
+        }
+        if (b.gait === 'knuckle' && moving) {                // long arms swing like front legs
+            const s = Math.sin(this.phase), run = state === 'run';
+            Object.assign(P, { spineX: run ? 1.0 : .85, neckX: -.35, headX: -.55, lShZ: .18, rShZ: -.18, lElX: -.1, rElX: -.1,
+                lShX: -.85 + s * .5, rShX: -.85 - s * .5 });
+            P.hipsY -= .08;
+            P.wpnX = 1.15 - (P.rShX + P.rElX);
+        }
+        if (b.hover) {                                       // floats above the ground, feet hanging
+            P.bodyY += b.hover + Math.sin((this.time + this.offset) * 2.2) * .04;
+            P.lHipX *= .35; P.rHipX *= .35; P.lKnX = P.lKnX * .4 + .25; P.rKnX = P.rKnX * .4 + .35; P.lAnX = .5; P.rAnX = .5;
+        }
+        if (b.legs === 'fish') {                             // slides on the tail: no bobbing, the hips sway
+            P.hipsY = moving ? Math.sin(this.phase * 2) * .015 : P.hipsY * .5;
+            if (moving) { P.hipsRY = Math.sin(this.phase * 1.5) * .12; P.spineZ += Math.sin(this.phase * 1.5) * .05; }
+        }
     }
 
     attackKeys() {
@@ -652,7 +701,7 @@ export class ProceduralAvatar {
         const J = this.j;
         J.body.position.set(0, P.bodyY, P.bodyZ);
         J.body.rotation.x = P.bodyRX;
-        J.pelvis.position.y = HIP_Y + P.hipsY;
+        J.pelvis.position.y = this.hipY + P.hipsY * this.legK;
         J.pelvis.rotation.set(P.hipsRX, P.hipsRY, P.hipsRZ);
         J.spine.rotation.set(P.spineX, P.spineY, P.spineZ);
         J.neck.rotation.x = P.neckX;
@@ -687,7 +736,7 @@ export class ProceduralAvatar {
     solveArm(side, target, pole, w) {
         const J = this.j, sh = J[side + 'Sh'], el = J[side + 'El'];
         const t = _ik.copy(target).sub(sh.position);
-        const a = .26, b = .28;                                 // upper arm, forearm + palm
+        const a = .26 * this.armK, b = .28 * this.armK;         // upper arm, forearm + palm
         const d = THREE.MathUtils.clamp(t.length(), .08, a + b - .002);
         const cosE = THREE.MathUtils.clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1);
         const elX = -(Math.PI - Math.acos(cosE));               // bend forward (negative X like the poses)
@@ -819,6 +868,8 @@ export class ProceduralAvatar {
             const want = jawTarget(state, t, p);
             J.jaw.rotation.x += (want - J.jaw.rotation.x) * (1 - Math.exp(-18 * dt));
         }
+
+        animateBeast(this, state, c, dt);                // wings, fish tail, tongue, animal jaw … (avatar/beastParts.js)
 
         // Attack trail.
         const fx = this.fx;

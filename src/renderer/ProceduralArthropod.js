@@ -3,6 +3,7 @@ import { G, mat } from '../avatar/kit.js';
 import { QuadrupedRig, BASE_STAND, smooth, furTexture } from './QuadrupedRig.js';
 import { scorpionTail, glowMat } from './creatureParts.js';
 import { haloSprite } from './LightProps.js';
+import { humanTorso, poseTorsoArms } from './hybridParts.js';
 
 /*
  * ProceduralArthropod — spiders, insects, scorpions, crabs and flying insects on one rig with N jointed legs.
@@ -27,6 +28,7 @@ export const ARTHROPOD_VARIANTS = {
     sorog: { kind: 'spider', color: 0x7a5a38, mark: 0x3a2818, eye: 0x100808, spots: true, bristle: true, scale: 1.5 },
     urax: { kind: 'spider', color: 0x1a1c28, mark: 0x2a3048, eye: 0xff2010, glow: true, bristle: true, scale: 1.5 },
     xur: { kind: 'spider', color: 0x23408a, mark: 0x14244a, eye: 0x080810, gloss: true, scale: .65 },
+    urxuquer: { kind: 'spider', color: 0x24242e, mark: 0x6a1a22, eye: 0x100808, torso: true, scale: 1.45 },
     zeghar: { kind: 'spider', color: 0x6a645c, mark: 0x3a3630, eye: 0x080808, spots: true, scale: .85 },
     ant: { kind: 'insect', color: 0x3a2014, mark: 0x5a3020, eye: 0x080606, ant: true, scale: 1 },
     'beetle-1': { kind: 'insect', color: 0x14161a, mark: 0x2a2e36, eye: 0x080808, beetle: true, horn: 'rhino', scale: 1.2 },
@@ -176,6 +178,11 @@ export class ProceduralArthropod extends QuadrupedRig {
             const dir = new THREE.Vector3(Math.sin(a) * Math.sqrt(1 - y * y), y, Math.cos(a) * Math.sqrt(1 - y * y));
             const br = add(J.abd, G.cone(ab * .03, ab * .2, 3), M.chitin, dir.x * r * .95, dir.y * r * .8 + ab * .05, az + dir.z * r * 1.1);
             br.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+        }
+        if (c.torso) {                                                                        // urxuquer: gaunt human torso instead of the head
+            this.torso = humanTorso(J.head, { skin: 0xb8b0a8, eye: 0xff2a1a, glowEye: true, gaunt: true, crown: 0x1a1a22, plates: 0x22222c, claws: true, ears: 'pointy', scale: 1 / c.scale * 1.35 });
+            this.torso.T.position.set(0, b * .2, -b * .2);
+            return;
         }
         // head: eyes, fangs, pedipalps
         const eyeM = c.glow ? mat(c.eye, { emissive: c.eye, emissiveIntensity: 2, roughness: .2 }) : mat(c.eye, { roughness: .08, metalness: .3 });
@@ -432,6 +439,11 @@ export class ProceduralArthropod extends QuadrupedRig {
                 seg.rotation.x = (dead ? .1 : .55) + q.sting * (i > 3 ? .45 : -.12) + Math.sin(t * 1.8 - i * .5) * .03;
                 seg.rotation.y = Math.sin(t * 1.2 - i * .4) * .04;
             });
+        }
+        if (this.torso) {                                                                               // urxuquer: arms of the torso
+            const mode = dead ? 'dead' : state === 'attack' ? 'attack' : state === 'defend' ? 'defend' : state === 'hit' ? 'hit' : g > .3 ? 'walk' : 'idle';
+            poseTorsoArms(this.torso, mode, state === 'attack' ? Math.max(0, Math.min(1, (1.1 - q.front) / .8)) : 0, t);
+            this.torso.T.rotation.x = -q.bx * .7;
         }
         if (J.wings) {                                                                                  // buzzing wings, hovering bob
             const buzz = grounded ? 0 : 1;

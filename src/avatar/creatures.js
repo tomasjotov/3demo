@@ -6,7 +6,8 @@
  * the lookBase is used only when there is no key (characters, older server).
  * Overview of the bestiary and the rigs still missing: docs/bestiar-modely.md.
  *
- *   creatureFor(beast, lookBase) → { rig: 'canine' | 'feline' | 'bear' | 'rat' | 'hoofed' | 'pachyderm' | 'reptile' | 'biped', variant } | null
+ *   creatureFor(beast, lookBase) → { rig: 'canine' | 'feline' | 'bear' | 'rat' | 'hoofed' | 'pachyderm' | 'reptile' | 'biped' | 'arthropod'
+ *       | 'serpent' | 'centaur' | 'flyer' | 'dragon' | 'elemental' | 'aquatic' | 'amorphous' | 'plant', variant } | null
  *   (rigs: renderer/creatureRigs.js)
  *   beastBody(beast) → lookBase of the humanoid body to use instead of the 2D one | null
  */
@@ -82,7 +83,94 @@ const BEASTS = {
     'giant-crab': 'arthropod:giant-crab', // Obří krab
     'giant-spider-crab': 'arthropod:giant-spider-crab', // Giga Krabopavouk
     aku: 'arthropod:aku',                 // Aku
-    sirii: 'arthropod:sirii'              // Sirii
+    sirii: 'arthropod:sirii',             // Sirii
+    urxuquer: 'arthropod:urxuquer',       // Urxuquer (pavouk s lidským trupem)
+    // ProceduralSerpent
+    python: 'serpent:python',              // Python
+    'crystal-snake': 'serpent:crystal-snake', // Křišťálový had
+    'sea-serpent': 'serpent:sea-serpent',  // Mořský had
+    'goblin-snake': 'serpent:goblin-snake', // Skřetohad
+    'winged-serpent': 'serpent:winged-serpent', // Okřídlený had
+    hydra: 'serpent:hydra',                // Hydra
+    'forest-wurm': 'serpent:forest-wurm',  // Lesní červ
+    'serpent-guardian': 'serpent:serpent-guardian', // Hadí strážce
+    aakf: 'serpent:aakf',                  // Aakf
+    'corpse-wurm': 'serpent:corpse-wurm',  // Mrtvočerv
+    'leech-shuddery': 'serpent:leech-shuddery', // Pijavice hrozivá
+    sandworm: 'serpent:sandworm',          // Písečný červ
+    'swamp-worm': 'serpent:swamp-worm',    // Bahenní červ
+    'cave-slug': 'serpent:cave-slug',      // Slimák jeskynní
+    'maggot-lair-1': 'serpent:maggot-lair-1', // Jeskynní červ
+    'maggot-lair-2': 'serpent:maggot-lair-2', // Jeskynní červ - matka
+    nugotha: 'serpent:nugotha',            // Nugotha
+    sterenda: 'serpent:sterenda',          // Sterenda
+    // ProceduralCentaur
+    centaur: 'centaur:centaur',            // Kentaur
+    // ProceduralFlyer
+    eagle: 'flyer:eagle',                  // Orel královský
+    phoenix: 'flyer:phoenix',              // Fénix
+    gryffon: 'flyer:gryffon',              // Gryf
+    harpy: 'flyer:harpy',                  // Harpyje
+    'giant-bat': 'flyer:giant-bat',        // Netopýr obří
+    'vampire-bat-form': 'flyer:vampire-bat-form', // Upír (v podobě netopýra)
+    'vampire-elder-bat-form': 'flyer:vampire-elder-bat-form', // Upír prastarý (v podobě netopýra)
+    // ProceduralDragon
+    dragon: 'dragon:dragon',               // Drak
+    'dragon-young': 'dragon:dragon-young', // Drak mladý
+    'dragon-elder': 'dragon:dragon-elder', // Drak prastarý
+    dragonlich: 'dragon:dragonlich',       // Drakolich
+    'skeleton-dragon': 'dragon:skeleton-dragon', // Kostlivý drak
+    wyvern: 'dragon:wyvern',               // Wyvern
+    gargoyle: 'dragon:gargoyle',           // Gargoyla
+    // ProceduralElemental
+    'earth-elemental': 'elemental:earth-elemental', // Zemní elementál
+    'earth-elemental-greater': 'elemental:earth-elemental-greater', // Zemní elementál vyšší
+    'earth-elemental-giant': 'elemental:earth-elemental-giant', // Zemní elementál obří
+    golem: 'elemental:golem',              // Golem
+    automaton: 'elemental:automaton',      // Automaton
+    'fire-elemental-greater': 'elemental:fire-elemental-greater', // Ohnivý elementál vyšší
+    'fire-elemental-giant': 'elemental:fire-elemental-giant', // Ohnivý elementál obří
+    'water-elemental-greater': 'elemental:water-elemental-greater', // Vodní elementál vyšší
+    'air-elemental-greater': 'elemental:air-elemental-greater', // Vzdušný elementál vyšší
+    vestrad: 'elemental:vestrad',          // Vestrad
+    'swarm-devil': 'elemental:swarm-devil', // Děsivý roj
+    'maggot-man': 'elemental:maggot-man',  // Červicec
+    // ProceduralAquatic
+    shark: 'aquatic:shark',                // Žralok
+    'octopuss-1': 'aquatic:octopuss-1',    // Chobotnice obří
+    'octopuss-2': 'aquatic:octopuss-2',    // Chobotnice ďábelská
+    'octopuss-3': 'aquatic:octopuss-3',    // Horor z hlubin
+    kraken: 'aquatic:kraken',              // Kraken
+    klobg: 'aquatic:klobg',                // Klobg
+    manyhead: 'aquatic:manyhead',          // Mnohohlavec
+    'illusion-beast': 'aquatic:illusion-beast', // Iluzní tvor
+    'illusion-beast-2': 'aquatic:illusion-beast-2', // Iluzní tvor II
+    // ProceduralAmorphous
+    'air-elemental': 'amorphous:air-elemental', // Vzdušný elementál
+    'air-elemental-giant': 'amorphous:air-elemental-giant', // Vzdušný elementál obří
+    'water-elemental': 'amorphous:water-elemental', // Vodní elementál
+    'water-elemental-giant': 'amorphous:water-elemental-giant', // Vodní elementál obří
+    'fire-elemental': 'amorphous:fire-elemental', // Ohnivý elementál
+    'cave-slime': 'amorphous:cave-slime',  // Sliz, jeskynní
+    'living-jelly': 'amorphous:living-jelly', // Oživlý rosol
+    chasfon: 'amorphous:chasfon',          // Chasfon
+    'cloud-form': 'amorphous:cloud-form',  // Přeměna na oblak
+    'vampire-cloud-form': 'amorphous:vampire-cloud-form', // Upír (v podobě oblaku)
+    'vampire-elder-cloud-form': 'amorphous:vampire-elder-cloud-form', // Upír prastarý (v podobě oblaku)
+    vermin: 'amorphous:vermin',            // Havěť
+    // ProceduralPlant
+    drischea: 'plant:drischea',            // Drischea
+    gwanga: 'plant:gwanga',                // Gwanga
+    'hungry-wine': 'plant:hungry-wine',    // Hladové víno
+    mirocus: 'plant:mirocus',              // Mirocus
+    rack: 'plant:rack',                    // Skřipec
+    skorfan: 'plant:skorfan',              // Skorfan
+    suotix: 'plant:suotix',                // Suotix
+    waaz: 'plant:waaz',                    // Waaz
+    'evil-tree': 'plant:evil-tree',        // Oživlý strom
+    'tree-folk': 'plant:tree-folk',        // Stromový lid
+    'nature-wrath': 'plant:nature-wrath',  // Zloba přírody
+    'forest-phantom': 'plant:forest-phantom'  // Lesní přízrak
 };
 const spec = v => v.includes(':') ? { rig: v.split(':')[0], variant: v.split(':')[1] } : { rig: 'canine', variant: v };
 
@@ -102,9 +190,19 @@ export function creatureFor(beast, lookBase) {
 
 export const CREATURE_BEASTS = Object.keys(BEASTS);
 
-// Humanoid beasts whose 2D sprite is a stand-in of another body: bestiary key → body of avatar/bodies.js.
+// Humanoid beasts whose 2D sprite is a stand-in of another body: bestiary key → body of avatar/bodies.js
+// (monster bodies of avatar/beastBodies.js carry the bestiary key as their name).
+const BEAST_BODY_KEYS = [
+    // gugs: demons of wrath, decay, gluttony and possession I–V
+    ...['anger', 'decay', 'gluttony', 'possession'].flatMap(g => [1, 2, 3, 4, 5].map(i => `demon-${g}-${i}`)),
+    'demon-pride-1', 'demon-pride-2', 'demon-pride-3', 'demon-pride-4', 'demon-pride-5',   // succubi / incubi (wings, horns, tail)
+    'demon-devourer-3', 'demon-devourer-4', 'demon-devourer-5',                           // draunug lords (wings, horns, maw)
+    'fairy', 'fallen-angel', 'faun', 'cobold', 'werewolf', 'werewolf-elder', 'minotaur',  // wings, goat legs, wolf / bull heads
+    'headless', 'mermaid', 'triton', 'ubeg', 'gorilla'                                     // no head, fish tails, insect head, ape
+];
 const BEAST_BODIES = {
-    'skeleton-giant': 'skeleton-giant'    // Kostlivý obr (2D: troll)
+    'skeleton-giant': 'skeleton-giant',   // Kostlivý obr (2D: troll)
+    ...Object.fromEntries(BEAST_BODY_KEYS.map(k => [k, k]))
 };
 export function beastBody(beast) {
     return beast ? BEAST_BODIES[String(beast).replace(/^beast-/, '')] || null : null;

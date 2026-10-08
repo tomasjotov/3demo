@@ -64,7 +64,8 @@ export const OBJECT_CATALOG = [
     { id: 'vase01', label: 'Váza', group: 'props', legacy: true, rot: 'random' },
     // light: shines by itself (LightRenderer); power / radius must match hof PlanLight.objectPower (rules)
     { id: 'lantern01', label: 'Lucerna', group: 'props', legacy: true, rot: 'random', light: { type: 'LANTERN', power: 10, radius: 10, y: .16 } },
-    { id: 'candlestick01', label: 'Svícen', group: 'props', legacy: true, rot: 'random', light: { type: 'CANDLE', power: 4, radius: 4, y: .5 } }
+    { id: 'candlestick01', label: 'Svícen', group: 'props', legacy: true, rot: 'random', light: { type: 'CANDLE', power: 4, radius: 4, y: .5 } },
+    { id: 'fire01', label: 'Oheň', group: 'props', sprite2d: 'candlestick01', rot: 'random', light: { type: 'FIRE', power: 10, radius: 10, y: .35 } }
 ];
 
 export const CATALOG_BY_ID = Object.fromEntries(OBJECT_CATALOG.map(o => [o.id, o]));

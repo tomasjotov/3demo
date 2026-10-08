@@ -11,8 +11,13 @@
  *     limb,                                      limb thickness multiplier
  *     horns, tail, ears: 'pointy', snout,        species extras
  *     humanoid: false                            → not a humanoid rig (horse, …)
+ *     + monster parts of the bestiary bodies (avatar/beastBodies.js, built by avatar/beastParts.js):
+ *       wings, head: 'wolf'|'bull'|'insect'|'ape'|'skull'|'none', legs: 'goat'|'digi'|'fish', horn, tongue, paunch,
+ *       skinTex (lava cracks, rot, fur …), smoke, spikes, claws, bulk / arm / leg lengths, hunch …
  *   }
+ * Bestiary bodies are found by their exact name (the key of a bestiary monster, see creatures.js BEAST_BODIES).
  */
+import { BEAST_LOOKS } from './beastBodies.js';
 
 // lookVariant base01, base02, … of male / female → skin tone.
 export const SKIN_TONES = [0xdba77c, 0xc89469, 0xcf9a72, 0xc18a62, 0xe8bf98, 0xa8744e, 0x8a5a3a, 0x6b4430];
@@ -77,6 +82,9 @@ const NON_HUMANOID = ['buck', 'doe', 'cat-', 'dog-', 'hound', 'wolf', 'direwolf'
 
 export function bodyFor(lookBase = 'male', lookVariant = '') {
     const base = String(lookBase || 'male');
+    if (BEAST_LOOKS[base]) {                         // monster body of the bestiary (loincloth unless it sets underwear)
+        return { ...HUMAN, underwear: 0x5a4636, base, ...BEAST_LOOKS[base], humanoid: true, beast: true };
+    }
     // animal sprites first: 'giantrat', 'giantspider-*' or 'giant-dark-beast' must not become the humanoid 'giant'
     const animal = NON_HUMANOID.some(p => base.startsWith(p));
     const hit = animal ? null : BASES.find(([p]) => base === p || base.startsWith(p));
