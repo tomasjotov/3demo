@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 //          http://localhost:5173/game.html?server   live hof
 //          http://localhost:5173/game.html?mock     replays public/fixtures/*
 // Build:   npm run build →   dist/  (relative paths – upload the folder anywhere,
-//          e.g. https://www.hrdinovefantasy.cz/demo/three1/)
+//          e.g. https://www.hrdinovefantasy.cz/demo/hof3d/)
 export default defineConfig({
     base: './',
     server: {

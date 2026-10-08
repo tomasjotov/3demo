@@ -2,7 +2,7 @@
 //   objectsBase    – URL folder with object models   (tree_oak_1.glb, …)
 //   charactersBase – URL folder with character models (hero.glb, …)
 // Standalone (Vite / static demo): ./assets/models/objects/, ./assets/models/characters/ (public/assets),
-//   relative to the page, so the build works in any folder (e.g. /demo/three1/)
+//   relative to the page, so the build works in any folder (e.g. /demo/hof3d/)
 // Embedded in hof:   <ctx>/assets/objects/,    <ctx>/assets/characters/    (WEB-INF/assets)
 export const config = {
     assetBase: './assets/',

@@ -2,6 +2,8 @@
 
 Výrazně rozšířený základ pro převod 2.5D izometrického RPG na 3D renderer.
 
+**Běžící demo:** https://www.hrdinovefantasy.cz/demo/hof3d/ (obsah složky `deploy/` po `npm run export:demo`)
+
 ## Co prototyp obsahuje
 
 - 2D herní souřadnice `x/y`
@@ -324,11 +326,11 @@ přímou trasu stejně jako server). Klik / Ctrl+klik na jinou postavu = `select
 - Server: `PlanActor.lookBase`, `lookVariant`, `layers`, `positionType`; změna výbavy za běhu avatara převleče.
   `?mock&looks` = záznam s ukázkovými vrstvami.
 
-### V22 – statické demo (https://www.hrdinovefantasy.cz/demo/three1/)
+### V22 – statické demo (https://www.hrdinovefantasy.cz/demo/hof3d/)
 - `index.html` = rozcestník, hra je `game.html` (`?mock`, `?mock&looks`, `?server` jen s Vite proxy / v hof).
 - `npm run export:demo` (`tools/export-demo.mjs`) → `deploy/`: stránky s import mapou, `src/` beze změny, `lib/` (three.js +
   použité addony), `assets/`, `fixtures/`, `hub/`. Bez bundleru, všechny cesty relativní – obsah složky se nahraje do
-  `/demo/three1/` (funguje v jakékoli složce). Alternativně `npm run build` (Vite, `base: './'`) → `dist/`.
+  `/demo/hof3d/` (funguje v jakékoli složce). Alternativně `npm run build` (Vite, `base: './'`) → `dist/`.
 - Modely a záznam se načítají relativně (`./assets/…`, `./fixtures/…`), celé GLB postav jen když je data vyžádají (`c.model`).
 
 ### V23 – obouruční držení zbraně (2H)
@@ -349,7 +351,7 @@ přímou trasu stejně jako server). Klik / Ctrl+klik na jinou postavu = `select
   ruce ani zbraň neprochází trupem, levá ruka sedí na úchopu.
 - Luk se drží za střed rámu (rukojeť), tětiva je na straně střelce, při míření luk stojí svisle. Kuše: luček napříč pažbou.
 - Šatník: lišta animací (klid, chůze, běh, útok, obrana, klek, leh, zásah, smrt), pauza, rychlost, otočení postavy, oběh kamery.
-- Demo se exportuje do `deploy/` (obsah složky se nahraje do `/demo/three1/`).
+- Demo se exportuje do `deploy/` (obsah složky se nahraje do `/demo/hof3d/`).
 
 ### V25 – jízda na koni v hof (arena3d)
 - Jízda je na serveru **poloha** postavy (`PositionType.HORSE_RIDE` / `HORSE_RIDE_RUN`, volí se v HTML aréně v nabídce polohy

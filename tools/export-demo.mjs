@@ -4,7 +4,7 @@
  *
  *   node tools/export-demo.mjs [target dir]          default: deploy/
  *
- * Upload the content of the target folder anywhere, e.g. https://www.hrdinovefantasy.cz/demo/three1/
+ * Upload the content of the target folder anywhere, e.g. https://www.hrdinovefantasy.cz/demo/hof3d/
  * – all paths are relative. Result:
  *   index.html, game.html, wardrobe.html, avatar-viewer.html, object-assets.html,
  *   bestiary.html, creature-test.html                                                 (import map injected)
