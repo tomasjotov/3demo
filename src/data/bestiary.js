@@ -58,7 +58,7 @@ export const BESTIARY_GROUPS = [
  },
  {
   "id": "flyer",
-  "title": "Ptáci, netopýři, létající hmyz",
+  "title": "Ptáci a netopýři",
   "how": "nová kostra s křídly (letí nad polem)"
  },
  {
@@ -68,8 +68,8 @@ export const BESTIARY_GROUPS = [
  },
  {
   "id": "arthropod",
-  "title": "Pavouci, hmyz, štíři, krabi",
-  "how": "jedna kostra s N nohama, varianty těla"
+  "title": "Pavouci, hmyz, štíři, krabi – ProceduralArthropod",
+  "how": "hotovo (V34), včetně létajícího hmyzu"
  },
  {
   "id": "aquatic",
@@ -98,7 +98,7 @@ export const BESTIARY = [
     {"key": "air-elemental-giant", "cz": "Vzdušný elementál obří", "en": "Giant Air Elemental", "group": "amorphous", "note": "vzdušný vír (tornádo)", "lookBase": "fiend-blue", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Pokud se krajinou žene tornádo, vězte, že je to obří vzdušný elementál."},
     {"key": "air-elemental-greater", "cz": "Vzdušný elementál vyšší", "en": "Greater Air Elemental", "group": "humanoid+", "note": "tělo z energie / ohně / vody (průsvitné, částice)", "lookBase": "brute-blue", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Silnější forma vzdušného elementála, kterou je těžší ovládat."},
     {"key": "air-elemental", "cz": "Vzdušný elementál", "en": "Air Elemental", "group": "amorphous", "note": "vzdušný vír (tornádo)", "lookBase": "slime", "lookVariant": "", "hair": "", "beard": "", "size": 2, "desc": "Vzdušný elementál je vzduchový trychtýř vysoký asi dva metry, ve kterém poletuje prach, listí a kamení."},
-    {"key": "aku", "cz": "Aku", "en": "Aku", "group": "flyer", "note": "létající hmyz (vážka, vosa)", "lookBase": "giantbee", "lookVariant": "", "hair": "", "beard": "", "size": -2, "desc": "Aku jsou přerostlí příbuzní včel a vos."},
+    {"key": "aku", "cz": "Aku", "en": "Aku", "group": "arthropod", "note": "létající hmyz (vážka, vosa)", "lookBase": "giantbee", "lookVariant": "", "hair": "", "beard": "", "size": -2, "desc": "Aku jsou přerostlí příbuzní včel a vos."},
     {"key": "ant", "cz": "Mravenec", "en": "Ant", "group": "arthropod", "note": "hmyz (6 nohou)", "lookBase": "giantratdark", "lookVariant": "", "hair": "", "beard": "", "size": -1, "desc": "Obří mravenci žijí a chovají se podobně jako jejich drobní příbuzní, jen jsou mnohem větší – běžně měří kolem metru, někdy i víc."},
     {"key": "automaton", "cz": "Automaton", "en": "Automaton", "group": "humanoid+", "note": "tělo z kamene / kovu (bez oblečení, hranaté)", "lookBase": "brute-dark-brown", "lookVariant": "", "hair": "", "beard": "", "size": 3, "desc": "Automaton dokážou vyrobit jen mistři alchymie a mechaniky."},
     {"key": "banshee", "cz": "Banší", "en": "Banshee", "group": "humanoid", "note": "", "lookBase": "shadow", "lookVariant": "", "hair": "", "beard": "", "size": null, "desc": "Banší je děsivý nehmotný nemrtvý, který vzniká z duše ženy, jejíž smrt provázel hluboký žal, zrada nebo nenaplněná láska."},
@@ -291,7 +291,7 @@ export const BESTIARY = [
     {"key": "shooter-3", "cz": "Střelec III", "en": "Shooter III", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad střelce."},
     {"key": "shooter-4", "cz": "Střelec IV", "en": "Shooter IV", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad střelce."},
     {"key": "shooter-5", "cz": "Střelec V", "en": "Shooter V", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base01", "hair": "hair01", "beard": "hair01", "size": null, "desc": "Příklad střelce."},
-    {"key": "sirii", "cz": "Sirii", "en": "Sirii", "group": "flyer", "note": "létající hmyz (vážka, vosa)", "lookBase": "dragonfly", "lookVariant": "", "hair": "", "beard": "", "size": -2, "desc": "Sirii jsou velké modročerné vážky se čtyřmi nohama, dvěma složenýma očima a žihadlem."},
+    {"key": "sirii", "cz": "Sirii", "en": "Sirii", "group": "arthropod", "note": "létající hmyz (vážka, vosa)", "lookBase": "dragonfly", "lookVariant": "", "hair": "", "beard": "", "size": -2, "desc": "Sirii jsou velké modročerné vážky se čtyřmi nohama, dvěma složenýma očima a žihadlem."},
     {"key": "skeletal-mage", "cz": "Kostlivý kouzelník", "en": "Skeletal Mage", "group": "humanoid", "note": "", "lookBase": "male", "lookVariant": "base-skeleton", "hair": "", "beard": "", "size": null, "desc": "Kostlivý kouzelník vzniká, jak napovídá jméno, z kostí padlého kouzelníka."},
     {"key": "skeleton-dragon", "cz": "Kostlivý drak", "en": "Skeleton Dragon", "group": "dragon", "note": "", "lookBase": "dragon-undead", "lookVariant": "", "hair": "", "beard": "", "size": 10, "desc": "Nekromanti velkého talentu a síly dokážou oživit i kostru samotného draka a donutit ji, aby jim sloužila."},
     {"key": "skeleton-giant", "cz": "Kostlivý obr", "en": "Skeleton Giant", "group": "humanoid", "note": "", "lookBase": "troll", "lookVariant": "", "hair": "", "beard": "", "size": 6, "desc": "Pokud se nekromant nespokojí s obyčejným nemrtvým kostlivcem, může místo něj oživit toto monstrum."},

@@ -4,7 +4,7 @@ import { mat } from '../avatar/kit.js';
 
 /*
  * QuadrupedRig — shared animation of the procedural legged creatures (ProceduralFeline, ProceduralBear, ProceduralRat,
- * ProceduralHoofed / Pachyderm, ProceduralReptile, ProceduralBiped; any number of legs, see init({ legs })).
+ * ProceduralHoofed / Pachyderm, ProceduralReptile, ProceduralBiped, ProceduralArthropod; any number of legs, see init({ legs })).
  * A subclass builds the meshes into the joints and gives the pose tables; this class runs the states,
  * the walk / gallop cycle, idle behaviour and facing. Same interface as ProceduralAvatar: `root`, `j`, `update(c, dt)`.
  *

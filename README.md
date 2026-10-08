@@ -467,3 +467,16 @@ přímou trasu stejně jako server). Klik / Ctrl+klik na jinou postavu = `select
 - `creature-test.html`: `z=` oddálení kamery pro velká zvířata, `view=head|headside|top`.
 - Ukázky: `game.html?beasts` (+ býk, jednorožec, krokodýl, sagat), `bestiary.html`. Bestiář: 125 hotovo / 36 doplněk / 103 chybí;
   ze zvířat zbývají létající (orel, gryf, fénix, netopýři) a vodní tvorové.
+
+### V34 – hmyz, pavouci, štíři, krabi (`ProceduralArthropod.js`)
+- Jeden rig s N článkovanými nohami (dědí z `QuadrupedRig`): kyčel natočená do vějíře a zvednutá nahoru, holeň dolů, chodidlo;
+  nohy jdou ve střídavých sadách (trojnožka / čtyřnožka), přední pár se při útoku a obraně zvedá.
+- Pavouci: `gargantula` (6 nohou, rudě žhnoucí oči, štětiny), `giant-strider` (malé tělo na dlouhých nohou), `rahlog`,
+  `rahlog-queen` (fialově žhnoucí žíly na zadečku), `sorog` (skvrny), `urax`, `xur` (lesklý modrý), `zeghar`. Útok = vzepětí
+  s předníma nohama nahoru → výpad → kousnutí chelicerami.
+- Hmyz: `ant` (kusadla), `beetle-1` (roh nosorožíka), `beetle-2` (kusadla roháče), `beetle-3` (velký roh), `dune-reaper`
+  (dvě kosy místo předních nohou); `mantis` (4 nohy na chůzi, loupeživé přední nohy, úder vymrštěním).
+- Štíři a krabi: `giant-scorpion`, `diamond-scorpion` (krystalový, žhne), klepeta + ocas s žihadlem, který při útoku bodne;
+  `giant-crab` (široký krunýř, oči na stopkách, velká klepeta), `giant-spider-crab` (krabopavouk na dlouhých nohou).
+- Létající: `aku` (vosa) a `sirii` (vážka) se vznášejí s bzučícími křídly, útok = vzlet → střemhlavý výpad s žihadlem / kusadly.
+- Leh = tělo na zemi, nohy roztažené; smrt = na zádech se skrčenýma nohama.

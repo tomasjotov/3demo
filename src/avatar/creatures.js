@@ -61,7 +61,28 @@ const BEASTS = {
     uth: 'biped:uth',                     // Uth
     gauton: 'biped:gauton',               // Gauton
     terrorbird: 'biped:terrorbird',       // Hrůzopták
-    ghat: 'biped:ghat'                    // Ghat
+    ghat: 'biped:ghat',                   // Ghat
+    // ProceduralArthropod
+    gargantula: 'arthropod:gargantula',   // Gargantula
+    'giant-strider': 'arthropod:giant-strider', // Obří sekáč
+    rahlog: 'arthropod:rahlog',           // Rahlog
+    'rahlog-queen': 'arthropod:rahlog-queen', // Rahlog - královna
+    sorog: 'arthropod:sorog',             // Sorog
+    urax: 'arthropod:urax',               // Urax
+    xur: 'arthropod:xur',                 // Xur
+    zeghar: 'arthropod:zeghar',           // Ze’ghar
+    ant: 'arthropod:ant',                 // Mravenec
+    'beetle-1': 'arthropod:beetle-1',     // Brouk I
+    'beetle-2': 'arthropod:beetle-2',     // Brouk II
+    'beetle-3': 'arthropod:beetle-3',     // Brouk III
+    'dune-reaper': 'arthropod:dune-reaper', // Pouštní zabiják
+    mantis: 'arthropod:mantis',           // Kudlanka tropická
+    'giant-scorpion': 'arthropod:giant-scorpion', // Štír obří
+    'diamond-scorpion': 'arthropod:diamond-scorpion', // Diamantový štír
+    'giant-crab': 'arthropod:giant-crab', // Obří krab
+    'giant-spider-crab': 'arthropod:giant-spider-crab', // Giga Krabopavouk
+    aku: 'arthropod:aku',                 // Aku
+    sirii: 'arthropod:sirii'              // Sirii
 };
 const spec = v => v.includes(':') ? { rig: v.split(':')[0], variant: v.split(':')[1] } : { rig: 'canine', variant: v };
 

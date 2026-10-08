@@ -6,6 +6,7 @@ import { ProceduralPachyderm, PACHYDERM_VARIANTS } from './ProceduralPachyderm.j
 import { ProceduralRat, RAT_VARIANTS } from './ProceduralRat.js';
 import { ProceduralReptile, REPTILE_VARIANTS } from './ProceduralReptile.js';
 import { ProceduralBiped, BIPED_VARIANTS } from './ProceduralBiped.js';
+import { ProceduralArthropod, ARTHROPOD_VARIANTS } from './ProceduralArthropod.js';
 
 // Creature rigs by name (avatar/creatures.js picks rig + variant from the bestiary key).
 export const CREATURE_RIGS = {
@@ -16,7 +17,8 @@ export const CREATURE_RIGS = {
     pachyderm: { Rig: ProceduralPachyderm, variants: PACHYDERM_VARIANTS, title: 'ProceduralPachyderm' },
     rat: { Rig: ProceduralRat, variants: RAT_VARIANTS, title: 'ProceduralRat' },
     reptile: { Rig: ProceduralReptile, variants: REPTILE_VARIANTS, title: 'ProceduralReptile' },
-    biped: { Rig: ProceduralBiped, variants: BIPED_VARIANTS, title: 'ProceduralBiped' }
+    biped: { Rig: ProceduralBiped, variants: BIPED_VARIANTS, title: 'ProceduralBiped' },
+    arthropod: { Rig: ProceduralArthropod, variants: ARTHROPOD_VARIANTS, title: 'ProceduralArthropod' }
 };
 
 // creature = { rig, variant } or just a variant name ('wolf', 'lion', 'bear' …)

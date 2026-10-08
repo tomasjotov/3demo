@@ -95,7 +95,7 @@ put('biped', 'terrorbird', 'obří pták s křídly')
 put('biped', 'ghat', 'shrbený obojživelný ještěr s velkými drápy (podle obrázku chodí po dvou)')
 put('dragon', 'dragon dragon-young dragon-elder dragonlich skeleton-dragon wyvern')
 put('flyer', 'eagle gryffon harpy giant-bat vampire-bat-form vampire-elder-bat-form phoenix')
-put('flyer', 'sirii aku', 'létající hmyz (vážka, vosa)')
+put('arthropod', 'sirii aku', 'létající hmyz (vážka, vosa)')
 put('serpent', 'python sea-serpent crystal-snake goblin-snake winged-serpent', 'had (článkové tělo)')
 put('serpent', 'hydra', 'had s více hlavami')
 put('serpent', 'sandworm forest-wurm corpse-wurm swamp-worm maggot-lair-1 maggot-lair-2 aakf cave-slug leech-shuddery', 'červ / plž (článkové tělo bez hlavy)')
@@ -127,9 +127,9 @@ RIGS = collections.OrderedDict([
     ('reptile', ('Plazi – ProceduralReptile', 'hotovo (V33)')),
     ('biped', ('Dvounozí ještěři a ptáci – ProceduralBiped', 'hotovo (V33)')),
     ('dragon', ('Draci a wyverni', 'plazí kostra + křídla')),
-    ('flyer', ('Ptáci, netopýři, létající hmyz', 'nová kostra s křídly (letí nad polem)')),
+    ('flyer', ('Ptáci a netopýři', 'nová kostra s křídly (letí nad polem)')),
     ('serpent', ('Hadi, červi, stonožky', 'jedna článková kostra (vlnění), varianty hlavy a nožiček')),
-    ('arthropod', ('Pavouci, hmyz, štíři, krabi', 'jedna kostra s N nohama, varianty těla')),
+    ('arthropod', ('Pavouci, hmyz, štíři, krabi – ProceduralArthropod', 'hotovo (V34), včetně létajícího hmyzu')),
     ('aquatic', ('Vodní tvorové', 'žralok, chobotnice (chapadla)')),
     ('amorphous', ('Beztvaří a elementálové', 'efekty / částice, bez kostry')),
     ('plant', ('Rostliny a houby', 'statický model s animovanými úponky')),
@@ -142,6 +142,7 @@ def current(k, lb, rig):
     if k in ('bear', 'bear-large', 'cave-bear', 'necrotaur'): return 'medvěd (V32)'
     if k in ('chimera', 'manticore', 'sphinx'): return 'lví složenina (V33)'
     if k == 'giant-rat': return 'krysa (V33)'
+    if rig == 'arthropod': return 'arthropod (V34)'
     if rig in ('hoofed', 'heavy', 'reptile', 'biped') and not lb.startswith('horse'): return rig + ' (V33)'
     if lb.startswith('horse'): return 'kůň'
     humanoid_bases = ['male', 'female', 'skeleton', 'mummy', 'zombie', 'ghoul', 'dead-gentleman', 'goblin', 'ogre', 'troll', 'brute', 'uruk',
@@ -180,7 +181,7 @@ out.append('')
 out.append('## Návrh pořadí\n')
 out.append('1. **Gugové** (20 nestvůr): jen nové tělo humanoida v `bodies.js` – nejvíc nestvůr za nejmenší práci.')
 out.append('2. **Zvířata** hotovo: kočkovité šelmy a medvědi (V32), kopytníci, těžcí čtyřnožci, krysa, plazi, dvounožci a lví složeniny (V33).')
-out.append('3. **Pavouci a hmyz** (18) a **hadi, červi a stonožky** (17): dvě nové kostry pokryjí 35 nestvůr.')
+out.append('3. **Pavouci, hmyz, štíři a krabi** hotovo (V34). Další: **hadi, červi a stonožky** (17) – jedna článková kostra.')
 out.append('4. **Létající tvorové a vodní tvorové**: orel, gryf, fénix, netopýři, žralok, chobotnice.')
 out.append('5. **Humanoidi s doplňkem**: vlčí hlava pro vlkodlaky a vlkouše (hlava z vlka už je), křídla, rybí ocas, býčí hlava.')
 out.append('6. Draci, elementálové a rostliny.\n')

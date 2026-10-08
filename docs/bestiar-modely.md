@@ -19,9 +19,9 @@ Sloupec „teď“ říká, co 3D klient ukáže dnes: humanoid s tělem podle 2
 | Plazi – ProceduralReptile | 6 | hotovo (V33) |
 | Dvounozí ještěři a ptáci – ProceduralBiped | 5 | hotovo (V33) |
 | Draci a wyverni | 6 | plazí kostra + křídla |
-| Ptáci, netopýři, létající hmyz | 9 | nová kostra s křídly (letí nad polem) |
+| Ptáci a netopýři | 7 | nová kostra s křídly (letí nad polem) |
 | Hadi, červi, stonožky | 17 | jedna článková kostra (vlnění), varianty hlavy a nožiček |
-| Pavouci, hmyz, štíři, krabi | 18 | jedna kostra s N nohama, varianty těla |
+| Pavouci, hmyz, štíři, krabi – ProceduralArthropod | 20 | hotovo (V34), včetně létajícího hmyzu |
 | Vodní tvorové | 5 | žralok, chobotnice (chapadla) |
 | Beztvaří a elementálové | 12 | efekty / částice, bez kostry |
 | Rostliny a houby | 8 | statický model s animovanými úponky |
@@ -31,7 +31,7 @@ Sloupec „teď“ říká, co 3D klient ukáže dnes: humanoid s tělem podle 2
 
 1. **Gugové** (20 nestvůr): jen nové tělo humanoida v `bodies.js` – nejvíc nestvůr za nejmenší práci.
 2. **Zvířata** hotovo: kočkovité šelmy a medvědi (V32), kopytníci, těžcí čtyřnožci, krysa, plazi, dvounožci a lví složeniny (V33).
-3. **Pavouci a hmyz** (18) a **hadi, červi a stonožky** (17): dvě nové kostry pokryjí 35 nestvůr.
+3. **Pavouci, hmyz, štíři a krabi** hotovo (V34). Další: **hadi, červi a stonožky** (17) – jedna článková kostra.
 4. **Létající tvorové a vodní tvorové**: orel, gryf, fénix, netopýři, žralok, chobotnice.
 5. **Humanoidi s doplňkem**: vlčí hlava pro vlkodlaky a vlkouše (hlava z vlka už je), křídla, rybí ocas, býčí hlava.
 6. Draci, elementálové a rostliny.
@@ -304,19 +304,17 @@ Postup: plazí kostra + křídla.
 | skeleton-dragon | Kostlivý drak | Skeleton Dragon | dragon-undead | 10 | zástupný humanoid (dragon-undead) |  | Nekromanti velkého talentu a síly dokážou oživit i kostru samotného draka a donutit ji, aby jim sloužila. |
 | wyvern | Wyvern | Wyvern | wyvern-gray | 4 | zástupný humanoid (wyvern-gray) |  | Wyvern je létající ještěr s úzkou tlamou plnou ostrých zubů, párem netopýřích křídel a dlouhým ocasem. |
 
-## Ptáci, netopýři, létající hmyz (9)
+## Ptáci a netopýři (7)
 
 Postup: nová kostra s křídly (letí nad polem).
 
 | klíč | jméno | EN | 2D lookBase | vel. | teď | poznámka | popis |
 |---|---|---|---|---:|---|---|---|
-| aku | Aku | Aku | giantbee | -2 | zástupný humanoid (giantbee) | létající hmyz (vážka, vosa) | Aku jsou přerostlí příbuzní včel a vos. |
 | eagle | Orel královský | Royal Eagle | wyvern-gray | 4 | zástupný humanoid (wyvern-gray) |  | Orel královský patří k nejúžasnějším tvorům. |
 | giant-bat | Netopýr obří | Giant Bat | turkey-1 | 1 | zástupný humanoid (turkey-1) |  | Obří netopýr je téměř metr dlouhý masožravec, příbuzný obyčejného netopýra. |
 | gryffon | Gryf | Griffin | wyvern-gray | 5 | zástupný humanoid (wyvern-gray) |  | Gryf je velký tvor podobný ptáku, s mohutnými křídly, zobákem a tělem krytým hnědou srstí. |
 | harpy | Harpyje | Harpy | wyvern-gray |  | zástupný humanoid (wyvern-gray) |  | Harpyje jsou zlovolná stvoření s ženskou hlavou a ptačím tělem, s drápatýma nohama a křídly. |
 | phoenix | Fénix | Phoenix | dragon-red | 8 | zástupný humanoid (dragon-red) |  | Fénix je ohnivý démon v podobě obrovského ptáka se zlatým peřím, obklopeného plameny. |
-| sirii | Sirii | Sirii | dragonfly | -2 | zástupný humanoid (dragonfly) | létající hmyz (vážka, vosa) | Sirii jsou velké modročerné vážky se čtyřmi nohama, dvěma složenýma očima a žihadlem. |
 | vampire-bat-form | Upír (v podobě netopýra) | Vampire (bat form) | dragonfly |  | zástupný humanoid (dragonfly) |  | Upír ve formě netopýra. |
 | vampire-elder-bat-form | Upír prastarý (v podobě netopýra) | Elder Vampire (bat form) | dragonfly |  | zástupný humanoid (dragonfly) |  | Prastarý upír ve formě netopýra. |
 
@@ -344,30 +342,32 @@ Postup: jedna článková kostra (vlnění), varianty hlavy a nožiček.
 | swamp-worm | Bahenní červ | Swamp Worm | crawler | 2 | zástupný humanoid (crawler) | červ / plž (článkové tělo bez hlavy) | Tento tlustý zelený červ si libuje v kalné bahnité vodě. |
 | winged-serpent | Okřídlený had | Winged Serpent | dragonfly | 1 | zástupný humanoid (dragonfly) | had (článkové tělo) | Okřídlený had je zelenomodrý plaz se dvěma blanitými křídly těsně za hlavou. |
 
-## Pavouci, hmyz, štíři, krabi (18)
+## Pavouci, hmyz, štíři, krabi – ProceduralArthropod (20)
 
-Postup: jedna kostra s N nohama, varianty těla.
+Postup: hotovo (V34), včetně létajícího hmyzu.
 
 | klíč | jméno | EN | 2D lookBase | vel. | teď | poznámka | popis |
 |---|---|---|---|---:|---|---|---|
-| ant | Mravenec | Ant | giantratdark | -1 | zástupný humanoid (giantratdark) | hmyz (6 nohou) | Obří mravenci žijí a chovají se podobně jako jejich drobní příbuzní, jen jsou mnohem větší – běžně měří kolem metru, někdy i víc. |
-| beetle-1 | Brouk I | Beetle I | giantspider-black |  | zástupný humanoid (giantspider-black) | hmyz (6 nohou) | Velký brouk dlouhý asi dva metry. |
-| beetle-2 | Brouk II | Beetle II | giantspider-bluespotted | 2 | zástupný humanoid (giantspider-bluespotted) | hmyz (6 nohou) | Ještě větší brouk dlouhý asi čtyři metry. |
-| beetle-3 | Brouk III | Beetle III | giantspider-poison | 4 | zástupný humanoid (giantspider-poison) | hmyz (6 nohou) | Obří brouk dlouhý asi šest metrů. |
-| diamond-scorpion | Diamantový štír | Diamond Scorpion | giantspider-bluespotted | 4 | zástupný humanoid (giantspider-bluespotted) | štír (klepeta, ocas) | Diamantový štír je nebezpečný tvor, který vznikl spojením štíra s démonickými bytostmi. |
-| dune-reaper | Pouštní zabiják | Dune Reaper | giantspider-bluespotted | 1 | zástupný humanoid (giantspider-bluespotted) | štír (klepeta, ocas) | Tento nebezpečný hmyz žije v poušti, kde se zahrabává do písku a trpělivě čeká na kořist. |
-| gargantula | Gargantula | Gargantula | giantspider-poison | 8 | zástupný humanoid (giantspider-poison) | pavouk (8 nohou, gargantula 6) | Gargantula je obrovský černý pavouk pokrytý ostrými štětinami, se dvěma shluky očí a šesti nohama. |
-| giant-crab | Obří krab | Giant Crab | gigacrab | 7 | zástupný humanoid (gigacrab) | krab | V hlubinách žije mnoho podivných a obřích stvoření a jedním z nich je obří krab, na kterého čas od času narazí námořníci daleko od obydle… |
-| giant-scorpion | Štír obří | Giant Scorpion | giantspider-striped | 3 | zástupný humanoid (giantspider-striped) | štír (klepeta, ocas) | Štíři zjevně fascinovali dávné alchymisty a pokoutné kouzelníky, kteří je mutovali tak dlouho, až vypěstovali exempláře od velikosti pras… |
-| giant-spider-crab | Giga Krabopavouk | Giant Spider Crab | gigacrab | 12 | zástupný humanoid (gigacrab) | krab | Tento výtvor, v němž šílený tvůrce spojil obřího kraba s pavoukem, můžeme najít v hlubokých bažinách. |
-| giant-strider | Obří sekáč | Giant Strider | giantspider-poison | 8 | zástupný humanoid (giantspider-poison) | pavouk (8 nohou, gargantula 6) | Obří sekáči jsou strašliví pavoukovci, kterých naštěstí žije jen několik. |
-| mantis | Kudlanka tropická | Tropical Mantis | giantspider-bluespotted | 2 | zástupný humanoid (giantspider-bluespotted) | kudlanka | Kudlanka tropická má tmavě zelené tělo a dvě klepeta, kterými lapá své oběti. |
-| rahlog | Rahlog | Rahlog | giantspider-black |  | zástupný humanoid (giantspider-black) | pavouk (8 nohou, gargantula 6) | Rahlogové jsou velcí světlí pavouci. |
-| rahlog-queen | Rahlog - královna | Rahlog Queen | giantspider-striped | 3 | zástupný humanoid (giantspider-striped) | pavouk (8 nohou, gargantula 6) | Rahlogové jsou velcí světlí pavouci. |
-| sorog | Sorog | Sorog | giantspider-bluespotted | 3 | zástupný humanoid (giantspider-bluespotted) | pavouk (8 nohou, gargantula 6) | Sorog je obrovský pavouk, který tká husté sítě na okrajích bažin, v soutěskách a v hustých lesích a loví do nich kořist. |
-| urax | Urax | Urax | giantspider-poison | 5 | zástupný humanoid (giantspider-poison) | pavouk (8 nohou, gargantula 6) | Urax je obrovský tmavý pavouk s tělem pokrytým štětinami. |
-| xur | Xur | Xur | giantspider-black | -2 | zástupný humanoid (giantspider-black) | pavouk (8 nohou, gargantula 6) | Xurové jsou pavouci, kteří žijí v lesích, tkají si pavučiny a loví menší zvěř. |
-| zeghar | Ze’ghar | Zeghar | giantspider-black | -1 | zástupný humanoid (giantspider-black) | pavouk (8 nohou, gargantula 6) | Ze'gharové jsou tmavošedí pavouci velcí asi jako trpaslík, s nápadným tečkováním na hřbetě. |
+| aku | Aku | Aku | giantbee | -2 | arthropod (V34) | létající hmyz (vážka, vosa) | Aku jsou přerostlí příbuzní včel a vos. |
+| ant | Mravenec | Ant | giantratdark | -1 | arthropod (V34) | hmyz (6 nohou) | Obří mravenci žijí a chovají se podobně jako jejich drobní příbuzní, jen jsou mnohem větší – běžně měří kolem metru, někdy i víc. |
+| beetle-1 | Brouk I | Beetle I | giantspider-black |  | arthropod (V34) | hmyz (6 nohou) | Velký brouk dlouhý asi dva metry. |
+| beetle-2 | Brouk II | Beetle II | giantspider-bluespotted | 2 | arthropod (V34) | hmyz (6 nohou) | Ještě větší brouk dlouhý asi čtyři metry. |
+| beetle-3 | Brouk III | Beetle III | giantspider-poison | 4 | arthropod (V34) | hmyz (6 nohou) | Obří brouk dlouhý asi šest metrů. |
+| diamond-scorpion | Diamantový štír | Diamond Scorpion | giantspider-bluespotted | 4 | arthropod (V34) | štír (klepeta, ocas) | Diamantový štír je nebezpečný tvor, který vznikl spojením štíra s démonickými bytostmi. |
+| dune-reaper | Pouštní zabiják | Dune Reaper | giantspider-bluespotted | 1 | arthropod (V34) | štír (klepeta, ocas) | Tento nebezpečný hmyz žije v poušti, kde se zahrabává do písku a trpělivě čeká na kořist. |
+| gargantula | Gargantula | Gargantula | giantspider-poison | 8 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Gargantula je obrovský černý pavouk pokrytý ostrými štětinami, se dvěma shluky očí a šesti nohama. |
+| giant-crab | Obří krab | Giant Crab | gigacrab | 7 | arthropod (V34) | krab | V hlubinách žije mnoho podivných a obřích stvoření a jedním z nich je obří krab, na kterého čas od času narazí námořníci daleko od obydle… |
+| giant-scorpion | Štír obří | Giant Scorpion | giantspider-striped | 3 | arthropod (V34) | štír (klepeta, ocas) | Štíři zjevně fascinovali dávné alchymisty a pokoutné kouzelníky, kteří je mutovali tak dlouho, až vypěstovali exempláře od velikosti pras… |
+| giant-spider-crab | Giga Krabopavouk | Giant Spider Crab | gigacrab | 12 | arthropod (V34) | krab | Tento výtvor, v němž šílený tvůrce spojil obřího kraba s pavoukem, můžeme najít v hlubokých bažinách. |
+| giant-strider | Obří sekáč | Giant Strider | giantspider-poison | 8 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Obří sekáči jsou strašliví pavoukovci, kterých naštěstí žije jen několik. |
+| mantis | Kudlanka tropická | Tropical Mantis | giantspider-bluespotted | 2 | arthropod (V34) | kudlanka | Kudlanka tropická má tmavě zelené tělo a dvě klepeta, kterými lapá své oběti. |
+| rahlog | Rahlog | Rahlog | giantspider-black |  | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Rahlogové jsou velcí světlí pavouci. |
+| rahlog-queen | Rahlog - královna | Rahlog Queen | giantspider-striped | 3 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Rahlogové jsou velcí světlí pavouci. |
+| sirii | Sirii | Sirii | dragonfly | -2 | arthropod (V34) | létající hmyz (vážka, vosa) | Sirii jsou velké modročerné vážky se čtyřmi nohama, dvěma složenýma očima a žihadlem. |
+| sorog | Sorog | Sorog | giantspider-bluespotted | 3 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Sorog je obrovský pavouk, který tká husté sítě na okrajích bažin, v soutěskách a v hustých lesích a loví do nich kořist. |
+| urax | Urax | Urax | giantspider-poison | 5 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Urax je obrovský tmavý pavouk s tělem pokrytým štětinami. |
+| xur | Xur | Xur | giantspider-black | -2 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Xurové jsou pavouci, kteří žijí v lesích, tkají si pavučiny a loví menší zvěř. |
+| zeghar | Ze’ghar | Zeghar | giantspider-black | -1 | arthropod (V34) | pavouk (8 nohou, gargantula 6) | Ze'gharové jsou tmavošedí pavouci velcí asi jako trpaslík, s nápadným tečkováním na hřbetě. |
 
 ## Vodní tvorové (5)
 
