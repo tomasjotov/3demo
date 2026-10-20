@@ -6,7 +6,7 @@ import { CameraController } from './CameraController.js';
 import { ModelManager } from './ModelManager.js';
 import { MouseController } from '../input/MouseController.js';
 import { LightRenderer } from './LightRenderer.js';
-import { EffectRenderer, EFFECT_TYPES } from './EffectRenderer.js';
+import { EffectRenderer, EFFECT_TYPES, SPELL_PROJECTILES } from './EffectRenderer.js';
 
 // Tile marker size: 90 % of a tile (square, axis-aligned with the tile).
 const MARK = .9;
@@ -123,6 +123,11 @@ export class Renderer {
         this.lightRenderer.update(world, p ? { x: p.renderX, z: p.renderY } : null, delta);
         // area effects: server plan (PlanArena.spell "x,y:TYPE") or the offline demo (world.effects)
         this.effectRenderer.setEffects(this.game.serverOverlays?.spell ?? world.effects ?? [], this._areaLights);
+        // projectile spells cast since the last frame (ServerGame.spellEvents, offline demo world.spellEvents)
+        const shots = this.game.spellEvents ?? world.spellEvents;
+        if (shots?.length) for (const e of shots.splice(0)) {
+            if (SPELL_PROJECTILES[e.spell]) this.effectRenderer.cast(SPELL_PROJECTILES[e.spell], e.fx, e.fz, e.tx, e.tz, e.r);
+        }
         this.effectRenderer.update(delta, this.hemi.intensity / 2.1);
         this.drawOverlays(world);
     }
@@ -178,11 +183,11 @@ export class Renderer {
         const reachable = this.game.getReachableTiles();
         const own = new Set(player.getCells().map(c => `${c.x},${c.y}`));
 
-        // Reachable tiles — light green fill with a green border.
+        // Reachable tiles — green border only, no fill (the ground stays visible).
         for (const [key] of reachable) {
             if (own.has(key)) continue;
             const [x, y] = key.split(',').map(Number);
-            this.marker(this.selectionGroup, x, y, 0xc8ffd8, .22, MARK, 0x2fd67a, .55);
+            this.selectionGroup.add(this.tileMesh(x, y, 0x2fd67a, .55, MARK, 'ring', .002));
         }
 
         // Controlled character — blue, every occupied cell.
@@ -225,11 +230,15 @@ export class Renderer {
 
     // Server overlays: move-range ring, opponent / spell areas, pointed cells.
     drawServerOverlays(o) {
-        for (const c of o.ring) this.selectionGroup.add(this.tileMesh(c.x, c.y, 0x2fd67a, .95, MARK, 'ring', .003));
+        if (this.game.onTurn !== false) for (const c of o.ring) this.selectionGroup.add(this.tileMesh(c.x, c.y, 0x2fd67a, .95, MARK, 'ring', .003));
         for (const c of o.extra) this.marker(this.selectionGroup, c.x, c.y, 0xb06cff, .28, MARK, 0xd6b3ff, .7);
         for (const c of o.spell) {                       // cells with a 3D effect (smoke, fire …) get only a faint mark
             const fx = EFFECT_TYPES.includes(String(c.text).toUpperCase());
             this.marker(this.selectionGroup, c.x, c.y, 0xff4fd8, fx ? .12 : .35, MARK, 0xff9be9, fx ? .35 : .9);
+        }
+        if (o.spawn) {                                   // GM: spawn cell of a new monster — amber with a white frame
+            this.marker(this.selectionGroup, o.spawn.x, o.spawn.y, 0xffa21a, .55, MARK, 0xffffff, 1);
+            this.selectionGroup.add(this.tileMesh(o.spawn.x, o.spawn.y, 0xffd27a, .9, 1.06, 'ring', .01));
         }
         for (const c of o.pointers) this.selectionGroup.add(this.tileMesh(c.x, c.y, 0xffffff, .95, .98, 'ring', .009));
     }

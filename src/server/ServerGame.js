@@ -23,14 +23,16 @@ export class ServerGame {
         this.hooks = hooks;
         this.previewPath = [];
         this.previewTarget = null;
-        this.serverOverlays = { ring: [], extra: [], spell: [], pointers: [] };
+        this.serverOverlays = { ring: [], extra: [], spell: [], spawn: null, pointers: [] };
         this.known = new Map();          // actor id → body cell count
+        this.spellEvents = [];           // projectile spells to play (Renderer takes them)
         this.ver = -1;
         this.lastFull = null;
         this.connected = false;
         this.error = '';
         this.lastMessage = '';
         this.phase = '';
+        this.onTurn = true;              // false = not my turn: no path preview, no move range
         this.polls = 0;
     }
 
@@ -103,6 +105,7 @@ export class ServerGame {
                 this.world.characters.push(c);
                 this.hooks.onAdd?.(c);
             }
+            this.detectSpell(c, a);
             c.server = a;
             c.name = a.name;
             c.x = a.x; c.y = a.y;
@@ -123,6 +126,11 @@ export class ServerGame {
         }
 
         const act = d.actors.find(a => a.active);
+        // Path preview and move range only while my actor is on turn (PlanArena.phase 1 = PHASE_MANEUVERS, hof ≥ V42);
+        // an older server without the phase keeps showing them.
+        const onTurn = d.phase === undefined || (d.phase === 1 && !!act?.own);
+        if (!onTurn && this.onTurn !== false) this.clearPreview();
+        this.onTurn = onTurn;
         const cur = this.world.active;
         if (act) this.world.setActive(this.world.characters.find(c => c.id === act.id));
         else if (!cur || !seen.has(cur.id)) this.world.setActive(this.world.characters.find(c => c.own) || this.world.characters[0] || null);
@@ -132,6 +140,7 @@ export class ServerGame {
             ring: d.blocked.filter(c => c.x >= 0),
             extra: d.extra.filter(c => c.x >= 0),
             spell: d.spell.filter(c => c.x >= 0),
+            spawn: d.spawn && d.spawn.x >= 0 ? d.spawn : null,     // GM out of combat: where a new monster appears (hof ≥ V43)
             pointers
         };
         // lights placed on the plan (PlanArena.lights): keep the same array while unchanged
@@ -139,6 +148,21 @@ export class ServerGame {
         if (sig !== this._lightsSig) { this._lightsSig = sig; this.areaLights = d.lights || []; }
         this.vision = d.vision;
         this.visionType = d.visionType;
+    }
+
+    // A cast is resolved when the casting actor pays for it (its actions drop) – then the projectile flies
+    // (PlanActor.spell / spellX / spellY / spellRadius, hof ≥ V39). Once per cast; the server may clear the spell
+    // in the same poll, so the previous state counts too.
+    detectSpell(c, a) {
+        const prev = c.server;
+        const casting = a.moveType === 'cast' && a.spell;
+        const sp = casting ? a : prev?.moveType === 'cast' && prev.spell ? prev : null;
+        const paid = prev && (a.actions + a.speedActions) < (prev.actions + prev.speedActions);
+        if (sp && paid && !c.spellShot && sp.spellX >= 0) {
+            c.spellShot = true;
+            this.spellEvents.push({ spell: sp.spell, fx: c.renderX, fz: c.renderY, tx: sp.spellX + .5, tz: sp.spellY + .5, r: sp.spellRadius || 0 });
+        }
+        if (!casting) c.spellShot = false;
     }
 
     // ------------------------------------------------------- per-frame motion
@@ -196,7 +220,7 @@ export class ServerGame {
     getReachableTiles() {
         const c = this.active;
         const res = new Map();
-        if (!c || !c.server || !this.serverOverlays.ring.length) return res;
+        if (!c || !c.server || !this.onTurn || !this.serverOverlays.ring.length) return res;
         const sig = `${c.id}:${c.x},${c.y}:${c.move}:${this.world.characters.map(ch => ch.x + ',' + ch.y).join('|')}`;
         if (sig === this._reachSig) return this._reach;
         const r = c.move;
@@ -233,10 +257,10 @@ export class ServerGame {
         if (this.hooks.onTileClick?.(x, y)) { this.clearPreview(); return; }
         const c = this.active;
         if (!c) return;
-        this.previewPath = this.serverPath(c, x, y);
+        this.previewPath = this.onTurn ? this.serverPath(c, x, y) : [];   // the click still points / targets
         this.previewTarget = { x, y };
         const last = this.previewPath[this.previewPath.length - 1];
-        if (last.x !== x || last.y !== y) this.message(t('PLAN3D_PATH_STOPS', 'Cesta se zastaví na {x}, {y} (překážka)', { x: last.x, y: last.y }));
+        if (last && (last.x !== x || last.y !== y)) this.message(t('PLAN3D_PATH_STOPS', 'Cesta se zastaví na {x}, {y} (překážka)', { x: last.x, y: last.y }));
         await this.send(c, x, y);                      // 1st click on the server: point + turn
     }
 

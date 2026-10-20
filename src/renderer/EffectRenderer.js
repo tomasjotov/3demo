@@ -13,8 +13,16 @@ import { buildObject } from './ObjectFactory.js';
  * A fire area that appears while the plan is shown starts with an explosion (fireball, shock ring, debris, smoke);
  * explode(x, y, r) plays one on demand. Other cell types (SPELL = targeting) stay only as overlay markers.
  * Puffs are sprites with one shared material per type, they grow in, loop (rise, swell, shrink) and shrink out.
+ * Projectile spells (cast(), keys in SPELL_PROJECTILES): Fireball = glowing ball on a low arc with a fiery trail that bursts
+ * into an explosion over its area, Fire bolt = fast straight streak of fire with a small burst on the target.
  */
 export const EFFECT_TYPES = ['SMOKE', 'FOG', 'POISON', 'FIRE', 'KINETIC', 'BLUNT'];
+// ability key (hof PlanActor.spell) → projectile look
+export const SPELL_PROJECTILES = { fireball: 'ball', 'fire-bolt': 'bolt', 'fire-arrow': 'bolt' };
+const SHOT = {
+    ball: { speed: 8, y0: 1.35, y1: .7, arc: .22, core: .22, halo: 1.7, trail: .018, trailLife: .45, trailSize: .42 },
+    bolt: { speed: 17, y0: 1.3, y1: 1.05, arc: 0, core: .08, halo: 1, trail: .007, trailLife: .22, trailSize: .28 }
+};
 
 const PUFF = {
     SMOKE: { color: 0x403b38, opacity: .85, n: 5, size: [1.1, 1.7], y: [.2, 2.0], rise: .22, blend: THREE.NormalBlending },
@@ -82,6 +90,8 @@ export class EffectRenderer {
         scene.add(this.group);
         this.cells = new Map();              // "x,y:TYPE" → { root, type, t, k (grow 0..1), dying, parts }
         this.blasts = [];
+        this.shots = [];
+        this.trail = [];
         this.time = 0;
         this.ready = false;                  // the first plan only shows the state, without explosions
         this.puffMat = {};
@@ -223,6 +233,37 @@ export class EffectRenderer {
         this.blasts.push({ root, r, t: 0, ball, fireMat, hotMat, core, ring, flash, debris, smoke, smokeMat, dGeo, dMat });
     }
 
+    // Projectile spell from (fx, fz) to (tx, tz) in world units (cell centres); r = area radius in cells (fireball).
+    cast(kind, fx, fz, tx, tz, r = 0) {
+        const S = SHOT[kind] || SHOT.bolt;
+        const root = new THREE.Group();
+        const core = new THREE.Mesh(new THREE.SphereGeometry(S.core, 12, 8), additive(0xfff0c0, 1));
+        root.add(core);
+        if (kind === 'bolt') {                                        // streak: hot white-yellow core in an orange sheath
+            const len = .75;
+            const sheath = new THREE.Mesh(new THREE.CylinderGeometry(.09, .02, len, 8).rotateX(Math.PI / 2).translate(0, 0, -len / 2),
+                additive(0xff7a20, .85));
+            const inner = new THREE.Mesh(new THREE.CylinderGeometry(.035, .006, len * .8, 6).rotateX(Math.PI / 2).translate(0, 0, -len * .4),
+                additive(0xffe6a0, 1));
+            root.add(sheath, inner);
+        } else {                                                      // ball: churning fire sprites around the core
+            const fireMat = new THREE.SpriteMaterial({ map: ballTexture(), color: 0xff6a10, transparent: true, opacity: .95, depthWrite: false });
+            root.userData.fire = [];
+            for (let i = 0; i < 6; i++) {
+                const s = new THREE.Sprite(fireMat);
+                s.userData.ph = i / 6 * Math.PI * 2;
+                root.add(s);
+                root.userData.fire.push(s);
+            }
+        }
+        const halo = haloSprite(0xff8a30, S.halo, .75);
+        root.add(halo);
+        const dist = Math.hypot(tx - fx, tz - fz);
+        root.position.set(fx, S.y0, fz);
+        this.group.add(noRay(root));
+        this.shots.push({ kind, S, root, halo, fx, fz, tx, tz, r, t: 0, dur: Math.max(.15, dist / S.speed), dist, emit: 0 });
+    }
+
     // light: 0..1 daylight of the scene (smoke and fog are unlit sprites: darker at night, only the fire glows)
     update(dt, light = 1) {
         this.time += dt;
@@ -271,6 +312,8 @@ export class EffectRenderer {
         this.wallMat.opacity = .18 + Math.sin(t * 2.4) * .06;
         this.wallEdgeMat.opacity = .55 + Math.sin(t * 3.1) * .2;
 
+        this.updateShots(dt);
+
         for (let i = this.blasts.length - 1; i >= 0; i--) {
             const B = this.blasts[i];
             B.t += dt;
@@ -314,5 +357,56 @@ export class EffectRenderer {
                 this.blasts.splice(i, 1);
             }
         }
+    }
+
+    updateShots(dt) {
+        for (let i = this.shots.length - 1; i >= 0; i--) {
+            const P = this.shots[i], S = P.S;
+            P.t += dt;
+            const u = Math.min(1, P.t / P.dur);
+            const x = P.fx + (P.tx - P.fx) * u, z = P.fz + (P.tz - P.fz) * u;
+            const y = S.y0 + (S.y1 - S.y0) * u + Math.sin(Math.PI * u) * S.arc * P.dist;
+            const prev = P.root.position.clone();
+            P.root.position.set(x, y, z);
+            // face the flight direction (the bolt streak trails behind its tip)
+            const d = P.root.position.clone().sub(prev);
+            if (d.lengthSq() > 1e-8) P.root.lookAt(P.root.position.clone().add(d));
+            if (P.root.userData.fire) {
+                P.root.userData.fire.forEach((s, k) => {
+                    const a = this.time * 9 + s.userData.ph;
+                    s.position.set(Math.cos(a) * S.core * .7, Math.sin(a * 1.3) * S.core * .7, Math.sin(a) * S.core * .7);
+                    s.scale.setScalar(S.core * (2.6 + Math.sin(a * 2) * .4));
+                });
+            }
+            P.halo.material.opacity = .65 + Math.sin(this.time * 31) * .12;
+            for (P.emit += dt; P.emit >= S.trail; P.emit -= S.trail) this.addTrail(P, prev.lerp(P.root.position, Math.random()));
+            if (u >= 1) {
+                this.group.remove(P.root);
+                disposeTree(P.root);
+                this.shots.splice(i, 1);
+                if (P.kind === 'ball') this.explode(P.tx - .5, P.tz - .5, Math.max(.9, P.r));
+                else this.explode(P.tx - .5, P.tz - .5, .4);
+            }
+        }
+        for (let i = this.trail.length - 1; i >= 0; i--) {
+            const T = this.trail[i];
+            T.t += dt;
+            const l = T.t / T.life;
+            if (l >= 1) { this.group.remove(T.s); T.s.material.dispose(); this.trail.splice(i, 1); continue; }
+            // yellow → orange → dark red, growing and rising a little while it fades
+            T.s.material.color.setRGB(1, .75 - l * .6, .3 - l * .28, THREE.SRGBColorSpace);
+            T.s.material.opacity = (1 - l) * .9;
+            T.s.scale.setScalar(T.size * (.6 + l * 1.2));
+            T.s.position.y += dt * .5;
+        }
+    }
+
+    addTrail(P, pos) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: ballTexture(), color: 0xffc040, transparent: true, opacity: .9,
+            depthWrite: false, blending: THREE.AdditiveBlending }));
+        s.position.copy(pos).add(new THREE.Vector3((Math.random() - .5) * .06, (Math.random() - .5) * .06, (Math.random() - .5) * .06));
+        s.raycast = () => {};
+        this.group.add(s);
+        this.trail.push({ s, t: 0, life: P.S.trailLife * (.7 + Math.random() * .6), size: P.S.trailSize * (.7 + Math.random() * .6) });
     }
 }

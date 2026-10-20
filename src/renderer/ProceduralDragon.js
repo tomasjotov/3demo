@@ -5,74 +5,84 @@ import { taperTube, glowMat } from './creatureParts.js';
 import { haloSprite } from './LightProps.js';
 
 /*
- * ProceduralDragon — dragons and their kin: adult / young / elder dragon, dragonlich (rotting undead dragon with the
- * rib cage showing and ghostly eyes), skeleton dragon (bones only, empty eye sockets, tattered wings), wyvern (two legs,
- * the bat wings serve as fore-limbs, long tail with a sting) and gargoyle (crouching stone beast with bat wings).
+ * ProceduralDragon — dragons and their kin: adult / young / elder dragon, dragonlich (charred undead dragon with the
+ * rib cage open over raw flesh, bony fore-legs and tail, ghostly eyes), skeleton dragon (bones only, empty eye sockets,
+ * black spines, tattered wings), wyvern (two legs, the bat wings serve as fore-limbs, long tail with a sting) and
+ * gargoyle (crouching stone beast with a goblin head and bat wings).
  *
  *   root (yaw, scale)
- *   └─ body (pitch bx: the wyvern and the gargoyle carry the chest high)
- *      ├─ legs top ─ knee ─ low ─ toe (the toe group keeps the foot flat on the ground); planted poses are solved by a
- *      │  small two-bone IK (plant()) so the feet stay on the ground while the body rears, lunges or crouches
+ *   └─ body (pitch bx: the wyvern and the gargoyle carry the chest high) — torso: one smooth loft (belly plates, darker back)
+ *      ├─ legs top ─ knee ─ low ─ toe (lofted muscles; the toe group keeps the foot flat on the ground); planted poses
+ *      │  are solved by a small two-bone IK (plant()) so the feet stay on the ground while the body rears, lunges or crouches
  *      ├─ neck ─ neck segments (S-curve, pose key nS) ─ head ─ jaw, breath (fire / sickly green / steam cone)
- *      ├─ tailRoot ─ tail segments (droop tailC, sideways curl tailY, swish)
+ *      │  the neck skin is one skinned tube over body, segments and head, so it bends smoothly and grows out of the chest
+ *      ├─ tailRoot ─ tail segments (droop tailC, sideways curl tailY, swish), also one skinned tube
  *      └─ wings: shoulder (pitch) ─ arm ─ elbow ─ hand ─ 4 fingers; the membrane is one small mesh whose corners are
  *         moved every frame onto the bones (it folds with them), torn ones have holes (alpha-tested canvas texture)
  *   Neck, head and tail are kept above the ground by a cheap solver in the body plane (lying, dying, lunging).
  *
- * States: idle (breathing, neck sway, tail swish, wings folded), walk, run (wings half open, beating), attack (rears the
- * neck back, claw raised → lunges with the long neck, breath from the open jaws → bite snap → recover; skeleton,
- * wyvern and gargoyle only bite and claw), defend (rears up, wings spread high, roar), hit (flinch), kneel (crouched on
- * the belly, head up), lie (on the belly, head on the ground, tail curled), death (rolls on its side, wing limp, neck
- * on the ground). Animation: QuadrupedRig.
+ * States: idle (breathing, neck sway, tail swish, wings folded high), walk, run (wings half open, beating), attack
+ * (rears the neck back, claw raised → lunges with the long neck, breath from the open jaws → bite snap → recover;
+ * skeleton, wyvern and gargoyle only bite and claw), defend (rears up, wings spread high, roar), hit (flinch), kneel
+ * (crouched on the belly, head up), lie (on the belly, head on the ground, tail curled), death (rolls on its side, wing
+ * limp, neck on the ground). Animation: QuadrupedRig.
+ * Sizes (nose to tail tip): the adult dragon ~12.5 m long and ~5 m tall, the young one ~8 m, the elder ~16 m.
  */
 
 export const DRAGON_VARIANTS = {
-    // teal-green scales, gold belly, glowing orange membrane, fire
-    dragon: { kind: 'dragon', scale: 2.2, skin: 0x2e6a5c, dark: 0x1a3a34, belly: 0xc8963c, spine: 0xc8862e, horn: 0x34281e,
+    // teal-green scales, gold belly plates and frills, glowing orange membrane, fire
+    dragon: { kind: 'dragon', scale: 2.35, skin: 0x2a6658, dark: 0x12322c, belly: 0xd29a3a, spine: 0xd88a26, horn: 0x3a2c1e,
         membrane: 0xb8662a, vein: 0x4a2412, eye: 0xffb020, breath: [0xff4a10, 0xff9a28, 0xfff0b0] },
-    // grey-green, pale belly, amber membrane, smaller horns
-    'dragon-young': { kind: 'dragon', scale: 1.4, skin: 0x63786a, dark: 0x3a4a40, belly: 0xcdbf98, spine: 0x8a7656, horn: 0x2c2824,
-        membrane: 0xc68a4a, vein: 0x6a4424, eye: 0xf0a020, horns: .75, bulk: .92, breath: [0xff5a14, 0xffa030, 0xfff0b0] },
-    // deep blue, cream belly, dark membrane, crown of horns, scalding steam
-    'dragon-elder': { kind: 'dragon', scale: 2.8, skin: 0x1f4a6a, dark: 0x122638, belly: 0xd6cfb0, spine: 0x50708a, horn: 0x24242c,
-        membrane: 0x2e4258, vein: 0x0e1622, eye: 0x9ae8ff, horns: 1.25, elder: true, bulk: 1.06, breath: [0x3a7aff, 0x9ad0ff, 0xf4fbff] },
-    dragonlich: { kind: 'dragon', undead: 'lich', scale: 2.2, skin: 0x4a2c26, dark: 0x2a1614, belly: 0x5a1a16, bone: 0xd8ccb0, spine: 0xcfc2a4,
-        horn: 0xcfc2a4, membrane: 0x3e2a24, vein: 0x140c0a, eye: 0x8aff6a, ghost: true, torn: .45, breath: [0x2a9a20, 0x7aff50, 0xe0ffd0] },
-    'skeleton-dragon': { kind: 'dragon', undead: 'skeleton', scale: 2.0, bone: 0xd8cdb4, dark: 0x2a2628, spine: 0x2e2a2c, horn: 0x2e2a2c,
-        membrane: 0x37323a, vein: 0x151214, torn: .75 },
-    // charcoal scales, cream belly and crest, spotted cream membrane, poison sting
-    wyvern: { kind: 'wyvern', scale: 1.15, skin: 0x34363c, dark: 0x1c1e22, belly: 0xd8cbb0, spine: 0xe0d6c0, horn: 0xe0d6c0,
+    // sage green, pale gold belly, amber membrane, long slender horns
+    'dragon-young': { kind: 'dragon', scale: 1.5, skin: 0x6e8a70, dark: 0x34483a, belly: 0xdcc890, spine: 0xb89a5a, horn: 0x3a3226,
+        membrane: 0xc68a4a, vein: 0x6a4424, eye: 0xf0a020, horns: 1.05, bulk: .9, breath: [0xff5a14, 0xffa030, 0xfff0b0] },
+    // deep blue to teal, pale teal belly, blue-green membrane, crown of horns, scalding steam
+    'dragon-elder': { kind: 'dragon', scale: 2.9, skin: 0x1f4f7c, dark: 0x0e2238, belly: 0x76b4b0, spine: 0x3a9ab0, horn: 0x1c2430,
+        membrane: 0x2c6474, vein: 0x0e1e2a, eye: 0x9ae8ff, horns: 1.2, elder: true, bulk: 1.04, tailK: 1.15, breath: [0x3a7aff, 0x9ad0ff, 0xf4fbff] },
+    dragonlich: { kind: 'dragon', undead: 'lich', scale: 2.2, skin: 0x2e2b2a, dark: 0x121010, belly: 0x7a1e18, bone: 0xd8ccb0, spine: 0x1c1919,
+        horn: 0x262222, membrane: 0x3e2a24, vein: 0x140c0a, eye: 0x8aff6a, ghost: true, torn: .45, bulk: .92, breath: [0x2a9a20, 0x7aff50, 0xe0ffd0] },
+    'skeleton-dragon': { kind: 'dragon', undead: 'skeleton', scale: 2.4, bone: 0xd8cdb4, dark: 0x1e1c1e, spine: 0x1e1c1e, horn: 0x1e1c1e,
+        membrane: 0x3a302c, vein: 0x151214, torn: .75 },
+    // charcoal-navy scales, cream belly and crest, spotted cream membrane, poison sting
+    wyvern: { kind: 'wyvern', scale: 1.2, skin: 0x2c313c, dark: 0x14171e, belly: 0xd8cbb0, spine: 0xe0d6c0, horn: 0xe0d6c0,
         membrane: 0xd8c6a2, vein: 0x4a3a2c, spots: 0x2e241c, eye: 0xff6a20, sting: 0x1a1816 },
-    gargoyle: { kind: 'gargoyle', scale: .72, skin: 0x7e7c78, dark: 0x4c4a48, belly: 0x8c8a86, spine: 0x5e5c58, horn: 0x6a6864,
-        membrane: 0x6c6864, vein: 0x3c3a38, eye: 0xd8341c, stone: true }
+    gargoyle: { kind: 'gargoyle', scale: .75, skin: 0x86847e, dark: 0x4c4a48, belly: 0x96948e, spine: 0x5e5c58, horn: 0x6a6864,
+        membrane: 0x6e6862, vein: 0x3c3a38, eye: 0xd8341c, stone: true }
 };
 
-// metres at scale 1: torso radius / length, body height and pitch, hips [y, z] (fore, hind), legs (upper, lower, foot),
-// foot z offset from the hip, world angle of the foot bone, neck [segments, length, base / top radius] and its S-curve,
-// tail [segments, length, base radius], wing (length, shoulder, membrane corners on the flank and hip, poses)
+// metres at scale 1: torso sections [z, half width, half height, centre y] and belly depth `low`, body height and pitch,
+// hips [y, z] (fore, hind), legs (upper, lower, foot), foot z offset from the hip, world angle of the foot bone,
+// neck [segments, length, base / top radius] and its S-curve, tail [segments, length, base radius], wing (length,
+// shoulder, membrane corners on the flank and hip, poses)
 const KINDS = {
     dragon: {
-        r: .27, len: .7, H: .72, hip: [[-.06, .34], [-.01, -.32]], legX: [.17, .18], legR: [.065, .08],
+        r: .27, len: .7, low: .35, H: .74, hip: [[-.06, .36], [-.01, -.34]], legX: [.19, .2], legR: [.08, .095],
+        torso: [[-.78, .04, .04, .06], [-.64, .17, .19, .04], [-.44, .245, .27, .01], [-.18, .24, .27, -.02], [.1, .275, .315, -.04],
+            [.34, .275, .3, -.01], [.52, .215, .245, .05], [.66, .12, .14, .11], [.74, .03, .03, .12]],
         fl: [.31, .3, .1], hl: [.33, .32, .17], foot: [.05, .03], toeA: [0, -.3],
-        neckAt: [.12, .46], neck: [6, .13, .13, .08], neckProf: [.35, .25, 0, -.25, -.4, -.45],
-        head: 1.25, tailAt: [.04, -.55], tail: [11, .16, .135],
-        wing: { len: 1.55, at: [.1, .18, .28], hip: [.15, .04, -.44], flank: [.2, .12, -.08], bone: .02 },
-        gait: { walk: 1.15, run: 2.3, amp: .36, ampRun: .38, lift: .7 }
+        neckAt: [.13, .5], neck: [6, .14, .155, .085], neckProf: [.35, .25, 0, -.25, -.4, -.45],
+        head: 1.3, tailAt: [.04, -.6], tail: [12, .17, .16],
+        wing: { len: 1.75, at: [.12, .22, .3], hip: [.16, .06, -.46], flank: [.21, .15, -.08], bone: .02 },
+        gait: { walk: 1.2, run: 2.4, amp: .36, ampRun: .38, lift: .7 }
     },
     wyvern: {
-        r: .19, len: .5, H: .72, hip: [null, [-.03, -.1]], legX: [0, .15], legR: [0, .066],
+        r: .19, len: .5, low: .22, H: .72, hip: [null, [-.03, -.1]], legX: [0, .15], legR: [0, .08],
+        torso: [[-.44, .03, .03, .03], [-.34, .13, .14, .02], [-.16, .17, .19, 0], [.04, .185, .22, -.02], [.22, .175, .205, 0],
+            [.36, .12, .14, .05], [.45, .03, .03, .07]],
         fl: null, hl: [.31, .3, .15], foot: [0, .06], toeA: [0, -.3],
-        neckAt: [.08, .34], neck: [5, .12, .085, .05], neckProf: [.3, .2, -.05, -.3, -.4],
-        head: 1.1, tailAt: [.02, -.4], tail: [13, .14, .085],
-        wing: { len: 1.4, at: [.09, .12, .2], hip: [.12, -.06, -.26], flank: [.15, .04, -.02], bone: .022 },
+        neckAt: [.08, .36], neck: [5, .12, .1, .055], neckProf: [.3, .2, -.05, -.3, -.4],
+        head: 1.1, tailAt: [.02, -.38], tail: [13, .14, .1],
+        wing: { len: 1.45, at: [.1, .13, .2], hip: [.12, -.04, -.26], flank: [.15, .06, -.02], bone: .022 },
         gait: { walk: .95, run: 1.8, amp: .45, ampRun: .3, lift: .8 }
     },
     gargoyle: {
-        r: .15, len: .26, H: .48, hip: [[.02, .2], [-.02, -.15]], legX: [.15, .12], legR: [.042, .055],
+        r: .15, len: .26, low: .15, H: .48, hip: [[.06, .2], [-.02, -.15]], legX: [.18, .12], legR: [.045, .058],
+        torso: [[-.3, .03, .03, 0], [-.22, .11, .12, 0], [-.08, .125, .13, -.01], [.08, .15, .145, .01], [.2, .17, .14, .05],
+            [.3, .13, .1, .08], [.36, .07, .06, .09], [.39, .02, .02, .09]],
         fl: [.3, .3, .07], hl: [.22, .22, .12], foot: [.1, .06], toeA: [0, -.35],
-        neckAt: [.05, .3], neck: [2, .07, .075, .062], neckProf: [.25, -.1],
-        head: 1, tailAt: [0, -.3], tail: [11, .1, .04],
-        wing: { len: 1.0, at: [.07, .12, .1], hip: [.1, -.02, -.2], flank: [.13, .05, -.05], bone: .028 },
+        neckAt: [.07, .3], neck: [2, .07, .1, .075], neckProf: [.25, -.1],
+        head: 1, tailAt: [0, -.26], tail: [11, .1, .06],
+        wing: { len: 1.05, at: [.08, .12, .12], hip: [.1, -.02, -.2], flank: [.13, .05, -.05], bone: .028 },
         gait: { walk: .7, run: 1.3, amp: .4, ampRun: .35, lift: .8 }
     }
 };
@@ -80,11 +90,11 @@ const KINDS = {
 // wing joint angles: shoulder pitch, raise (up), sweep (back), roll (membrane down when folded), elbow / hand fold
 const WING_POSES = {
     dragon: {
-        fold: { pitch: 0, raise: -.65, sweep: 1.2, roll: -1.3, elbow: 2.7, hand: 2.9 },
+        fold: { pitch: 0, raise: .1, sweep: 1.1, roll: -1.2, elbow: 2.4, hand: 3.3 },
         open: { pitch: 0, raise: .3, sweep: .3, roll: .05, elbow: .55, hand: -.1 }
     },
     wyvern: {
-        fold: { pitch: 0, raise: -.65, sweep: 1.2, roll: -1.3, elbow: 2.7, hand: 2.9 },
+        fold: { pitch: 0, raise: .1, sweep: 1.1, roll: -1.2, elbow: 2.4, hand: 3.3 },
         open: { pitch: 0, raise: .3, sweep: .3, roll: .05, elbow: .55, hand: -.1 },
         ground: { pitch: .6, raise: -1.32, sweep: 0, roll: 0, elbow: .5, hand: 2.85 }       // wrist on the ground ahead of the shoulder
     },
@@ -96,11 +106,11 @@ const WING_POSES = {
 const FAN_FOLD = [0, .04, .08, .12], FAN_OPEN = [-.1, .35, .8, 1.3];
 
 // Pose tables per kind: o = keys over the stand pose, plant = legs kept on the ground by IK ('F' fore, 'H' hind),
-// rest = belly on the ground (body lowered to this many torso radii), fw / hw = world angles of folded legs.
+// rest = belly on the ground (body lowered to this many belly depths), fw / hw = world angles of folded legs.
 const EXTRA = { nS: 1, tailC: .03, tailY: 0, wS: 0, wF: 0, wG: 0 };
 const POSES = {
     dragon: {
-        stand: { o: { neckX: .55, headX: .25, jaw: .04, tailX: -.3, tailC: .035 }, plant: 'FH' },
+        stand: { o: { neckX: .5, headX: .35, jaw: .04, tailX: -.3, tailC: .035, wS: .22 }, plant: 'FH' },
         run: { o: { wS: .4, wF: .05, neckX: .75, headX: .2 }, plant: 'FH' },
         wind: { o: { by: .04, bz: -.1, bx: -.1, FRx: -.6, FRk: .9, neckX: -.05, nS: 1.5, headX: -.25, jaw: .4, wS: .4, wF: .25, tailX: -.15 }, plant: 'FH' },
         strike: { o: { by: -.05, bz: .22, bx: .14, FRx: .35, FRk: -.2, neckX: 1.25, nS: .1, headX: .2, jaw: .6, wS: .3, wF: -.1 }, plant: 'FH' },
@@ -108,13 +118,14 @@ const POSES = {
         defend: { o: { by: .22, bz: -.15, bx: -.5, FRx: -.35, FRk: .3, neckX: .15, nS: 1.4, headX: .05, jaw: .6, wS: 1, wF: .45, tailX: -.05 },
             plant: 'H', fw: [-1, -1.7, -.6] },
         hit: { o: { by: -.02, bz: -.12, bx: -.08, neckX: .15, nS: 1.5, headX: -.1, jaw: .35, wS: .3, wF: .3 }, plant: 'FH' },
-        kneel: { o: { neckX: .35, nS: 1.1, headX: .25, tailX: -.2, tailC: .02, tailY: .12, HLz: .2 }, rest: 1.02, fw: [1, -1.57, -1.57], hw: [-1.3, 1.2, -1.5] },
-        lie: { o: { neckX: 1.4, nS: -.3, headX: .7, jaw: .02, tailX: -.2, tailC: .02, tailY: .16, HLz: .2 }, rest: 1.0, fw: [1, -1.57, -1.57], hw: [-1.3, 1.2, -1.5] },
-        dead: { o: { roll: 1.3, FLz: -.15, HLz: -.15, neckX: 1.3, nS: -.4, headX: .3, jaw: .5, tailX: -.05, tailC: 0, tailY: 0, wS: .5, wF: -.3 }, rest: 1.3,
+        kneel: { o: { neckX: .35, nS: 1.1, headX: .25, tailX: -.2, tailC: .02, tailY: .12, HLz: .2 }, rest: 1.0, fw: [1, -1.57, -1.57], hw: [-1.3, 1.2, -1.5] },
+        lie: { o: { neckX: 1.4, nS: -.3, headX: .7, jaw: .02, tailX: -.2, tailC: .02, tailY: .16, HLz: .2, wS: 0 }, rest: .97, fw: [1, -1.57, -1.57], hw: [-1.3, 1.2, -1.5] },
+        dead: { o: { roll: 1.3, FLz: -.15, HLz: -.15, neckX: 1.3, nS: -.4, headX: .3, jaw: .5, tailX: -.05, tailC: 0, tailY: 0, wS: .5, wF: -.3 }, rest: 1.0,
             fw: [-.3, .1, .3], hw: [.3, .6, .4] }
     },
     wyvern: {
-        stand: { o: { bx: -.5, neckX: 1.15, nS: 1.4, headX: .7, jaw: .05, tailX: .3, tailC: .03, wG: 1 }, plant: 'H' },
+        stand: { o: { bx: -.62, neckX: 1.1, nS: 1.4, headX: .75, jaw: .05, tailX: .35, tailC: .03, wS: .45 }, plant: 'H' },
+        walk: { o: { bx: -.5, neckX: 1.15, nS: 1.4, headX: .7, jaw: .05, tailX: .3, tailC: .03, wG: 1 }, plant: 'H' },
         run: { o: { bx: -.35, neckX: 1.0, headX: .55, wG: .7, wS: .25 }, plant: 'H' },
         wind: { o: { bx: -.75, by: .06, bz: -.08, neckX: .5, nS: 1.6, headX: .7, jaw: .6, wG: .2, wS: .55, wF: .3, tailX: .7 }, plant: 'H' },
         strike: { o: { bx: -.2, by: -.08, bz: .22, neckX: 1.55, nS: .1, headX: .55, jaw: .9, wG: 0, wS: .6, wF: -.25, tailX: .2 }, plant: 'H' },
@@ -123,11 +134,11 @@ const POSES = {
         hit: { o: { bx: -.62, bz: -.1, neckX: .6, nS: 1.5, headX: .7, jaw: .4, wG: .5, wS: .3, wF: .2 }, plant: 'H' },
         kneel: { o: { bx: -.15, neckX: .8, headX: .4, wG: 0, tailY: .12, HLz: .2 }, rest: 1.0, hw: [-1.35, 1.45, -1.55] },
         lie: { o: { bx: 0, neckX: 1.4, nS: -.3, headX: .7, wG: 0, tailX: -.1, tailY: .16, HLz: .2 }, rest: 1.0, hw: [-1.35, 1.45, -1.55] },
-        dead: { o: { bx: 0, roll: 1.3, HLz: -.15, neckX: 1.3, nS: -.4, headX: .3, jaw: .5, tailX: -.05, tailC: 0, tailY: 0, wG: 0, wS: .5, wF: -.3 }, rest: 1.3,
+        dead: { o: { bx: 0, roll: 1.3, HLz: -.15, neckX: 1.3, nS: -.4, headX: .3, jaw: .5, tailX: -.05, tailC: 0, tailY: 0, wG: 0, wS: .5, wF: -.3 }, rest: 1.1,
             hw: [.3, .6, .4] }
     },
     gargoyle: {
-        stand: { o: { bx: -.75, neckX: .45, headX: .75, jaw: .05, tailX: .6, tailC: .02, tailY: .12, wS: .35 }, plant: 'FH' },
+        stand: { o: { bx: -.6, by: -.07, neckX: .6, headX: .6, jaw: .22, tailX: .6, tailC: .02, tailY: .12, wS: .4 }, plant: 'FH' },
         walk: { o: { bx: -.25, neckX: .9, headX: .3 }, plant: 'FH', rel: true },
         run: { o: { bx: -.15, neckX: 1.0, headX: .25, wS: .3 }, plant: 'FH', rel: true },
         wind: { o: { bx: -.95, by: .05, FRx: -2.0, FRk: .4, neckX: .35, headX: .8, jaw: .5, wS: .5, wF: .2 }, plant: 'FH' },
@@ -137,7 +148,7 @@ const POSES = {
         hit: { o: { bx: -.9, bz: -.06, neckX: .2, headX: .9, jaw: .35, wS: .3, wF: .2 }, plant: 'FH' },
         kneel: { o: { bx: -.8, by: -.06, neckX: .5, headX: .9, tailX: .5 }, plant: 'FH' },
         lie: { o: { bx: 0, neckX: 1.3, nS: -.2, headX: .5, tailX: -.1, tailY: .2, HLz: .2, wS: 0 }, rest: 1.0, fw: [1, -1.57, -1.57], hw: [-1.3, 1.2, -1.5] },
-        dead: { o: { bx: 0, roll: 1.3, FLz: -.15, HLz: -.15, neckX: 1.3, nS: -.3, headX: .3, jaw: .4, tailX: -.05, tailC: 0, tailY: 0, wS: .45, wF: -.3 }, rest: 1.3,
+        dead: { o: { bx: 0, roll: 1.3, FLz: -.15, HLz: -.15, neckX: 1.3, nS: -.3, headX: .3, jaw: .4, tailX: -.05, tailC: 0, tailY: 0, wS: .45, wF: -.3 }, rest: 1.25,
             fw: [-.3, .1, .3], hw: [.3, .6, .4] }
     }
 };
@@ -162,45 +173,56 @@ function canvasTex(key, size, draw, repeat = [1, 1]) {
     texCache.set(key, tex);
     return tex;
 }
-// overlapping scales
-const scaleTex = (base, edge) => canvasTex('sc' + base + edge, 64, g => {
-    g.fillStyle = hex(base); g.fillRect(0, 0, 64, 64);
-    g.strokeStyle = hex(new THREE.Color(base).lerp(new THREE.Color(edge), .6)); g.lineWidth = 1.2;
-    for (let y = 0; y <= 64; y += 8) for (let x = (y / 8) % 2 ? 4 : 0; x <= 68; x += 8) {
-        g.beginPath(); g.arc(x, y, 4.6, 0, Math.PI); g.stroke();
+// grey overlapping scales tinted by the vertex colours; u = once around a loft (0 = belly), v = along it.
+// plates: the belly band (u < .17 or > .83) carries broad transverse plates instead.
+const scaleTex = plates => canvasTex('gsc' + plates, 128, g => {
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128);
+    const cols = 24, rows = 6, cw = 128 / cols, rh = 128 / rows;
+    for (let r = -1; r <= rows; r++) for (let c = -1; c <= cols; c++) {
+        const x = (c + (r % 2 ? .5 : 0)) * cw, y = r * rh;
+        const gr = g.createLinearGradient(0, y, 0, y + rh * 1.1);
+        gr.addColorStop(0, '#ffffff'); gr.addColorStop(.75, '#d4d4d4'); gr.addColorStop(1, '#8a8a8a');
+        g.fillStyle = gr; g.strokeStyle = '#6a6a6a'; g.lineWidth = 1;
+        g.beginPath(); g.ellipse(x, y, cw * .62, rh * 1.05, 0, 0, Math.PI); g.closePath(); g.fill(); g.stroke();
     }
-}, [7, 5]);
-// belly plates: bands across the body
-const plateTex = (base, edge) => canvasTex('pl' + base + edge, 32, g => {
-    g.fillStyle = hex(base); g.fillRect(0, 0, 32, 32);
-    g.fillStyle = hex(edge);
-    for (let y = 0; y < 32; y += 4) g.fillRect(0, y, 32, 1);
-}, [1, 3]);
-// weathered stone: speckles and hairline cracks
-const stoneTex = (base, dark) => canvasTex('st' + base + dark, 64, (g, rnd) => {
-    g.fillStyle = hex(base); g.fillRect(0, 0, 64, 64);
-    for (let i = 0; i < 260; i++) {
-        g.fillStyle = rnd() < .5 ? hex(dark) : '#a8a6a0';
-        g.globalAlpha = .12 + rnd() * .2;
-        g.fillRect(rnd() * 64, rnd() * 64, 1 + rnd() * 2, 1 + rnd() * 2);
+    if (plates) {
+        for (const [x0, x1] of [[0, 22], [106, 128]]) {
+            for (let y = 0; y < 128; y += 32) {
+                const gr = g.createLinearGradient(0, y, 0, y + 32);
+                gr.addColorStop(0, '#ffffff'); gr.addColorStop(.8, '#e6e6e6'); gr.addColorStop(1, '#9a9a9a');
+                g.fillStyle = gr; g.fillRect(x0, y, x1 - x0, 32);
+                g.fillStyle = '#707070'; g.fillRect(x0, y + 30, x1 - x0, 2);
+            }
+        }
     }
-    g.globalAlpha = .5; g.strokeStyle = hex(dark); g.lineWidth = 1;
-    for (let i = 0; i < 5; i++) {
-        let x = rnd() * 64, y = rnd() * 64;
+});
+// weathered stone (grey, tinted by the vertex colours): speckles and hairline cracks
+const stoneTex = () => canvasTex('gst', 128, (g, rnd) => {
+    g.fillStyle = '#e8e8e8'; g.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 900; i++) {
+        const v = 150 + Math.floor(rnd() * 105);
+        g.fillStyle = `rgb(${v},${v},${v})`;
+        g.globalAlpha = .25 + rnd() * .35;
+        g.fillRect(rnd() * 128, rnd() * 128, 1 + rnd() * 3, 1 + rnd() * 3);
+    }
+    g.globalAlpha = .55; g.strokeStyle = '#5a5a5a'; g.lineWidth = 1;
+    for (let i = 0; i < 9; i++) {
+        let x = rnd() * 128, y = rnd() * 128;
         g.beginPath(); g.moveTo(x, y);
-        for (let k = 0; k < 5; k++) { x += (rnd() - .5) * 14; y += rnd() * 9; g.lineTo(x, y); }
+        for (let k = 0; k < 6; k++) { x += (rnd() - .5) * 22; y += rnd() * 14; g.lineTo(x, y); }
         g.stroke();
     }
-}, [2, 2]);
+    g.globalAlpha = 1;
+});
 // wing membrane: veins (and spots); torn = ragged holes cut out (used with alphaTest)
 const membraneTex = c => canvasTex('mb' + c.membrane + c.vein + (c.spots || 0) + (c.torn || 0), 128, (g, rnd) => {
     const gr = g.createLinearGradient(0, 0, 128, 128);
-    gr.addColorStop(0, hex(new THREE.Color(c.membrane).multiplyScalar(.8)));
+    gr.addColorStop(0, hex(new THREE.Color(c.membrane).multiplyScalar(.75)));
     gr.addColorStop(1, hex(c.membrane));
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     if (c.spots) {
         g.fillStyle = hex(c.spots);
-        for (let i = 0; i < 70; i++) {
+        for (let i = 0; i < 90; i++) {
             g.globalAlpha = .5 + rnd() * .4;
             g.beginPath(); g.ellipse(rnd() * 128, rnd() * 128, 2 + rnd() * 5, 2 + rnd() * 4, rnd() * 3, 0, Math.PI * 2); g.fill();
         }
@@ -238,19 +260,111 @@ const membraneTex = c => canvasTex('mb' + c.membrane + c.vein + (c.spots || 0) +
 /* ------------------------------------------------------------------ shared geometry */
 
 const geoCache = new Map();
+const cachedGeo = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); };
 // cone with its tip at the origin opening along +z (breath)
-const breathCone = (r, h) => {
-    const key = 'bc' + r + h;
-    if (!geoCache.has(key)) geoCache.set(key, new THREE.ConeGeometry(r, h, 10, 1, true).rotateX(-Math.PI / 2).translate(0, 0, h / 2));
-    return geoCache.get(key);
-};
-const puffGeo = () => {
-    if (!geoCache.has('puff')) geoCache.set('puff', new THREE.IcosahedronGeometry(1, 0));
-    return geoCache.get('puff');
-};
+const breathCone = (r, h) => cachedGeo('bc' + r + h, () => new THREE.ConeGeometry(r, h, 10, 1, true).rotateX(-Math.PI / 2).translate(0, 0, h / 2));
+const puffGeo = () => cachedGeo('puff', () => new THREE.IcosahedronGeometry(1, 0));
 // horn / spike curving back from the origin (side s mirrors x)
 const backHorn = (len, r, s, up = .5, out = .2) => taperTube([[0, 0, 0], [s * out * .3 * len, up * .25 * len, -.3 * len],
     [s * out * .7 * len, up * .4 * len, -.65 * len], [s * out * len, up * .35 * len, -len]], r, r * .12, 8, 6);
+// flat blade spike (dorsal fins, frills): cone flattened sideways
+const bladeGeo = (r, h) => cachedGeo('bl' + r + h, () => new THREE.ConeGeometry(r, h, 4).scale(.4, 1, 1));
+
+const sstep = (a, b, x) => smooth((x - a) / (b - a));
+// Catmull-Rom through column `col` of the sections at parameter f (0 .. sections - 1)
+function crs(S, col, f) {
+    const n = S.length, i = Math.min(n - 2, Math.floor(f)), t = f - i;
+    const p0 = S[Math.max(0, i - 1)][col], p1 = S[i][col], p2 = S[i + 1][col], p3 = S[Math.min(n - 1, i + 2)][col];
+    return .5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
+}
+// linear look-up of a section [rx, ry, cy] at z (sections ascending in z)
+function secAt(S, z, out = [0, 0, 0]) {
+    let i = 0;
+    while (i < S.length - 2 && z > S[i + 1][0]) i++;
+    const a = S[i], b = S[i + 1], f = Math.min(1, Math.max(0, (z - a[0]) / (b[0] - a[0])));
+    for (let k = 1; k <= 3; k++) out[k - 1] = (a[k] ?? a[1]) + ((b[k] ?? b[1]) - (a[k] ?? a[1])) * f;
+    if (a.length < 4) out[2] = 0;
+    return out;
+}
+
+const _ca = new THREE.Color(), _cs = new THREE.Color(), _cb = new THREE.Color(), _cd = new THREE.Color();
+/*
+ * Smooth closed loft along +z through sections [z, rx, ry, cy] (half width, half height, centre height; Catmull-Rom,
+ * `sub` rings per span, small caps at the ends). Vertex colours: skin, a belly band underneath (-y; bellyAt = cosine of
+ * its half angle, 2 = none), darker back (darkW); colFn(colour, z, sin, cos) may adjust them. u runs once around
+ * (0 = middle of the belly, matching the plates of scaleTex(true)), v along the length (vk per metre).
+ * rot: 'up' turns +z into +y (belly → +z), 'down' turns +z into -y (belly → -z), 'back' turns +z into -z.
+ */
+function loftGeo(key, sec, o = {}) {
+    return cachedGeo(key, () => {
+        const S = sec.map(s => [s[0], s[1], s[2] ?? s[1], s[3] ?? 0]);
+        const radial = o.radial || 12, sub = o.sub || 3, vk = o.vk ?? 3, n = (S.length - 1) * sub + 1, R = radial + 1;
+        _cs.set(o.skin ?? 0xffffff); _cb.set(o.belly ?? o.skin ?? 0xffffff); _cd.set(o.dark ?? o.skin ?? 0xffffff);
+        const bAt = o.bellyAt ?? 2, dW = o.darkW ?? 0;
+        const pos = [], uv = [], col = [], idx = [];
+        let v = 0, pz = 0, pr = 0;
+        for (let j = 0; j < n; j++) {
+            const f = j / sub, z = crs(S, 0, f), rx = Math.max(.001, crs(S, 1, f)), ry = Math.max(.001, crs(S, 2, f)), cy = crs(S, 3, f);
+            if (j) v += Math.hypot(z - pz, rx - pr) * vk;
+            pz = z; pr = rx;
+            for (let i = 0; i <= radial; i++) {
+                const a = -Math.PI / 2 + i / radial * Math.PI * 2, sa = Math.sin(a), ca = Math.cos(a);
+                pos.push(rx * ca, cy + ry * sa, z);
+                uv.push(i / radial, v);
+                _ca.copy(_cs).lerp(_cd, sstep(.15, 1, sa) * dW).lerp(_cb, sstep(bAt - .18, bAt + .12, -sa));
+                if (o.colFn) o.colFn(_ca, z, sa, ca);
+                col.push(_ca.r, _ca.g, _ca.b);
+            }
+        }
+        for (let j = 0; j < n - 1; j++) for (let i = 0; i < radial; i++) {
+            const a = j * R + i, b = a + R;
+            idx.push(a, a + 1, b, a + 1, b + 1, b);
+        }
+        for (const [ring, sg] of [[0, -1], [n - 1, 1]]) {                  // end caps
+            const base = ring * R, c0 = pos.length / 3;
+            let y = 0, r = 0, gg = 0, bb = 0;
+            for (let i = 0; i < radial; i++) { y += pos[(base + i) * 3 + 1]; r += col[(base + i) * 3]; gg += col[(base + i) * 3 + 1]; bb += col[(base + i) * 3 + 2]; }
+            pos.push(0, y / radial, pos[base * 3 + 2] + sg * .002);
+            uv.push(.5, ring ? v : 0);
+            col.push(r / radial, gg / radial, bb / radial);
+            for (let i = 0; i < radial; i++) {
+                if (sg > 0) idx.push(base + i, base + i + 1, c0); else idx.push(c0, base + i + 1, base + i);
+            }
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        const nm = g.attributes.normal;
+        for (let j = 0; j < n; j++) {                                       // weld the normals along the u seam
+            const a = j * R, b = a + radial;
+            const x = nm.getX(a) + nm.getX(b), y = nm.getY(a) + nm.getY(b), z = nm.getZ(a) + nm.getZ(b), l = Math.hypot(x, y, z) || 1;
+            nm.setXYZ(a, x / l, y / l, z / l); nm.setXYZ(b, x / l, y / l, z / l);
+        }
+        if (o.rot === 'up') g.rotateX(-Math.PI / 2);
+        else if (o.rot === 'down') g.rotateX(Math.PI / 2);
+        else if (o.rot === 'back') g.rotateY(Math.PI);
+        if (o.skin2) skinAlong(g, ...o.skin2);
+        if (o.at) g.translate(...o.at);
+        return g;
+    });
+}
+// skin weights along one axis (1 = y, 2 = z, sign flips it): bone k is centred at cs[k] (ascending), linear blend
+function skinAlong(g, axis, sign, cs) {
+    const p = g.attributes.position, n = p.count, si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) {
+        const s = (axis === 1 ? p.getY(i) : p.getZ(i)) * sign;
+        let a = 0;
+        while (a < cs.length - 2 && s > cs[a + 1]) a++;
+        const f = Math.min(1, Math.max(0, (s - cs[a]) / (cs[a + 1] - cs[a])));
+        si[i * 4] = a; si[i * 4 + 1] = a + 1;
+        sw[i * 4] = 1 - f; sw[i * 4 + 1] = f;
+    }
+    g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+    g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+}
 
 /* ------------------------------------------------------------------ wing */
 
@@ -348,6 +462,8 @@ function makeDragonWing(body, s, o) {
 
 /* ------------------------------------------------------------------ rig */
 
+const _cf = new THREE.Color(), _cm = new THREE.Color(0x4a1414), _s3 = [0, 0, 0];
+
 export class ProceduralDragon extends QuadrupedRig {
     constructor(variant = 'dragon', { scale = 1 } = {}) {
         super();
@@ -357,6 +473,7 @@ export class ProceduralDragon extends QuadrupedRig {
         const D = this.D = KINDS[this.kind];
         this.k = c.bulk ?? 1;
         this.skel = c.undead === 'skeleton';
+        this.tailL = D.tail[1] * (c.tailK || 1);
         const T = POSES[this.kind];
         const stand = { ...BASE_STAND, ...EXTRA, ...T.stand.o };
         this.init({ H: D.H, stand, legs: D.fl ? ['FL', 'FR', 'HL', 'HR'] : ['HL', 'HR'], sniff: .2, scale: c.scale * (scale || 1), gait: { roll: .015, ...D.gait } });
@@ -395,7 +512,7 @@ export class ProceduralDragon extends QuadrupedRig {
     }
     makePose({ o = {}, plant = '', rest, fw, hw, rel = false }) {
         const P = this.pose(o);
-        if (rest !== undefined) P.by = -(this.H - this.D.r * this.k * rest * (this.skel && !o.roll ? 1.45 : 1));
+        if (rest !== undefined) P.by = -(this.H - (this.skel && !o.roll ? this.D.r * 1.45 : this.D.low * this.k) * rest);
         if (fw && this.D.fl) this.legsWorld(P, 'FL', ...fw);
         if (hw) this.legsWorld(P, 'HL', ...hw);
         if (plant.includes('F') && this.D.fl) this.plant(P, 'FL', rel);
@@ -403,19 +520,31 @@ export class ProceduralDragon extends QuadrupedRig {
         return P;
     }
 
+    // skinned tube over a chain of joints, bound in the rest pose (built before the first update)
+    skinned(geo, m, parent, bones) {
+        const mesh = new THREE.SkinnedMesh(geo, m);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.frustumCulled = false;
+        parent.add(mesh);
+        this.root.updateMatrixWorld(true);
+        mesh.bind(new THREE.Skeleton(bones), mesh.matrixWorld);
+        return mesh;
+    }
+
     /* -------------------------------------------------------------- build */
 
     build() {
         const c = this.c, J = this.j, add = this.adder(), grp = this.grp.bind(this);
-        const sTex = c.stone ? stoneTex(c.skin, c.dark) : c.skin !== undefined ? scaleTex(c.skin, c.dark) : null;
-        const bTex = c.stone || c.undead ? null : plateTex(c.belly, c.dark);
-        const opt = c.stone ? { roughness: 1, flatShading: true } : { roughness: .6 };
+        const sTex = c.stone ? stoneTex() : scaleTex(false), hTex = c.stone ? stoneTex() : scaleTex(true);
+        const rough = c.stone ? .95 : .55;
         const M = this.M = {
-            skin: c.skin === undefined ? mat(c.bone, { roughness: .7 }) : sTex ? mat(0xffffff, { ...opt, map: sTex }) : mat(c.skin, opt),
-            plain: mat(c.skin ?? c.bone, opt),
-            belly: bTex ? mat(0xffffff, { roughness: .55, map: bTex }) : mat(c.belly ?? c.bone, opt),
+            lskin: mat(0xffffff, { vertexColors: true, map: sTex, roughness: rough }),        // lofts (vertex colours)
+            lhide: mat(0xffffff, { vertexColors: true, map: hTex, roughness: rough }),        // lofts with belly plates
+            lbone: mat(0xffffff, { vertexColors: true, roughness: .75 }),
+            skin: mat(c.skin ?? c.bone, { roughness: rough, map: c.skin === undefined ? null : sTex }),
             dark: mat(c.dark, { roughness: .8 }),
-            spine: mat(c.spine, { roughness: .5 }),
+            spine: mat(c.spine, { roughness: .45 }),
             horn: mat(c.horn, { roughness: .45 }),
             bone: mat(c.bone ?? 0xd8ccb0, { roughness: .75 }),
             claw: mat(c.stone ? c.dark : c.undead ? 0x2a2420 : 0x1e1a16, { roughness: .4 }),
@@ -434,54 +563,55 @@ export class ProceduralDragon extends QuadrupedRig {
     }
 
     buildTorso(add, grp) {
-        const c = this.c, D = this.D, J = this.j, M = this.M, r = D.r * this.k, len = D.len, lich = c.undead === 'lich';
-        const along = m => { m.rotation.x = Math.PI / 2; return m; };
-        along(add(J.body, new THREE.CapsuleGeometry(r * (lich ? .82 : 1), len, 4, 10), M.skin, 0, lich ? .03 : 0, 0)).scale.set(.9, 1, .95);
-        J.chest = grp(J.body, 0, .02, len * .32);                                                 // breathes
-        along(add(J.chest, G.sph(r * 1.08, 12, 9), M.skin)).scale.set(.95, 1.05, 1.1);
-        along(add(J.body, G.sph(r * .95, 10, 8), M.skin, 0, .02, -len * .38)).scale.set(.98, 1.1, 1);   // haunches
-        if (lich) {                                                                               // open rib cage over a dark cavity
-            along(add(J.body, G.sph(r * .8, 10, 8), M.belly, 0, -r * .3, .05)).scale.set(.8, 1.5, .7);
+        const c = this.c, D = this.D, J = this.j, M = this.M, k = this.k, lich = c.undead === 'lich', garg = this.kind === 'gargoyle';
+        const S = D.torso.map(([z, rx, ry, cy]) => [z, rx * k * (lich ? .9 : 1), ry * k * (lich ? .94 : 1), cy]);
+        _cf.set(c.belly);
+        // dragonlich: raw flesh under the open ribs, dark rot patches
+        const colFn = lich ? (col, z, sa, ca) => {
+            col.lerp(_cf, sstep(-.15, .35, -sa) * sstep(-.35, -.18, z) * (1 - sstep(.42, .56, z)));
+            col.multiplyScalar(1 - .45 * sstep(.55, .95, Math.sin(z * 31 + ca * 4) * Math.sin(sa * 6 + z * 17)));
+        } : null;
+        J.chest = add(J.body, loftGeo('torso' + this.variant, S, { radial: 14, sub: 3, skin: c.skin, belly: c.belly, dark: c.dark,
+            darkW: garg ? .3 : .55, bellyAt: lich ? 2 : garg ? .6 : .48, colFn }), M.lhide);
+        if (lich) {                                                                               // open rib cage
             for (let i = 0; i < 7; i++) {
-                const z = len * .5 - i * len * .13, rr = r * (.95 - Math.abs(i - 2) * .05);
-                const rib = add(J.body, G.torus(rr, r * .055, 4, 10, Math.PI * 1.15), M.bone, 0, 0, z);
-                rib.rotation.set(.25, 0, -Math.PI / 2 - Math.PI * .575);
-                rib.scale.set(.95, 1, 1);
+                const z = .44 - i * .095;
+                secAt(S, z, _s3);
+                const g = grp(J.body, 0, _s3[2], z);
+                g.scale.set(_s3[0] * 1.04, _s3[1] * 1.04, .26);
+                g.rotation.x = .12;
+                add(g, G.torus(1, .07, 4, 14, Math.PI * 1.3), M.bone).rotation.z = -Math.PI / 2 - Math.PI * .65;
             }
-            add(J.body, G.box(r * .2, r * .12, len * .9), M.bone, 0, -r * .98, .1);             // sternum
-            for (let i = 0; i < 5; i++) add(J.body, G.sph(r * .2, 6, 5), M.dark, (i % 2 - .5) * r * .9, r * .5, len * .4 - i * len * .2).scale.set(1, .5, 1.4);  // rot patches
-        } else {
-            along(add(J.body, G.sph(r, 12, 8), M.belly, 0, -r * .42, .04)).scale.set(.78, (len + 2 * r) / (2 * r) * .92, .62);
+            secAt(S, .1, _s3);
+            add(J.body, G.box(.05, .03, .62), M.bone, 0, _s3[2] - _s3[1] * 1.02, .1);              // sternum
         }
-        if (this.kind === 'gargoyle') {                                                           // hunched shoulders
-            for (const s of [1, -1]) add(J.body, G.sph(r * .65, 8, 6), M.skin, s * r * .55, r * .35, len * .3).scale.set(1, .9, 1.2);
-        }
-        // dorsal spikes
-        const n = Math.round((len + r * 1.4) / (this.kind === 'gargoyle' ? .06 : .1));
-        for (let i = 0; i < n; i++) {
-            const z = len / 2 + r * .5 - i * (len + r * 1.2) / (n - 1), h = r * (this.kind === 'gargoyle' ? .2 : c.elder ? .62 : .42) * (1 - Math.abs(i / (n - 1) - .4) * .5);
-            const sp = add(J.body, G.cone(h * .32, h, 4), this.kind === 'gargoyle' ? M.dark : M.spine, 0, r * .9, z);
-            sp.rotation.x = -.5;
-            sp.scale.x = .45;
+        // dorsal spikes along the ridge
+        const z0 = S[1][0] + .04, z1 = S[S.length - 2][0] - .03, n = Math.round((z1 - z0) / (garg ? .06 : .085));
+        const h0 = garg ? .04 : (c.elder ? .17 : .12) * k;
+        for (let i = 0; i <= n; i++) {
+            const z = z1 - i * (z1 - z0) / n, h = h0 * (1 - Math.abs(i / n - .35) * .7);
+            secAt(S, z, _s3);
+            const sp = add(J.body, bladeGeo(h * .38, h), garg ? M.dark : M.spine, 0, _s3[2] + _s3[1] * .92 + h * .3, z);
+            sp.rotation.x = -.6;
         }
     }
 
     buildSkeletonTorso(add, grp) {
         const D = this.D, J = this.j, M = this.M, r = D.r, len = D.len;
         const n = 13;
-        for (let i = 0; i < n; i++) {                                                             // spine with dark spines
+        for (let i = 0; i < n; i++) {                                                             // spine with black spines
             const z = len / 2 + r * .55 - i * (len + r * 1.1) / (n - 1);
-            add(J.body, G.box(r * .26, r * .24, r * .28), M.bone, 0, r * .62, z);
-            const sp = add(J.body, G.cone(r * .07, r * .5 * (1 - Math.abs(i / n - .4) * .6), 4), M.spine, 0, r * .9, z);
-            sp.rotation.x = -.45;
+            add(J.body, G.box(r * .28, r * .26, r * .3), M.bone, 0, r * .62, z);
+            const sp = add(J.body, bladeGeo(r * .1, r * .7 * (1 - Math.abs(i / n - .4) * .6)), M.spine, 0, r * .95, z);
+            sp.rotation.x = -.5;
         }
         for (let i = 0; i < 8; i++) {                                                             // rib cage
-            const z = len * .5 - i * len * .1, rr = r * (.68 + .3 * Math.sin(Math.PI * (i + 1.2) / 9));
-            const rib = add(J.body, G.torus(rr, r * .045, 4, 12, Math.PI * 1.7), M.bone, 0, r * .62 - rr, z);
+            const z = len * .5 - i * len * .1, rr = r * (.7 + .32 * Math.sin(Math.PI * (i + 1.2) / 9));
+            const rib = add(J.body, G.torus(rr, r * .05, 4, 12, Math.PI * 1.7), M.bone, 0, r * .62 - rr, z);
             rib.rotation.set(.3, 0, Math.PI / 2 + Math.PI * .15);
             rib.scale.set(.92, 1, 1);
         }
-        add(J.body, G.box(r * .18, r * .1, len * .7), M.bone, 0, -r * .72, len * .18).rotation.x = -.1;   // sternum
+        add(J.body, G.box(r * .2, r * .12, len * .7), M.bone, 0, -r * .76, len * .18).rotation.x = -.1;   // sternum
         for (const s of [1, -1]) {
             add(J.body, G.box(r * .08, r * .7, r * .5), M.bone, s * r * .55, r * .2, D.hip[0][1] + .02).rotation.z = s * .25;   // shoulder blades
             add(J.body, G.box(r * .1, r * .55, r * .7), M.bone, s * r * .45, r * .25, D.hip[1][1]).rotation.z = s * .4;        // pelvis
@@ -490,31 +620,45 @@ export class ProceduralDragon extends QuadrupedRig {
     }
 
     buildLegs(add, grp) {
-        const D = this.D, J = this.j, M = this.M, k = this.k, skel = this.skel, garg = this.kind === 'gargoyle';
-        const flesh = skel ? M.bone : M.skin;
+        const D = this.D, J = this.j, M = this.M, c = this.c, k = this.k, skel = this.skel, garg = this.kind === 'gargoyle', V = this.variant;
+        const shade = (b, gr) => (col, z) => col.lerp(_cd, Math.min(.55, b + Math.max(0, z) * gr));
         for (const name of this.legNames) {
             const F = name[0] === 'F', side = name[1] === 'L' ? 1 : -1, i = F ? 0 : 1;
             const [l0, l1, l2] = F ? D.fl : D.hl, R = D.legR[i] * k, [hy, hz] = D.hip[i];
             const top = grp(J.body, side * D.legX[i] * k, hy, hz), knee = grp(top, 0, -l0, 0), low = grp(knee, 0, -l1, 0), toe = grp(low, 0, -l2, 0);
-            // bones of the dragonlich's fore-legs show through
-            const m = skel || (this.c.undead === 'lich' && F) ? M.bone : flesh, thin = skel || (this.c.undead === 'lich' && F) ? .45 : 1;
-            if (thin === 1) add(top, G.sph(R * 1.55, 8, 6), m, 0, -l0 * .22, 0).scale.set(.85, 1.35, 1.15);   // muscle
-            else add(top, G.sph(R * .7, 6, 5), m);
-            add(top, G.cyl(R * .8 * thin, R * 1.05 * thin, l0, 7), m, 0, -l0 / 2, 0);
-            add(knee, G.sph(R * .8 * (thin < 1 ? .8 : 1), 7, 5), m);
-            add(knee, G.cyl(R * .6 * thin, R * .78 * thin, l1, 7), m, 0, -l1 / 2, 0);
-            add(low, G.sph(R * .6, 6, 5), m);
-            add(low, G.cyl(R * .5 * (thin < 1 ? .7 : 1), R * .58 * (thin < 1 ? .7 : 1), l2, 6), m, 0, -l2 / 2, 0);
+            const bony = skel || (c.undead === 'lich' && F), key = V + name[0];
+            if (bony) {                                                                           // knobbly long bones
+                const b = R * .55, bs = (l, e) => [[-b * 1.3, b * .4], [-b * .7, b * 1.3, b * 1.2], [l * .14, b * .72], [l * .5, b * .6], [l * .86, b * .72], [l + b * .5 * e, b * 1.25], [l + b * 1.2 * e, b * .35]];
+                [[top, l0], [knee, l1], [low, l2]].forEach(([g, l], s) => add(g, loftGeo('lb' + s + key, bs(l, s < 2 ? 1 : -1), { rot: 'down', radial: 7, sub: 2, skin: c.bone }), M.lbone));
+            } else {
+                const dl = garg ? .95 : 1.55;
+                const secs = F ? [
+                    [[-.07, .3 * R], [-.02, dl * R, dl * 1.12 * R, 0], [.3 * l0, 1.5 * R, 1.7 * R, .15 * R], [.75 * l0, 1.0 * R, 1.15 * R, 0], [l0, .82 * R, .88 * R, 0], [l0 + .45 * R, .3 * R]],
+                    [[-.4 * R, .3 * R], [0, .82 * R, .88 * R, 0], [.25 * l1, .92 * R, 1.05 * R, -.12 * R], [.8 * l1, .6 * R, .66 * R, 0], [l1, .55 * R], [l1 + .4 * R, .2 * R]],
+                    [[-.3 * R, .3 * R], [0, .55 * R], [l2 * .8, .5 * R], [l2 - .05 * R, .3 * R]]
+                ] : [
+                    [[-.09, .4 * R], [-.03, 1.9 * R, 2.1 * R, 0], [.3 * l0, 1.8 * R, 2.0 * R, .35 * R], [.7 * l0, 1.1 * R, 1.2 * R, .1 * R], [l0, .8 * R, .85 * R, 0], [l0 + .45 * R, .3 * R]],
+                    [[-.4 * R, .3 * R], [0, .8 * R, .85 * R, 0], [.3 * l1, .85 * R, .95 * R, -.25 * R], [.85 * l1, .5 * R, .55 * R, 0], [l1, .48 * R, .5 * R, 0], [l1 + .4 * R, .2 * R]],
+                    [[-.3 * R, .3 * R], [0, .5 * R], [l2 * .8, .46 * R], [l2 - .05 * R, .3 * R]]
+                ];
+                [[top, 0, .1], [knee, .12, .4], [low, .3, .5]].forEach(([g, b, gr], s) =>
+                    add(g, loftGeo('lg' + s + key, secs[s], { rot: 'down', radial: 10, sub: 2, skin: c.skin, dark: c.dark, colFn: shade(b, gr) }), M.lskin));
+            }
             // foot (sole at the toe group origin, kept level)
-            add(toe, G.sph(R * .95, 7, 5), skel ? M.bone : M.skin, 0, R * .42, R * .45).scale.set(1.1, .45, 1.35);
+            const footS = [[-.55 * R, .3 * R, .2 * R, .35 * R], [-.25 * R, .85 * R, .42 * R, .42 * R], [.45 * R, 1.0 * R, .36 * R, .36 * R], [1.0 * R, .85 * R, .24 * R, .25 * R], [1.3 * R, .4 * R, .1 * R, .14 * R]];
+            add(toe, loftGeo('ft' + key, footS, { radial: 10, sub: 2, skin: bony ? c.bone : c.skin, dark: bony ? c.bone : c.dark, darkW: .3 }), bony ? M.lbone : M.lskin);
             const claws = garg && F ? 4 : 3, cl = (garg && F ? 1.4 : 1) * R;
             for (let t = 0; t < claws; t++) {
                 const a = (t / (claws - 1) - .5) * 1.1;
-                if (skel || garg) {                                                              // toe bones / long fingers
-                    const tb = add(toe, G.cyl(R * .14, R * .2, cl * 1.1, 5), skel ? M.bone : M.skin, Math.sin(a) * R * .9, R * .25, R * .5 + Math.cos(a) * cl * .55);
+                if (bony || garg) {                                                              // toe bones / long fingers
+                    const tb = add(toe, G.cyl(R * .16, R * .24, cl * 1.1, 5), bony ? M.bone : M.skin, Math.sin(a) * R * .9, R * .25, R * .5 + Math.cos(a) * cl * .55);
                     tb.rotation.set(Math.PI / 2, 0, -a);
+                } else {
+                    const tg = add(toe, G.sph(R * .3, 7, 5), M.skin, Math.sin(a) * R * .85, R * .22, R * .95 + Math.cos(a) * R * .35);
+                    tg.scale.set(1, .75, 2.2);
+                    tg.rotation.y = a;
                 }
-                const cw = add(toe, G.cone(R * .17, cl * .85, 5), M.claw, Math.sin(a) * R * 1.2, R * .2, R * .45 + Math.cos(a) * cl * 1.15);
+                const cw = add(toe, G.cone(R * .17, cl * .85, 5), M.claw, Math.sin(a) * R * 1.25, R * .2, R * .45 + Math.cos(a) * cl * 1.2);
                 cw.rotation.set(Math.PI / 2 + .45, 0, -a);
             }
             if (!F) add(toe, G.cone(R * .15, R * .6, 4), M.claw, 0, R * .5, -R * .55).rotation.x = -Math.PI / 2 - .4;   // dew claw
@@ -524,25 +668,21 @@ export class ProceduralDragon extends QuadrupedRig {
 
     buildNeck(add, grp) {
         const D = this.D, J = this.j, M = this.M, c = this.c, skel = this.skel, k = this.k;
-        const [n, L, r0, r1] = D.neck;
+        const [n, L, r0, r1] = D.neck, top = n * L;
+        const rAt = s => (r0 + (r1 - r0) * Math.min(1, Math.max(0, s) / top)) * k;
         J.neck = grp(J.body, 0, D.neckAt[0], D.neckAt[1]);
         J.neckSeg = [];
         this.neckR = [];
         let p = J.neck;
         for (let i = 0; i < n; i++) {
-            const g = grp(p, 0, i === 0 ? 0 : L, 0), ra = (r0 + (r1 - r0) * i / n) * k, rb = (r0 + (r1 - r0) * (i + 1) / n) * k;
+            const g = grp(p, 0, i === 0 ? 0 : L, 0), ra = rAt(i * L), rb = rAt((i + 1) * L);
             if (skel) {
                 add(g, G.cyl(ra * .38, ra * .42, L * .8, 6), M.bone, 0, L * .5, 0);
                 add(g, G.box(ra * .9, ra * .22, ra * .3), M.bone, 0, L * .5, 0);
-                add(g, G.cone(ra * .14, ra * .9, 4), M.spine, 0, L * .5, -ra * .55).rotation.x = -1.1;
+                add(g, bladeGeo(ra * .2, ra * 1.1), M.spine, 0, L * .5, -ra * .6).rotation.x = -1.1;
             } else {
-                add(g, G.sph(ra, 8, 6), M.skin);
-                add(g, G.cyl(rb, ra, L * 1.04, 8), M.skin, 0, L / 2, 0);
-                if (c.undead !== 'lich' || i % 2) add(g, G.cyl(rb * 1.04, ra * 1.04, L * .9, 6, true, -Math.PI / 2, Math.PI), M.belly, 0, L / 2, 0);   // throat
-                else add(g, G.box(ra * .5, L * .8, ra * .5), M.bone, 0, L / 2, -ra * .75);         // exposed vertebra
-                const sp = add(g, G.cone(ra * .2, ra * (this.kind === 'gargoyle' ? .4 : .75), 4), M.spine, 0, L * .5, -rb * .85);
+                const sp = add(g, bladeGeo(ra * .24, ra * (this.kind === 'gargoyle' ? .45 : .85)), M.spine, 0, L * .5, -rb * 1.02);
                 sp.rotation.x = -1.1;
-                sp.scale.x = .5;
             }
             J.neckSeg.push(g);
             this.neckR.push(ra);
@@ -550,34 +690,50 @@ export class ProceduralDragon extends QuadrupedRig {
         }
         J.head = grp(p, 0, L, 0);
         J.head.rotation.order = 'YXZ';
+        if (skel) return;
+        // one smooth skinned tube: chest → segments → head
+        const S = [[-.15, rAt(0) * .5], [-.09, rAt(0) * 1.04], [0, rAt(0)]];
+        for (let i = 1; i <= n; i++) S.push([i * L, rAt(i * L)]);
+        S.push([top + .045, r1 * k * .8], [top + .08, r1 * k * .3]);
+        const cs = [.02];
+        for (let i = 0; i < n; i++) cs.push((i + .5) * L);
+        cs.push(top + .05);
+        const geo = loftGeo('neck' + this.variant, S.map(([s, r]) => [s, r, r * 1.1, 0]), { radial: 12, sub: 2, rot: 'up',
+            skin: c.skin, belly: c.belly, dark: c.dark, darkW: .5, bellyAt: .42, skin2: [1, 1, cs], at: [0, D.neckAt[0], D.neckAt[1]] });
+        this.skinned(geo, M.lhide, J.body, [J.body, ...J.neckSeg, J.head]);
     }
 
-    // long reptile head: skull, tapering snout, brow ridges, swept-back horns, frill spikes
+    // long reptile head: wedge skull, tapering snout, brow ridges, swept-back horns, frill spikes
     buildHead(add, grp) {
-        const c = this.c, J = this.j, M = this.M, skel = this.skel, lich = c.undead === 'lich', wy = this.kind === 'wyvern';
+        const c = this.c, J = this.j, M = this.M, skel = this.skel, lich = c.undead === 'lich', wy = this.kind === 'wyvern', V = this.variant;
         const hs = this.D.head * (c.headK || 1);
         const H = grp(J.head);
         H.scale.setScalar(hs);
         this.headLen = .3 * hs;
-        const sk = skel || lich ? M.bone : M.skin, sn = wy ? .8 : 1;
-        add(H, G.sph(.085, 10, 8), sk, 0, .035, 0).scale.set(1, .85, 1.2);                      // cranium
-        add(H, G.cyl(.042 * sn, .06 * sn, .2, 8), sk, 0, .012, .15).rotation.x = Math.PI / 2;   // snout
-        H.children[H.children.length - 1].scale.set(1.05, 1, .66);
-        add(H, G.sph(.042 * sn, 8, 6), sk, 0, .014, .25).scale.set(1, .62, .8);                 // nose tip
-        if (lich) {                                                                                // rags of flesh on the skull
-            add(H, G.sph(.07, 8, 6), M.skin, .02, .05, -.03).scale.set(1.2, .7, 1.1);
-            add(H, G.box(.05, .02, .1), M.skin, -.015, .042, .14).rotation.z = .2;
+        const bone = skel || lich, sn = wy ? .82 : 1;
+        const skullS = [[-.11, .015, .015, .045], [-.085, .055, .055, .045], [-.03, .075, .068, .04], [.03, .07, .06, .035],
+            [.08, .058 * sn, .048 * sn, .028], [.15, .046 * sn, .036 * sn, .018], [.22, .04 * sn, .029 * sn, .013], [.27, .032 * sn, .022 * sn, .012], [.295, .008, .008, .012]];
+        const mouthFn = (col, z, sa) => { if (z > .03) col.lerp(_cm, sstep(-.6, -.85, sa)); };
+        add(H, loftGeo('skull' + V, skullS, { radial: 12, sub: 2, vk: 8, skin: bone ? c.bone : c.skin, dark: bone ? c.bone : c.dark,
+            darkW: bone ? 0 : .5, colFn: mouthFn }), bone ? M.lbone : M.lskin);
+        if (lich) {                                                                                // charred scales on the skull
+            add(H, G.sph(.07, 8, 6), M.skin, 0, .05, -.04).scale.set(1.15, .75, 1.1);
+            add(H, G.box(.05, .02, .1), M.skin, -.015, .05, .12).rotation.z = .2;
         }
         for (const s of [1, -1]) {
-            add(H, G.box(.04, .022, .09), skel || lich ? M.bone : M.dark, s * .05, .078, .05).rotation.set(-.15, -s * .25, s * .2);   // brow ridge
+            const br = add(H, G.sph(.03, 7, 5), bone ? M.bone : M.skin, s * .05, .072, .055);    // brow ridge
+            br.scale.set(.75, .5, 1.7);
+            br.rotation.y = -s * .25;
             add(H, G.sph(.008, 5, 4), M.hole, s * .02 * sn, .03, .27);                            // nostril
+            if (bone) add(H, G.sph(.012, 5, 4), M.hole, s * .022, .02, .22).scale.set(.7, 1, 1.6);   // nasal hole
         }
         // eyes: amber with a slit; dragonlich ghost glow; skeleton empty sockets
         J.eyes = [];
         for (const s of [1, -1]) {
-            if (skel) { add(H, G.sph(.026, 7, 5), M.hole, s * .052, .048, .065).scale.set(.7, 1, 1.2); continue; }
+            if (bone) add(H, G.box(.012, .014, .1), M.bone, s * .062, .026, .04).rotation.y = s * .12;   // cheekbone
+            if (skel) { add(H, G.sph(.032, 7, 5), M.hole, s * .05, .048, .065).scale.set(.75, 1, 1.25); continue; }
             if (c.ghost) {
-                add(H, G.sph(.024, 7, 5), M.hole, s * .052, .048, .065).scale.set(.7, 1, 1.2);
+                add(H, G.sph(.03, 7, 5), M.hole, s * .05, .048, .065).scale.set(.75, 1, 1.25);
                 const e = new THREE.Mesh(G.sph(.014, 6, 5), glowMat(c.eye, .95));
                 e.position.set(s * .058, .048, .068);
                 H.add(e);
@@ -592,13 +748,15 @@ export class ProceduralDragon extends QuadrupedRig {
         }
         // upper teeth
         for (const s of [1, -1]) for (let i = 0; i < (wy ? 6 : 4); i++) {
-            add(H, G.cone(.006, wy ? .03 : .028, 4), M.tooth, s * .036 * sn, -.018, .1 + i * (wy ? .028 : .04)).rotation.x = Math.PI;
+            add(H, G.cone(.006, wy ? .03 : .028, 4), M.tooth, s * .036 * sn, -.016, .1 + i * (wy ? .028 : .04)).rotation.x = Math.PI;
         }
-        // lower jaw
+        // lower jaw: belly-coloured underside, dark red mouth on top
         J.jaw = grp(H, 0, -.025, .02);
-        add(J.jaw, G.cyl(.03 * sn, .048 * sn, .23, 7), skel || lich ? M.bone : M.belly, 0, -.012, .11).rotation.x = Math.PI / 2;
-        J.jaw.children[0].scale.set(1, 1, .55);
-        for (const s of [1, -1]) for (let i = 0; i < (wy ? 5 : 3); i++) add(J.jaw, G.cone(.005, .022, 4), M.tooth, s * .028 * sn, .006, .08 + i * (wy ? .03 : .045));
+        const jawS = [[-.035, .012, .01, -.004], [-.01, .046, .028, -.008], [.06, .046 * sn, .022, -.01], [.14, .037 * sn, .018, -.009],
+            [.21, .029 * sn, .014, -.007], [.245, .01, .007, -.005]];
+        add(J.jaw, loftGeo('jaw' + V, jawS, { radial: 10, sub: 2, vk: 8, skin: bone ? c.bone : c.skin, belly: bone ? c.bone : c.belly,
+            dark: skel ? c.bone : 0x4a1414, darkW: skel ? 0 : 1, bellyAt: .35 }), bone ? M.lbone : M.lskin);
+        for (const s of [1, -1]) for (let i = 0; i < (wy ? 5 : 3); i++) add(J.jaw, G.cone(.005, .022, 4), M.tooth, s * .028 * sn, .008, .08 + i * (wy ? .03 : .045));
         if (c.elder) for (let i = 0; i < 3; i++) {                                                // chin spikes
             const sp = add(J.jaw, G.cone(.008, .06, 4), M.horn, (i - 1) * .02, -.03, .04 - Math.abs(i - 1) * .02);
             sp.rotation.x = Math.PI - .9;
@@ -606,78 +764,91 @@ export class ProceduralDragon extends QuadrupedRig {
         // horns and frill
         const hl = .3 * (c.horns ?? 1);
         for (const s of [1, -1]) {
-            add(H, backHorn(hl, .022, s, .55, .25), M.horn, s * .045, .08, -.02);
+            add(H, backHorn(hl, .026, s, .6, .25), M.horn, s * .045, .08, -.02);
             if (c.elder) {
-                add(H, backHorn(hl * .65, .016, s, .2, .55), M.horn, s * .065, .05, -.03);
-                add(H, backHorn(hl * .4, .012, s, .9, .4), M.horn, s * .03, .1, .03);
+                add(H, backHorn(hl * .65, .018, s, .2, .55), M.horn, s * .065, .05, -.03);
+                add(H, backHorn(hl * .4, .013, s, .9, .4), M.horn, s * .03, .1, .03);
             }
             for (let i = 0; i < (c.elder ? 4 : 3); i++) {                                       // cheek frill
-                const sp = add(H, G.cone(.009, .07 + i * .012, 4), skel ? M.spine : M.horn, s * (.065 + i * .006), .0 - i * .022, -.03 - i * .012);
+                const sp = add(H, bladeGeo(.014, .075 + i * .014), skel ? M.spine : bone ? M.horn : M.spine, s * (.066 + i * .006), .0 - i * .022, -.03 - i * .012);
                 sp.rotation.set(-Math.PI / 2 - .3 + i * .1, 0, s * .5);
             }
         }
-        if (wy) for (let i = 0; i < 5; i++) {                                                    // wyvern: fan of long pale crest spikes
+        if (wy || bone) for (let i = 0; i < 5; i++) {                                            // crest: fan of long spikes behind the skull
             const a = (i - 2) * .32;
-            const sp = add(H, G.cone(.01, .17 - Math.abs(i - 2) * .02, 4), M.horn, Math.sin(a) * .05, .07 + Math.cos(a) * .02, -.05);
+            const sp = add(H, G.cone(.01, (wy ? .17 : .12) - Math.abs(i - 2) * .02, 4), wy ? M.horn : M.spine, Math.sin(a) * .05, .07 + Math.cos(a) * .02, -.05);
             sp.rotation.set(-Math.PI / 2 - .55, 0, -a * 1.2);
         }
-        for (let i = 0; i < 3; i++) add(H, G.cone(.008, .04, 4), skel ? M.spine : M.horn, 0, .1 - i * .01, -.04 - i * .03).rotation.x = -1.2;
+        for (let i = 0; i < 3; i++) add(H, bladeGeo(.012, .045), skel ? M.spine : M.horn, 0, .1 - i * .01, -.04 - i * .03).rotation.x = -1.2;
         this.mouth = [0, -.025, .26];
         this.headPts = [[0, .29], [-.05, -.08], [-.04, .02]];                                  // [y, z]: nose, back of the skull, jaw hinge
         this.jawLen = .24;
     }
 
-    // gargoyle: goblin head with pointed ears, curled horns, heavy brow and a fanged grin
+    // gargoyle: goblin head with big pointed ears, curled horns, heavy brow and a fanged grin
     buildGoblinHead(add, grp) {
-        const c = this.c, J = this.j, M = this.M;
+        const c = this.c, J = this.j, M = this.M, V = this.variant;
         const H = grp(J.head, 0, .03, 0);
         H.scale.setScalar(1.35);
         this.headLen = .2;
-        add(H, G.sph(.075, 9, 7), M.skin, 0, .02, 0).scale.set(1, .95, 1);                     // skull
-        add(H, G.sph(.05, 8, 6), M.skin, 0, -.02, .065).scale.set(1.25, .8, .9);               // muzzle
-        add(H, G.box(.12, .025, .04), M.skin, 0, .05, .055).rotation.x = -.2;                  // brow
-        add(H, G.cone(.016, .04, 4), M.skin, 0, .0, .115).rotation.x = Math.PI / 2 + .6;       // nose
+        _cf.set(0x2a2624);
+        const gS = [[-.085, .02, .02, .03], [-.065, .06, .065, .03], [-.015, .075, .075, .028], [.035, .07, .066, .018], [.07, .064, .052, .002],
+            [.098, .052, .038, -.012], [.112, .02, .015, -.014]];
+        add(H, loftGeo('gskull' + V, gS, { radial: 12, sub: 2, vk: 8, skin: c.skin, dark: c.dark, darkW: .3,
+            colFn: (col, z, sa) => { if (z > .03) col.lerp(_cf, sstep(-.6, -.85, sa)); } }), M.lskin);
+        add(H, G.sph(.02, 7, 5), M.skin, 0, .02, .1).scale.set(1.2, .8, 1.1);                   // broad nose
         J.eyes = [];
         for (const s of [1, -1]) {
-            J.eyes.push(add(H, G.sph(.011, 6, 5), mat(c.eye, { emissive: c.eye, emissiveIntensity: .7 }), s * .03, .032, .072));
-            const ear = add(H, G.cone(.025, .11, 4), M.skin, s * .085, .03, -.01);              // long pointed ear
-            ear.rotation.set(-.4, 0, -s * 1.25);
-            ear.scale.z = .4;
-            add(H, backHorn(.1, .012, s, .9, .5), M.horn, s * .04, .08, .0);                    // small curled horns
-            for (let i = 0; i < 2; i++) add(H, G.cone(.006, .035, 4), M.tooth, s * (.022 + i * .018), -.035, .1 - i * .01).rotation.x = Math.PI;   // fangs
+            const br = add(H, G.sph(.036, 8, 6), M.skin, s * .028, .054, .058);                  // heavy brow
+            br.scale.set(1.15, .5, .8);
+            J.eyes.push(add(H, G.sph(.011, 6, 5), mat(c.eye, { emissive: c.eye, emissiveIntensity: .7 }), s * .03, .034, .074));
+            const ear = add(H, G.cone(.05, .2, 4), M.skin, s * .1, .05, -.02);                  // big pointed bat ear
+            ear.rotation.set(-.25, 0, -s * 1.0);
+            ear.scale.z = .3;
+            add(H, backHorn(.12, .014, s, .9, .5), M.horn, s * .04, .078, 0);                  // small curled horns
+            for (let i = 0; i < 3; i++) add(H, G.cone(.006, i ? .025 : .04, 4), M.tooth, s * (.014 + i * .016), -.03, .103 - i * .012).rotation.x = Math.PI;   // grin
         }
         J.jaw = grp(H, 0, -.035, .03);
-        add(J.jaw, G.sph(.045, 8, 6), M.skin, 0, -.012, .035).scale.set(1.3, .5, 1.1);
-        for (const s of [1, -1]) add(J.jaw, G.cone(.006, .03, 4), M.tooth, s * .03, .008, .065);
+        const jS = [[-.04, .01, .01, 0], [-.02, .05, .025, -.005], [.03, .06, .025, -.008], [.07, .045, .02, -.008], [.085, .015, .01, -.006]];
+        add(J.jaw, loftGeo('gjaw' + V, jS, { radial: 10, sub: 2, vk: 8, skin: c.skin, dark: 0x2a2624, darkW: 1 }), M.lskin);
+        for (const s of [1, -1]) for (let i = 0; i < 2; i++) add(J.jaw, G.cone(.006, i ? .022 : .032, 4), M.tooth, s * (.02 + i * .016), .01, .07 - i * .012);
         this.mouth = [0, -.04, .12];
         this.headPts = [[0, .17], [-.02, -.08], [0, .04]];
         this.jawLen = .09;
     }
 
     buildTail(add, grp) {
-        const D = this.D, J = this.j, M = this.M, c = this.c, skel = this.skel, k = this.k;
-        const [n, L, r0] = D.tail;
+        const D = this.D, J = this.j, M = this.M, c = this.c, skel = this.skel, k = this.k, bony = skel || c.undead === 'lich';
+        const [n, , r0] = D.tail, L = this.tailL, top = n * L;
+        const rAt = s => s < 0 ? r0 * k * (1 + Math.min(.2, -s) * 1.4) : r0 * k * (.08 + .92 * Math.pow(1 - Math.min(1, s / top), 1.25));
         J.tailRoot = grp(J.body, 0, D.tailAt[0], D.tailAt[1]);
         J.tail = [];
         this.tailR = [];
         let p = J.tailRoot;
         for (let i = 0; i < n; i++) {
-            const ra = r0 * k * (1 - i / n * .9), rb = r0 * k * (1 - (i + 1) / n * .9), g = grp(p);
-            if (skel) {
-                add(g, G.box(ra * .8, ra * .65, L * .7), M.bone, 0, 0, -L / 2);
-                if (i % 2 === 0) add(g, G.cone(ra * .2, ra * 1.1, 4), M.spine, 0, ra * .5, -L / 2).rotation.x = -.6;
-            } else {
-                add(g, G.cyl(rb, ra, L * 1.04, 7), c.undead === 'lich' && i % 3 === 2 ? M.bone : M.skin, 0, 0, -L / 2).rotation.x = -Math.PI / 2;
-                if (i > 0) add(g, G.sph(ra, 7, 5), M.skin);
-                if (this.kind !== 'gargoyle' || i % 2 === 0) {
-                    const sp = add(g, G.cone(ra * .3, ra * .8 + .015, 4), M.spine, 0, ra * .85, -L / 2);
-                    sp.rotation.x = -.6;
-                    sp.scale.x = .5;
-                }
+            const ra = rAt(i * L), g = grp(p);
+            if (bony) {                                                                           // vertebrae with black spines
+                const rb = ra * (skel ? 1 : 1.15);
+                add(g, G.box(rb * .75, rb * .65, L * .78), M.bone, 0, 0, -L / 2);
+                add(g, G.box(rb * 1.4, rb * .18, rb * .3), M.bone, 0, 0, -L * .3);
+                add(g, bladeGeo(rb * .2, rb * 1.2), M.spine, 0, rb * .55, -L / 2).rotation.x = -.6;
+            } else if (this.kind !== 'gargoyle' || i % 2 === 0) {
+                const sp = add(g, bladeGeo(ra * .3, ra * .8 + .02), M.spine, 0, ra * .98, -L / 2);
+                sp.rotation.x = -.6;
             }
             J.tail.push(g);
             this.tailR.push(ra);
             p = grp(g, 0, 0, -L);
+        }
+        if (!bony) {                                                                              // one smooth skinned tube
+            const S = [[-.2, rAt(-.16) * .5], [-.14, rAt(-.14)], [-.06, rAt(-.06)]];
+            for (let i = 0; i <= n; i++) S.push([i * L, rAt(i * L)]);
+            S.push([top + .02, rAt(top) * .4]);
+            const cs = [-.12];
+            for (let i = 0; i < n; i++) cs.push((i + .5) * L);
+            const geo = loftGeo('tail' + this.variant, S.map(([s, r]) => [s, r, r * 1.08, 0]), { radial: 10, sub: 2, rot: 'back',
+                skin: c.skin, belly: c.belly, dark: c.dark, darkW: .55, bellyAt: .55, skin2: [2, -1, cs], at: [0, D.tailAt[0], D.tailAt[1]] });
+            this.skinned(geo, M.lhide, J.body, [J.body, ...J.tail]);
         }
         const tr = r0 * k * .1;
         if (this.kind === 'wyvern') {                                                             // poison sting
@@ -685,7 +856,7 @@ export class ProceduralDragon extends QuadrupedRig {
             const st = add(p, G.cone(tr * 1.1, tr * 7, 6), mat(c.sting, { roughness: .35 }), 0, tr * 1.5, -tr * 6);
             st.rotation.x = -Math.PI / 2 + .5;
         } else if (this.kind === 'dragon') {                                                      // spiked tail tip
-            const m = skel ? M.bone : M.spine;
+            const m = bony ? M.bone : M.spine;
             add(p, G.cone(tr * 2.4, tr * 9, 4), m, 0, 0, -tr * 4).rotation.x = -Math.PI / 2;
             for (const s of [1, -1]) add(p, G.cone(tr, tr * 5, 4), m, s * tr * 1.5, 0, -tr).rotation.set(-Math.PI / 2, 0, -s * .7);
         } else add(p, G.cone(tr * 2.5, tr * 6, 4), M.skin, 0, 0, -tr * 2).rotation.x = -Math.PI / 2;
@@ -702,7 +873,7 @@ export class ProceduralDragon extends QuadrupedRig {
         const w = D.wing, sc = k * (c.wingK || 1);
         this.wings = [1, -1].map(s => makeDragonWing(this.j.body, s, {
             len: w.len * sc, at: w.at.map(v => v * k), hip: w.hip, flank: w.flank, bone: w.bone,
-            boneMat: this.skel || c.undead ? M.bone : c.stone ? M.skin : M.dark, clawMat: M.claw, skinMat: skin, poses: WING_POSES[this.kind]
+            boneMat: c.undead ? mat(0x3a3430, { roughness: .7 }) : c.stone ? M.skin : M.dark, clawMat: M.claw, skinMat: skin, poses: WING_POSES[this.kind]
         }));
     }
 
@@ -806,7 +977,7 @@ export class ProceduralDragon extends QuadrupedRig {
         J.head.rotation.x = hp;
 
         // tail: droop, curl and swish; segments rise where they would touch the ground
-        const [nt, Lt] = D.tail;
+        const nt = D.tail[0], Lt = this.tailL;
         const swish = dead ? 0 : (state === 'defend' ? .1 : state === 'idle' ? .06 : still ? .015 : .04);
         const freq = state === 'defend' ? 3 : 1.2;
         J.tailRoot.rotation.x = q.tailX;

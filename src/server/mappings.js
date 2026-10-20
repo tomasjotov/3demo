@@ -81,5 +81,6 @@ export function moveTypeToState(moveType) {
     if (moveType === 'lie') return 'lie';
     if (moveType.startsWith('attack')) return 'attack';
     if (moveType.startsWith('block') || moveType === 'evade') return 'defend';
-    return 'idle';                                            // cast, use-item: no pose yet
+    if (moveType === 'cast') return 'cast';
+    return 'idle';                                            // use-item: no pose yet
 }

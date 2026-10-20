@@ -540,3 +540,52 @@ bestiáře v tabulce `BEASTS` v `avatar/creatures.js`):
 - Světelné kouzlo posílá server také jako buňku `FIRE` ve svém středu – tu 3D klient přeskočí (kreslí ho jako světlo).
   Buňky s 3D efektem mají v překryvu jen slabou růžovou značku.
 - Test: `game.html?effects` (offline: kouř, mlha, jed, silová zeď a hořící pole, které každých 5 s znovu vybuchne).
+
+### V39 – Fireball a Ohnivá střela (letící kouzla)
+- hof `PlanActor` posílá při sesílání (`moveType = cast`) klíč kouzla `spell` (např. `fireball`, `fire-bolt`), cílové pole
+  `spellX/spellY` (protivník, jinak označené pole) a `spellRadius` (poloměr oblasti, 0 = jeden cíl).
+- Klient (`ServerGame.detectSpell`): kouzlo vyletí, když sesilatel kouzlo zaplatí (klesnou mu akce), jednou za seslání.
+- `EffectRenderer.cast()`, tabulka `SPELL_PROJECTILES`: **Fireball** = žhavá koule na nízkém oblouku s ohnivou stopou,
+  v cíli vybuchne přes celou oblast (`explode`); **Ohnivá střela** (`fire-bolt`, `fire-arrow`) = rychlý rovný ohnivý
+  paprsek se stopou a malým výbuchem na cíli. Další kouzla stačí doplnit do tabulky.
+- Offline ukázka: `game.html?effects` – hrdina střídavě hází Fireball a Ohnivou střelu (každé 3 s).
+
+### V40 – nestvůry blíž obrázkům z bestiáře
+- Modely byly porovnány s obrázky nestvůr (`hof WEB-INF/img/beast`) a předělány: místo skládaných koulí a válců hladká
+  tělesa (soustružený trup, zužující se končetiny, jedna ohebná trubice pro krk / ocas / hadí tělo), malované textury
+  (šupiny, srst, peří, kámen, kůra, chitin, voda, kouř) a barvy podle obrázků. Animace a stavy zůstaly.
+- **Hadi a červi** (`ProceduralSerpent`): hladké tělo s plochým břichem nebo prstenci, tvarované hlavy, póza kobry, létající nugotha;
+  hydra má 3 hlavy (mladá hydra). **Nový trup** v `hybridParts.js` (svaly, ruce s prsty, hlava člověka / démona / ještěra /
+  skřeta) – kentaur, urxuquer, hadí strážce, skřetohad.
+- **Draci** (`ProceduralDragon`): hladký trup, krk a ocas, svalnaté nohy, břišní pláty, hlava s čelistí; drak měří ~12 m jako
+  v textu, prastarý ~16 m. Wyvern stojí vzpřímeně na dvou nohou, gargoyla je hladký tesaný kámen.
+- **Létající** (`ProceduralFlyer`): peří s lemem a pruhy, fénix karmínový s ohnivými pery, harpyje se ženským trupem a pažemi
+  v křídlech, netopýři s žilkovanými blánami.
+- **Elementálové** (`ProceduralElemental`, `ProceduralAmorphous`): kamenné desky a štípané balvany, ocelový golem, ohnivá
+  postava s plameny, vodní duch vystupující z vlny, vzdušná postava na víru, kouřové podoby s turbulentní texturou.
+- **Vodní** (`ProceduralAquatic`): klobg je šlachovitý plaz na čtyřech, mnohohlav černá krysí obluda s pěti hlavami,
+  chobotnice s jedním hladkým tělem, kraken s otevřenou tlamou, iluzorní bestie s hlavou východního draka.
+- **Rostliny** (`ProceduralPlant`): pokroucené kmeny, mechy, mimik mirocus s pootevřeným víkem a tesáky, shrbení stromoví
+  obři, přízrak lesa s kosou.
+- Sestřihy před a po: `/mnt/project-files/3d-modely/v40-*.png`. Kontrola `checkall.cjs` (všechny varianty × stavy) bez chyb.
+- **Humanoidní nestvůry** (`beastBodies.js`, `beastParts.js`, nový `beastSculpt.js`): 41 těl předěláno podle obrázků.
+  Faun, minotaur a sukuby mají vlastní nohy se srstí a kopyty (kalhoty, boty a holenice se na kozí / drápaté nohy
+  nekreslí, helma ani vlasy na zvířecí hlavu). Démoni hněvu svalnatí s lávovými prasklinami, hniloby vychrtlí, obžerství
+  tlustí, sukuby v krajkách, víla s křídly, ubeg leze jako brouk; ocasy, rohy, vlasy a sukně se v lehu nezabořují do země.
+  Obyčejné postavy beze změny (kromě obřího kostlivce, ten má teď tělo nestvůry).
+- **Póza sesílání kouzla** (`ProceduralAvatar`, stav `cast`): obě paže vpřed, dlaně ven, pomalé pulzování; server
+  `moveType = cast` → stav `cast`. Náhled v `avatar-viewer.html`, v ukázce `game.html?effects` se hrdina před hodem napřáhne.
+
+### V41 – obouruční zbraň v klidu čepelí nahoru
+- `HOLDS.melee.idle` (klid, chůze): ruce u břicha, čepel / hlava zbraně nahoru, mírně vpřed a do strany (nezakrývá obličej).
+  Obrana a útok beze změny.
+
+### V42 – cesta a dosah pohybu jen na tahu
+- hof `PlanArena.phase` (`ArenaBase.PHASE_*`, plní `ArenaFields.getPlanInfo`). Náhled cesty, zelená dosažitelná pole,
+  cíl i serverový kruh dosahu se kreslí jen ve fázi provedení akce (`PHASE_MANEUVERS`), když je aktivní aktér můj (`own`).
+  V ostatních fázích (Činnost, konec kola …) se nic z toho nekreslí; klik dál označuje pole a cíl. Starší server bez `phase`
+  se chová jako dřív.
+
+### V43 – GM: pole pro novou nestvůru
+- hof `PlanArena.spawn`: GM mimo boj (žádný aktivní aktér, žádné převzaté ovládání) dostane naposledy kliknuté pole
+  (`Game.pointedX/Y`) – tam se objeví nově přidaná nestvůra. 3D klient ho kreslí oranžově s bílým rámečkem.

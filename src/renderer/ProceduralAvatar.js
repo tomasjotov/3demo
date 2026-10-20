@@ -5,7 +5,8 @@ import { bodyFor } from '../avatar/bodies.js';
 import { layerBuilder, gearOf, hairColorOf } from '../avatar/layers.js';
 import { presetLook, PRESET_NAMES, lookSignature } from '../avatar/looks.js';
 import { boneMats, bonePelvis, boneLeg, boneTorso, boneArm, boneNeck, boneSkull, jawTarget, undeadFace, fleshRibs, mummyWraps } from '../avatar/undead.js';
-import { beastSkinMat, beastLeg, beastHead, buildBeast, animateBeast } from '../avatar/beastParts.js';
+import { beastSkinMat, beastLeg, legMat, beastHead, buildBeast, animateBeast } from '../avatar/beastParts.js';
+import { sculptPelvis, sculptTorso, sculptArm, sculptLeg, beastFace } from '../avatar/beastSculpt.js';
 
 /*
  * ProceduralAvatar — runtime low-poly humanoid composed of LAYERS like the 2D sprite
@@ -90,7 +91,7 @@ const H = (hand, dir, spineY = 0) => ({ hand: new THREE.Vector3(...hand), dir: n
 // close to the intended hand position and weapon direction).
 const HOLDS = {
     melee: {                                                  // swords, axes, clubs: hands together in front
-        idle: H([-.02, .21, .36], [-.11, -.62, .77]),
+        idle: H([-.04, .17, .34], [-.3, .78, .55]),            // guard: hands at the belly, blade up and slightly forward
         ready: H([0, .32, .38], [0, .55, .84], -.15),
         defend: H([.02, .42, .35], [.8, .49, .34], -.1),
         windup: H([.02, .69, .08], [0, .45, -.89], -.3),
@@ -208,6 +209,8 @@ export class ProceduralAvatar {
         // pelvis (underwear) -------------------------------------------------
         if (b.bone) {
             bonePelvis(add, J, b, D, M);
+        } else if (b.beast) {
+            sculptPelvis(add, J, b, D, skin, under, b.hipFur ? legMat(b, skin) : skin);   // monster bodies: sculpted flesh (avatar/beastSculpt.js)
         } else {
             add(J.pelvis, G.cyl(.19, b.female ? .215 : .205, .2, 12), under, 0, -.02, 0).scale.set(bulk, 1, .8 * bulk);
         }
@@ -233,6 +236,7 @@ export class ProceduralAvatar {
             if (b.bone) { boneLeg(add, J, s, side, M); continue; }
             if (b.legs === 'fish') { hip.visible = false; continue; }               // fish tail instead (beastParts)
             if (b.legs) { beastLeg(add, J, s, side, b, b.legColor ? mat(b.legColor) : skin, k, L); continue; }
+            if (b.beast) { sculptLeg(add, J, s, side, b, skin, k, L); continue; }
             add(hip, G.sph(.098 * k, 10, 8), under);
             add(hip, G.cyl(.094 * k, .074 * k, .4 * L, 10), skin, 0, -.2 * L, 0);
             add(knee, G.sph(.074 * k, 10, 8), skin);
@@ -244,6 +248,9 @@ export class ProceduralAvatar {
         J.spine = grp(J.pelvis, 0, .06, 0);
         if (b.bone) {
             boneTorso(add, J, b, D, M);
+        } else if (b.beast) {
+            sculptTorso(add, J, b, D, skin);
+            if (b.ribs) fleshRibs(add, J.spine, b, D);
         } else {
             add(J.spine, G.cyl(D.chestR, D.waistR, .44, 14), skin, 0, .22, 0).scale.z = .74;
             add(J.spine, G.sph(D.chestR, 14, 8), skin, 0, .42, 0).scale.set(1, .48, .74);
@@ -263,6 +270,7 @@ export class ProceduralAvatar {
             const hand = grp(el, 0, -.25 * A, 0);
             J[s + 'Sh'] = sh; J[s + 'El'] = el; J[s + 'Hand'] = hand;
             if (b.bone) { boneArm(add, J, s, side, M); continue; }
+            if (b.beast) { sculptArm(add, J, s, side, b, skin, k, A); continue; }
             add(sh, G.sph(.088 * k, 10, 8), skin);
             add(sh, G.cyl(.072 * k, .06 * k, .25 * A, 10), skin, 0, -.125 * A, 0);
             add(el, G.sph(.06 * k, 8, 6), skin);
@@ -285,10 +293,12 @@ export class ProceduralAvatar {
         if (b.bone) {                                    // skull with empty sockets and a moving jaw, no eyes
             boneNeck(add, J, M);
             boneSkull(add, grp, J, M);
+            if (b.beast) buildBeast(add, grp, J, b, D, skin, this.beast = {});   // armour of a bestiary skeleton
             return;
         }
         this.beast = b.beast ? {} : null;               // parts state of a bestiary body (avatar/beastParts.js)
         if (b.head) beastHead(add, grp, J, b, skin, this.beast);       // animal head / skull / none instead of the face
+        else if (b.beast) beastFace(add, grp, J, b, skin, this.beast);  // sculpted monster face
         else this.buildFace(add, grp, b, skin, F);
         if (this.beast) buildBeast(add, grp, J, b, D, skin, this.beast);
     }
@@ -365,6 +375,7 @@ export class ProceduralAvatar {
 
         const B = this.body;                            // animal heads wear no hair, hooves / paws / fish tails no shoes
         const layers = (look.layers || []).filter(k => !(B.head && (k.startsWith('hair') || k.startsWith('beard'))) && !(B.legs && k.startsWith('feet')));
+        if (B.beast) this.fitLayers(layers);
         const J = this.j, objs = this.layerObjects, tint = look.tint || {};
         const hairKey = layers.find(k => k.startsWith('hair'));
         const helmetKey = layers.find(k => k.startsWith('helmet-'));
@@ -414,6 +425,18 @@ export class ProceduralAvatar {
         this.fx.streak.position.set(-.22, 1.0, .35 + reach * .55);
         this.fx.streak.userData.len = reach;
         if (this.state) this.state = null;           // re-enter the current state with the new gear
+    }
+
+    // Monster bodies wear only what fits them (in place): no trousers / greaves / shoes over goat legs, paws or a fish tail
+    // (nor over the succubi's own stockings), no helmet on an animal head, no hair over their own; a body with a weapon
+    // of its own (body.weapon, a layer key) takes it when the look brings none.
+    fitLayers(layers) {
+        const B = this.body, legs = B.legs || B.ownLegWear, head = B.head && B.head !== 'skull';
+        const drop = k => (legs && (k.startsWith('pants') || k.startsWith('bottom-') || k.startsWith('feet')))
+            || ((head || B.hair) && (k.startsWith('hair') || k.startsWith('beard')))
+            || ((head || B.horn) && k.startsWith('helmet-'));
+        for (let i = layers.length - 1; i >= 0; i--) if (drop(layers[i])) layers.splice(i, 1);
+        if (B.weapon && !layers.some(k => k.startsWith('weapon-'))) layers.push(B.weapon);
     }
 
     // Left hand carries a light ('torch' | 'lantern' | null, renderer/CarriedLights.js): no 2H grip, arm held forward.
@@ -569,6 +592,15 @@ export class ProceduralAvatar {
                 if (state === 'death') Object.assign(P, { lShZ: 1.1, rShZ: -1.2, rElX: -.05 });
                 break;
             }
+            case 'cast': {
+                // spell casting: both arms reach forward, palms out, the power gathers in a slow pulse
+                const k = smooth(Math.min(1, this.stateTime / .35)), w = Math.sin(this.stateTime * TAU * .8);
+                Object.assign(P, {
+                    hipsY: -.03, lHipX: -.18, lKnX: .22, rHipX: .14, rKnX: .16, spineX: .08 * k, headX: -.06 * k,
+                    lShX: -1.35 * k + w * .06, lShZ: .28 * k, lElX: -.3 * k, rShX: -1.35 * k - w * .06, rShZ: -.28 * k, rElX: -.3 * k
+                });
+                break;
+            }
             case 'hit': {
                 const k = Math.sin(Math.min(1, this.stateTime / .4) * Math.PI);
                 Object.assign(P, {
@@ -632,16 +664,28 @@ export class ProceduralAvatar {
         const b = this.body;
         if (state === 'kneel' || state === 'lie' || state === 'death' || state === 'ride') return;
         const moving = state === 'walk' || state === 'run';
+        if (b.brute && state !== 'attack' && state !== 'run') {    // brutes: arms away from the body, elbows bent, wide stance
+            const k = b.brute;
+            P.lShZ += .2 * k; P.rShZ -= .2 * k; P.lElX -= .35 * k; P.rElX -= .25 * k; P.lShX -= .12 * k;
+            if (state === 'idle') { P.lHipZ += .05 * k; P.rHipZ -= .05 * k; P.lKnX += .1 * k; P.rKnX += .1 * k; P.lAnX -= .1 * k; P.rAnX -= .1 * k; }
+        }
         if (b.hunch) {
             const h = b.hunch;
-            P.spineX += h; P.neckX -= h * .45; P.headX -= h * .5; P.hipsY -= h * .1;
+            P.spineX += h; P.neckX -= h * .45; P.headX -= h * .5; P.hipsY -= h * .02;
             P.lHipX -= h * .35; P.rHipX -= h * .35; P.lKnX += h * .6; P.rKnX += h * .6; P.lAnX -= h * .25; P.rAnX -= h * .25;
+        }
+        if (b.gait === 'crawl' && state !== 'attack' && state !== 'hit') {   // beetle: body level, front limbs on the ground
+            const s = moving ? Math.sin(this.phase) : Math.sin((this.time + this.offset) * 1.3) * .04;
+            Object.assign(P, { spineX: 1.2, spineY: 0, neckX: -.55, headX: -.55, lShZ: .32, rShZ: -.32, lShY: 0, rShY: 0, lElX: -.8, rElX: -.8,
+                lShX: -.95 + s * .32, rShX: -.95 - s * .32 });
+            if (state === 'defend') { P.lShX = -1.6; P.rShX = -1.6; P.lElX = -1.2; P.rElX = -1.2; P.headX = -.3; }
+            P.wpnX = 1.15 - (P.rShX + P.rElX);
         }
         if (b.gait === 'knuckle' && moving) {                // long arms swing like front legs
             const s = Math.sin(this.phase), run = state === 'run';
             Object.assign(P, { spineX: run ? 1.0 : .85, neckX: -.35, headX: -.55, lShZ: .18, rShZ: -.18, lElX: -.1, rElX: -.1,
                 lShX: -.85 + s * .5, rShX: -.85 - s * .5 });
-            P.hipsY -= .08;
+            P.hipsY -= .02;
             P.wpnX = 1.15 - (P.rShX + P.rElX);
         }
         if (b.hover) {                                       // floats above the ground, feet hanging

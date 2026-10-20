@@ -28,7 +28,7 @@ scene.add(ground);
 const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, .1, 100);
 let camAngle = .5, camDist = 9.5, camHeight = 4.2;
 
-const STATES = ['idle', 'walk', 'run', 'attack', 'defend', 'kneel', 'lie', 'hit', 'death'];
+const STATES = ['idle', 'walk', 'run', 'attack', 'defend', 'cast', 'kneel', 'lie', 'hit', 'death'];
 const DURATION = { attack: .55, defend: .8, hit: .45 };
 const TYPES = [...AVATAR_TYPES, 'horse'];
 // Lay the models out side by side according to their width.

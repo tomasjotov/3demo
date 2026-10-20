@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { G, mat } from '../avatar/kit.js';
 import { QuadrupedRig, BASE_STAND, smooth, damp, TAU } from './QuadrupedRig.js';
 import { glowMat, flameTongue, taperTube } from './creatureParts.js';
@@ -6,16 +7,20 @@ import { haloSprite } from './LightProps.js';
 
 /*
  * ProceduralElemental — humanoid beings made of a material instead of flesh, on one biped rig (QuadrupedRig with the
- * legs HL / HR, two big arms, a chest that leans and twists). Kinds:
- *   rock      earth-elemental (layered tan slabs, glowing cracks), -greater (grey boulders, moss), -giant (colossal)
- *   golem     iron-and-stone giant: barrel chest, pauldrons, dome head, glowing coil at the waist
- *   automaton black metal construct: rods, plates, rivets, brass gears turning, red eyes and vent
- *   fire      fire-elemental-greater (dark ember body with glowing cracks), -giant (bright orange): flame tongues, breath
- *   water     water-elemental-greater: translucent blue body on a flowing water column, foam streaming over it
- *   air       air-elemental-greater: pale smoke body, mushroom-cloud head, lower body a spinning vortex with dust
- *   vestrad   hooded energy demon: floating robe, glowing hands, lightning crackling around the hands and body
+ * legs HL / HR, two big arms, a chest that leans and twists). Bodies are smooth lathed torsos and tapered limbs dressed
+ * per kind (canvas textures for stone strata, smoke, water streaks; static parts merged per joint to keep draw calls low):
+ *   rock      earth-elemental (upright, stacked tan shale slabs), -greater (hunched gorilla of cracked flagstone plates,
+ *             moss on the shoulders, fists before it), -giant (colossal hunched brute of splintered rock, long clawed arms,
+ *             glowing seams on the chest)
+ *   golem     steel-blue iron giant: barrel chest, round pauldrons, dome head with crest, glowing coil waist, claws
+ *   automaton black metal skeleton construct, hunched: ribs, brass chest gear, pistons, gear-crowned skull, red eyes / vent
+ *   fire      fire-elemental-greater (charred lava body with glowing veins, flame horns), -giant (bright orange): curved
+ *             flame tongues all over, breath
+ *   water     water-elemental-greater: translucent streaming body, hair of water swept back, rising from a breaking wave
+ *   air       air-elemental-greater: smoky body, mushroom-cloud head, lower body a spinning funnel over a mist bank
+ *   vestrad   hooded energy demon: floating robe, arms spread, lightning crackling from the hands and around the body
  *   swarm     swarm-devil: dark humanoid core covered by hundreds of orbiting insects (instanced)
- *   maggot    maggot-man: flesh core wrapped in ribbed worms, crawling maggots (instanced), dangling worm tendrils
+ *   maggot    maggot-man: pale core wrapped in ribbed worms, worm dreadlocks and hanging tendrils, crawling maggots
  *
  *   root ─ body (hips: bob, lunge, pitch `bx`, roll) ├─ legs HL/HR: top ─ knee ─ low ─ foot (kept flat)
  *        │                                           ├─ chest (pose keys spine / twist) ─ arms (sh ─ el ─ hand), neck ─ head
@@ -34,23 +39,30 @@ import { haloSprite } from './LightProps.js';
  */
 
 export const ELEMENTAL_VARIANTS = {
-    'earth-elemental': { kind: 'rock', scale: 1.45, stone: 0xa08a6c, dark: 0x6e5c48, crack: 0xff8a30, glow: .9, slab: .6, eye: true,
-        dims: { spine: .22, legs: [.44, .44], arm: [.44, .42], shX: .46 } },
-    'earth-elemental-greater': { kind: 'rock', scale: 2.3, stone: 0x7a726a, dark: 0x4e4842, crack: 0x9a4a18, glow: .15, slab: 1,
-        moss: 0x5a6a30, dims: { spine: .55, chestW: .46 } },
-    'earth-elemental-giant': { kind: 'rock', scale: 3.6, stone: 0xa48c72, dark: 0x5a4c40, crack: 0xff6a20, glow: 1.1, slab: .75,
-        moss: 0x5e7034, eye: true, dims: { spine: .5 } },
-    golem: { kind: 'golem', scale: 1.3, metal: 0x3c4856, dark: 0x252c34, glow: 0xff8a30 },
-    automaton: { kind: 'automaton', scale: 1, metal: 0x1c1e22, plate: 0x2e3035, brass: 0x9a7438, glow: 0xff2418 },
-    'fire-elemental-greater': { kind: 'fire', scale: 1.5, core: 0x2a120a, ember: 0xff5a10, glow: 1.7, lava: 0, flame: 0xff7a20,
-        shell: .22, fs: 1.1, fl: 1.2, dims: { spine: .38 } },
-    'fire-elemental-giant': { kind: 'fire', scale: 3.6, core: 0xd06018, ember: 0xff8a28, glow: 1.3, lava: 120, flame: 0xffa040,
-        shell: .32, fs: 1.3, fl: 1.4, dims: { spine: .06 } },
-    'water-elemental-greater': { kind: 'water', scale: 1.7, water: 0x3e8eb0, deep: 0x0c3a58, foam: 0xdaf2fa, eye: 0xe8ffff },
+    'earth-elemental': { kind: 'rock', scale: 1.45, tex: 'strata', stone: 0xa89070, dark: 0x78624c, skin: 0x7a6650, crack: 0xff8a30, glow: .1,
+        slab: .5, eye: true, shoulder: 1.35, finger: 1, brow: .15,
+        dims: { spine: .15, legs: [.44, .44], legR: .12, legX: .17, arm: [.44, .42], armR: .11, hand: .13, shX: .4, chestW: .3, chestD: .22,
+            hipW: .22, head: .14, headZ: .06, neck: .05, torso: .56, armZ: .18 } },
+    'earth-elemental-greater': { kind: 'rock', scale: 2.3, tex: 'plates', stone: 0x8e7e6a, dark: 0x5c4e42, skin: 0x6a5a4a, crack: 0x9a4a18, glow: 0,
+        slab: .8, moss: 0x4e5a2c, eye: true, shoulder: 1.7, finger: .9, brow: .3,
+        dims: { spine: .6, legs: [.36, .36], legR: .17, arm: [.53, .51], armR: .19, hand: .24, shX: .56, shY: .52, chestW: .5, chestD: .38,
+            head: .16, headZ: .44, neck: .02, armZ: .2 }, stand: { lX: -.4, rX: -.4, lK: -.5, rK: -.5 } },
+    'earth-elemental-giant': { kind: 'rock', scale: 3.6, tex: 'grain', stone: 0xa88e74, dark: 0x6a5848, skin: 0x4a3c30, crack: 0xff6a20, glow: .08,
+        chestGlow: 1.2, slab: .7, moss: 0x56662e, eye: true, shoulder: 1.8, finger: 1.4, fore: 1.25, brow: .45,
+        dims: { spine: .55, legs: [.38, .38], legR: .16, arm: [.58, .56], armR: .17, hand: .2, shX: .52, chestW: .46, chestD: .34,
+            head: .15, headZ: .4, neck: .02, armZ: .22 }, stand: { lX: -.4, rX: -.4, lK: -.55, rK: -.55 } },
+    golem: { kind: 'golem', scale: 1.3, metal: 0x5a6c82, dark: 0x2e3844, glow: 0xff8a30 },
+    automaton: { kind: 'automaton', scale: 1.1, metal: 0x2c2f35, plate: 0x3c4048, brass: 0xb88c48, glow: 0xff2418 },
+    'fire-elemental-greater': { kind: 'fire', scale: 1.5, core: 0x1e0c08, ember: 0xff5a10, glow: 2.2, lava: 0, flame: 0xff6a18,
+        shell: .08, fs: 1.5, fl: 1.6, fop: .6, horns: true, dims: { spine: .38, chestW: .3, shX: .34, armR: .08, legR: .085 } },
+    'fire-elemental-giant': { kind: 'fire', scale: 3.6, core: 0xe07018, ember: 0xffa030, glow: 1.4, lava: 150, flame: 0xffa040,
+        shell: .22, fs: 1.4, fl: 1.6, fop: .7, dims: { spine: .06 } },
+    'water-elemental-greater': { kind: 'water', scale: 1.95, water: 0x4aa8cc, glint: 0xbdeeff, foam: 0xe4f6fc, eye: 0xe8ffff,
+        stand: { lX: -.45, lZ: .55, lK: -.5, rX: -.2, rZ: .45, rK: -.35 } },
     'air-elemental-greater': { kind: 'air', scale: 1.7, air: 0xb4bcc4, cloud: 0xd2d6da, dust: 0x9a948a },
-    vestrad: { kind: 'vestrad', scale: 1.15, robe: 0x101824, bolt: 0x9ae8ff },
+    vestrad: { kind: 'vestrad', scale: 1.15, robe: 0x101824, bolt: 0x9ae8ff, stand: { lX: -.55, lZ: .95, lK: -.55, rX: -.55, rZ: .95, rK: -.55 } },
     'swarm-devil': { kind: 'swarm', scale: 1.1 },
-    'maggot-man': { kind: 'maggot', scale: .95, flesh: 0xa88a7c, worm: 0xdccdb6 }
+    'maggot-man': { kind: 'maggot', scale: 1.05, flesh: 0x9a8a86, worm: 0xece6dc }
 };
 
 // metres at scale 1: legs [thigh, shin], leg radius, foot height, hip spacing, knee bend [hip, knee, ankle], torso,
@@ -67,13 +79,13 @@ const DIMS = {
     golem: { ...HUMAN, legs: [.42, .42], legR: .14, foot: .1, legX: .22, hipDrop: .06, bend: [-.18, .36, -.18], splay: .05,
         waist: .14, torso: .58, chestW: .4, chestD: .32, hipW: .26, shX: .5, shY: .48, arm: [.46, .46], armR: .12, hand: .15,
         neck: .02, head: .16, headZ: .06, spine: .12, armZ: .2 },
-    automaton: { ...HUMAN, legR: .05, legX: .12, chestW: .22, chestD: .15, hipW: .15, shX: .27, shY: .45, arm: [.36, .34],
-        armR: .05, hand: .08, neck: .1, head: .12, headZ: .02, armZ: .12 },
+    automaton: { ...HUMAN, legR: .05, legX: .13, bend: [-.28, .56, -.28], chestW: .22, chestD: .15, hipW: .15, shX: .27, shY: .45,
+        arm: [.38, .36], armR: .05, hand: .09, neck: .08, head: .14, headZ: .06, spine: .32, armZ: .14 },
     fire: { ...HUMAN, armZ: .3 },
     swarm: { ...HUMAN, legR: .085, chestW: .27, chestD: .19, hipW: .18, armR: .075, head: .14 },
     maggot: { ...HUMAN, legR: .07, chestW: .23, chestD: .16, armR: .065, arm: [.42, .42], spine: .2 },
-    water: { ...HUMAN, legs: null, hover: .95, chestW: .27, chestD: .18, hipW: .18, shX: .32, shY: .46, arm: [.44, .42],
-        armR: .08, hand: .09, head: .14, armZ: .3 },
+    water: { ...HUMAN, legs: null, hover: .95, chestW: .3, chestD: .2, hipW: .19, shX: .35, shY: .46, arm: [.46, .44],
+        armR: .095, hand: .1, head: .145, spine: .22, armZ: .3 },
     air: { ...HUMAN, legs: null, hover: .95, chestW: .27, chestD: .18, hipW: .18, shX: .32, shY: .46, arm: [.44, .42],
         armR: .08, hand: .09, head: .14, armZ: .3 },
     vestrad: { ...HUMAN, legs: null, hover: 1.0, chestW: .22, chestD: .15, hipW: .17, shX: .27, shY: .44, arm: [.36, .34],
@@ -105,6 +117,84 @@ function rockGeo(i) {
     return rocks[k];
 }
 
+// Smooth organic shapes (module cache): tapered limbs, lathed torsos, lumpy blobs (clouds, foam), curved flames.
+const geoCache = new Map();
+const cachedGeo = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); };
+// smooth pseudo noise from sines (deterministic, cheap; only used while building geometry)
+const nz = (x, y, z, s) => Math.sin(x * 1.7 + s) * Math.sin(y * 2.3 + s * 1.3) * Math.sin(z * 1.9 + s * .7)
+    + .5 * Math.sin(x * 3.9 - y * 2.1 + s * 2.1) * Math.sin(z * 4.3 + y * 1.1 + s) + .25 * Math.sin(x * 7.3 + z * 6.1 + s * 3);
+
+// Limb segment from the joint along dir (-1 down, +1 up): rounded ends, taper r0 → r1, muscle bulge near the top.
+function limbGeo(len, r0, r1, dir, bulge = .12, seg = 10) {
+    return cachedGeo(`limb${rd(len)},${rd(r0)},${rd(r1)},${dir},${bulge},${seg}`, () => {
+        const P = [];
+        for (let i = 0; i <= 3; i++) { const a = -Math.PI / 2 + i * Math.PI / 6; P.push(new THREE.Vector2(r0 * Math.cos(a), r0 * Math.sin(a) * .8)); }
+        for (let i = 1; i < 6; i++) {
+            const t = i / 6;
+            P.push(new THREE.Vector2((r0 + (r1 - r0) * t) * (1 + bulge * Math.sin(Math.PI * Math.sqrt(t))), t * len));
+        }
+        for (let i = 0; i <= 3; i++) { const a = i * Math.PI / 6; P.push(new THREE.Vector2(Math.max(1e-4, r1 * Math.cos(a)), len + r1 * Math.sin(a) * .8)); }
+        const g = new THREE.LatheGeometry(P, seg);
+        if (dir < 0) g.rotateX(Math.PI);
+        return g;
+    });
+}
+// Lathe from [radius, y] pairs, squashed in depth by zs.
+function latheGeo(key, pts, seg = 14, zs = 1) {
+    return cachedGeo('lathe' + key, () => {
+        const g = new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(Math.max(1e-4, r), y)), seg);
+        g.scale(1, 1, zs);
+        return g;
+    });
+}
+// Humanoid torso from the hips (y 0) to the neck (y torso): hips, narrow waist, chest, sloping shoulders.
+function torsoGeo(D, waist = .8, seg = 14) {
+    const T = D.torso, W = D.chestW, Hp = D.hipW;
+    return latheGeo(`torso${rd(T)},${rd(W)},${rd(Hp)},${rd(D.chestD)},${waist}`, [[0, -.05], [Hp * .85, -.035], [Hp, .05], [Hp * waist, T * .3],
+        [W * .92, T * .6], [W, T * .78], [W * .8, T * .94], [W * .35, T * 1.02], [0, T * 1.04]], seg, D.chestD / W);
+}
+// Lumpy blob around the unit sphere (cloud puffs, foam, smooth boulders); amp = lump depth, f = lump frequency.
+function lumpGeo(seed, amp = .25, f = 2, detail = 2, flatBottom = 0) {
+    return cachedGeo(`lump${seed},${amp},${f},${detail},${flatBottom}`, () => {
+        let g = new THREE.IcosahedronGeometry(1, detail);
+        g.deleteAttribute('normal'); g.deleteAttribute('uv');
+        g = mergeVertices(g);
+        const p = g.attributes.position, uv = new Float32Array(p.count * 2);
+        for (let i = 0; i < p.count; i++) {
+            _v.fromBufferAttribute(p, i);
+            uv[i * 2] = Math.atan2(_v.z, _v.x) / TAU + .5; uv[i * 2 + 1] = _v.y * .5 + .5;
+            const k = 1 + amp * nz(_v.x * f, _v.y * f, _v.z * f, seed);
+            _v.multiplyScalar(k);
+            if (flatBottom && _v.y < -flatBottom) _v.y = -flatBottom + (_v.y + flatBottom) * .25;
+            p.setXYZ(i, _v.x, _v.y, _v.z);
+        }
+        g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+        g.computeVertexNormals();
+        return g;
+    });
+}
+// Curved flame tongue (+y, height 1, base radius .2): S-bent teardrop, vertex colours white-yellow base → red tip.
+function flameGeo(k) {
+    return cachedGeo('flame' + k, () => {
+        const g = new THREE.CylinderGeometry(1, 1, 1, 7, 6, true), p = g.attributes.position, C = [];
+        const c0 = new THREE.Color(0xffc860), c1 = new THREE.Color(0xff6a10), c2 = new THREE.Color(0x701002), c = new THREE.Color();
+        const bend = [.22, -.26, .34][k % 3], twist = [1, -1, .6][k % 3];
+        for (let i = 0; i < p.count; i++) {
+            const y = p.getY(i) + .5, a = Math.atan2(p.getZ(i), p.getX(i));
+            const r = .2 * Math.pow(Math.sin(Math.PI * Math.min(1, .12 + y * .95)), .8) * (1 - y * .6);
+            const ox = bend * Math.sin(y * 3.2) * y, oz = bend * .5 * twist * (1 - Math.cos(y * 2.6)) * y;
+            p.setXYZ(i, Math.cos(a) * r + ox, y, Math.sin(a) * r * .8 + oz);
+            if (y < .45) c.copy(c0).lerp(c1, y / .45); else c.copy(c1).lerp(c2, (y - .45) / .55);
+            C.push(c.r, c.g, c.b);
+        }
+        g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+        return g;
+    });
+}
+const flameMats = new Map();
+const flameMat = (op = .9) => flameMats.get(op) || (flameMats.set(op, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: op,
+    depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })), flameMats.get(op));
+
 // Toothed gear (disc in the xy plane, axle hole), radius 1.
 let gear = null;
 function gearGeo() {
@@ -130,9 +220,9 @@ function gearGeo() {
 let insect = null, insectMatC = null;
 function insectGeo() {
     if (insect) return insect;
-    const P = [], C = [], body = [.03, .03, .035], wing = [.62, .64, .6];
+    const P = [], C = [], body = [.025, .025, .03], wing = [.36, .37, .35];
     const tri = (a, b, c, col) => { P.push(...a, ...b, ...c); for (let i = 0; i < 3; i++) C.push(...col); };
-    const f = [0, 0, .5], bk = [0, 0, -.55], l = [.17, 0, 0], r = [-.17, 0, 0], u = [0, .14, .05], d = [0, -.12, 0];
+    const f = [0, 0, .5], bk = [0, 0, -.6], l = [.22, 0, 0], r = [-.22, 0, 0], u = [0, .18, .05], d = [0, -.14, 0];
     tri(f, l, u, body); tri(f, u, r, body); tri(f, d, l, body); tri(f, r, d, body);
     tri(bk, u, l, body); tri(bk, r, u, body); tri(bk, l, d, body); tri(bk, d, r, body);
     tri([.05, .1, .12], [.62, .16, -.12], [.18, .12, -.45], wing);
@@ -153,6 +243,13 @@ function tendrilGeo(i) {
     return tendrils[i % 3];
 }
 
+// Textured standard material, cached by colour + options (kit.mat() would serialise the canvas image for its key).
+const tmatCache = new Map();
+function tmat(color, o) {
+    const key = color + Object.entries(o).map(([k, v]) => k + (v && v.isTexture ? v.uuid : v)).join();
+    if (!tmatCache.has(key)) tmatCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: .78, metalness: 0, ...o }));
+    return tmatCache.get(key);
+}
 const texCache = new Map();
 function canvasTex(key, w, h, draw, repeat) {
     if (texCache.has(key)) return texCache.get(key);
@@ -189,11 +286,12 @@ const bugTex = () => canvasTex('bugs', 128, 128, g => {
     g.fillRect(0, 0, 128, 128);
     let s = 5;
     const r = () => (s = s * 16807 % 2147483647) / 2147483647;
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 110; i++) {
         const x = r() * 128, y = r() * 128, a = r() * TAU;
         g.save();
         g.translate(x, y);
         g.rotate(a);
+        g.scale(1.4, 1.4);
         g.fillStyle = 'rgba(190,192,180,.75)';
         g.beginPath(); g.ellipse(-2.5, -2, 3.5, 1.6, -.5, 0, TAU); g.ellipse(2.5, -2, 3.5, 1.6, .5, 0, TAU); g.fill();
         g.fillStyle = '#0a0907';
@@ -210,6 +308,78 @@ const wormTex = color => canvasTex('worm' + color, 64, 16, g => {
     g.fillStyle = 'rgba(255,255,255,.18)';
     g.fillRect(0, 4, 64, 3);
 }, [10, 1]);
+
+const lcg = s => () => (s = s * 16807 % 2147483647) / 2147483647;
+// Stone skin: 'strata' = stacked shale slabs (earth elemental), 'grain' = long vertical splinters (giant), 'plates' =
+// cracked flagstone mosaic (greater). Grey levels, tinted by the material colour.
+const stoneTex = kind => canvasTex('stone' + kind, 128, 128, g => {
+    const r = lcg(kind.length * 977 + 3);
+    g.fillStyle = '#c4c4c4';
+    g.fillRect(0, 0, 128, 128);
+    if (kind === 'plates') {
+        for (let y = 0; y < 128; y += 16) for (let x = -16; x < 128; x += 20) {
+            const ox = x + (y / 16 % 2) * 10, v = 165 + r() * 90 | 0;
+            g.fillStyle = `rgb(${v},${v * .97 | 0},${v * .92 | 0})`;
+            g.beginPath();
+            g.moveTo(ox + r() * 4, y + r() * 3); g.lineTo(ox + 18 + r() * 4, y + r() * 3);
+            g.lineTo(ox + 20 - r() * 4, y + 15 - r() * 3); g.lineTo(ox + r() * 3, y + 15 - r() * 2);
+            g.fill();
+        }
+    } else {
+        const vert = kind === 'grain';
+        for (let i = 0; i < 128; i += 3 + (r() * 5 | 0)) {
+            const v = 160 + r() * 95 | 0, w = 3 + r() * 6;
+            g.fillStyle = `rgb(${v},${v * .96 | 0},${v * .9 | 0})`;
+            g.beginPath();
+            const pts = [];
+            for (let k = 0; k <= 8; k++) pts.push([k * 16, i + Math.sin(k * 1.3 + i) * 2 + (r() - .5) * 2]);
+            pts.forEach(([a, b], k) => (vert ? (k ? g.lineTo(b, a) : g.moveTo(b, a)) : (k ? g.lineTo(a, b) : g.moveTo(a, b))));
+            for (let k = 8; k >= 0; k--) { const [a, b] = pts[k]; vert ? g.lineTo(b + w, a) : g.lineTo(a, b + w); }
+            g.fill();
+            g.fillStyle = 'rgba(30,22,16,.7)';
+            vert ? g.fillRect(i + w, 0, 1, 128) : g.fillRect(0, i + w, 128, 1);
+        }
+    }
+    g.strokeStyle = 'rgba(20,14,10,.55)';
+    for (let i = 0; i < 14; i++) {
+        g.lineWidth = .8 + r();
+        g.beginPath();
+        let x = r() * 128, y = r() * 128;
+        g.moveTo(x, y);
+        for (let k = 0; k < 3; k++) { x += (r() - .5) * 26; y += (r() - .5) * 26; g.lineTo(x, y); }
+        g.stroke();
+    }
+}, [1, 1]);
+// soft billowing smoke / flowing water streaks (grey levels for map, white streaks for emissive)
+const smokeTex = () => canvasTex('smoke', 128, 128, g => {
+    const r = lcg(41);
+    g.fillStyle = '#b8b8b8';
+    g.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 70; i++) {
+        const x = r() * 128, y = r() * 128, s = 6 + r() * 22, v = 150 + r() * 105 | 0;
+        const gr = g.createRadialGradient(x, y, 0, x, y, s);
+        gr.addColorStop(0, `rgba(${v},${v},${v},.55)`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
+        g.fillStyle = gr;
+        for (const dx of [-128, 0, 128]) for (const dy of [-128, 0, 128]) { g.save(); g.translate(dx, dy); g.fillRect(x - s, y - s, s * 2, s * 2); g.restore(); }
+    }
+}, [1, 1]);
+const streakTex = (k = 0) => canvasTex('streak' + k, 64, 128, g => {
+    const r = lcg(73);
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, 64, 128);
+    g.lineCap = 'round';
+    for (let i = 0; i < 26; i++) {
+        const x = r() * 64, v = 120 + r() * 135 | 0;
+        g.strokeStyle = `rgba(${v},${v},${v},${.35 + r() * .5})`;
+        g.lineWidth = .8 + r() * 2.5;
+        g.beginPath();
+        for (let y = -8; y <= 136; y += 8) {
+            const xx = x + Math.sin(y * .06 + i) * 6;
+            y < 0 ? g.moveTo(xx, y) : g.lineTo(xx, y);
+        }
+        g.stroke();
+    }
+}, [2, 1]);
 
 // ------------------------------------------------------------------ particle systems
 // Instanced particles orbiting a segment's axis (insects, maggots, foam, dust); positions are a pure function of time.
@@ -460,85 +630,102 @@ const halo = (parent, color, size, op, x, y, z) => {
 
 const ROCK = {
     mats(R) {
-        const c = R.c;
-        R.M.stone = mat(c.stone, { roughness: .95 });
-        R.M.stone2 = mat(c.dark, { roughness: .95 });
-        R.M.core = new THREE.MeshStandardMaterial({ color: 0x1a1008, emissive: c.crack, emissiveIntensity: c.glow, roughness: 1 });
+        const c = R.c, map = stoneTex(c.tex);
+        R.M.stone = tmat(c.stone, { roughness: .95, map });
+        R.M.stone2 = tmat(c.dark, { roughness: .95, map });
+        R.M.core = new THREE.MeshStandardMaterial({ color: c.skin, map, emissive: c.crack, emissiveMap: lavaTex(0), emissiveIntensity: c.glow, roughness: 1 });
+        R.M.chest = c.chestGlow ? new THREE.MeshStandardMaterial({ color: c.skin, map, emissive: c.crack, emissiveMap: lavaTex(0),
+            emissiveIntensity: c.chestGlow, roughness: 1 }) : R.M.core;
         R.M.moss = c.moss ? mat(c.moss, { roughness: 1 }) : null;
         R.M.eye = mat(c.crack, { emissive: c.crack, emissiveIntensity: 2.5 });
+        R.M.hole = mat(0x120c08, { roughness: 1 });
     },
+    // moss cushion: a flattened lumpy blob draped over a rock
     moss(R, g, r, x, y, z) {
-        for (let i = 0; i < 3; i++) {
-            const a = R.rnd() * TAU, k = .5 + R.rnd() * .5;
-            R.add(g, G.sph(1, 7, 5), R.M.moss, x + Math.cos(a) * r * .5, y + r * .1 * i, z + Math.sin(a) * r * .5).scale.set(r * k, r * k * .38, r * k * .9);
-        }
+        const m = R.add(g, lumpGeo(R.ri(4) + 20, .35, 3, 1, .2), R.M.moss, x, y, z);
+        m.scale.set(r * .9, r * .3, r * .75);
+        m.rotation.y = R.rnd() * TAU;
+        return m;
     },
-    chunk(R, g, r, x, y, z, sy = 1) {
-        const m = R.add(g, rockGeo(R.ri(6)), R.rnd() < .35 ? R.M.stone2 : R.M.stone, x, y, z);
-        m.scale.set(r * (.95 + R.rnd() * .25), r * sy, r * (.9 + R.rnd() * .25));
-        m.rotation.set((R.rnd() - .5) * .5, R.rnd() * TAU, (R.rnd() - .5) * .5);
+    chunk(R, g, r, x, y, z, sy = 1, sx = 1) {
+        const m = R.add(g, rockGeo(R.ri(6)), R.rnd() < .3 ? R.M.stone2 : R.M.stone, x, y, z);
+        m.scale.set(r * sx * (.95 + R.rnd() * .2), r * sy, r * (.9 + R.rnd() * .2));
+        m.rotation.set((R.rnd() - .5) * .3, R.rnd() * TAU, (R.rnd() - .5) * .3);
         R.anchors.push(m);
         return m;
     },
-    seg(R, g, len, r0, r1, dir, part) {
-        const big = part === 'fore' ? 1.12 : 1, slab = R.c.slab;
-        R.tube(g, len, r0 * .5, r1 * .5, dir, R.M.core, 6);
-        const n = Math.max(2, Math.round(len / (Math.max(r0, r1) * 1.2 * slab)));
-        for (let i = 0; i < n; i++) {
-            const t = (i + .5) / n, r = (r0 + (r1 - r0) * t) * big;
-            ROCK.chunk(R, g, r, (R.rnd() - .5) * r * .25, dir * t * len, (R.rnd() - .5) * r * .25, len / n / r * .8 * slab);
-        }
-        ROCK.chunk(R, g, r0 * .9, 0, 0, 0, .8);
-    },
-    torso(R, g) {
-        const D = R.D, T = D.torso, slab = R.c.slab;
-        R.tube(g, T, D.hipW * .6, D.chestW * .6, 1, R.M.core, 7);
-        const rows = Math.round(4 / slab);
+    // slab ring: overlapping flat plates (strata), long splinters (grain) or fat boulders (plates) around an axis
+    shell(R, g, len, r0, r1, dir, rows, per = 3, zs = 1) {
+        const [w, th, hk, off] = { strata: [.85, .32, .6, .72], grain: [.5, .3, .8, .7], plates: [.72, .4, .62, .66] }[R.c.tex];
         for (let i = 0; i < rows; i++) {
-            const t = (i + .5) / rows, w = D.hipW + (D.chestW - D.hipW) * Math.min(1, t * 1.3), d = D.chestD * (.75 + .25 * t);
-            for (let k = 0; k < 4; k++) {
-                const a = k * Math.PI / 2 + i * .55 + R.rnd() * .3;
-                ROCK.chunk(R, g, w * .58, Math.cos(a) * w * .45, t * T, Math.sin(a) * d * .45, T / rows / (w * .58) * .8 * slab);
+            const t = (i + .5) / rows, r = r0 + (r1 - r0) * t, h = len / rows;
+            for (let k = 0; k < per; k++) {
+                const a = k * TAU / per + i * 1.1 + R.rnd() * .4;
+                const m = ROCK.chunk(R, g, r * w, Math.cos(a) * r * off, dir * (t * len + (R.rnd() - .5) * h * .25), Math.sin(a) * r * off * zs,
+                    h * hk / (r * w), th / w);
+                m.rotation.set((R.rnd() - .5) * .2, -a, (R.rnd() - .5) * .25);
             }
         }
-        for (const s of [1, -1]) {
-            ROCK.chunk(R, g, D.armR * 1.6, s * D.shX * .85, D.shY + D.armR * .3, 0, .85);
-            if (R.M.moss) ROCK.moss(R, g, D.armR * .9, s * D.shX * .85, D.shY + D.armR * 1.1, 0);
+    },
+    seg(R, g, len, r0, r1, dir, part) {
+        const k = part === 'fore' ? R.c.fore || 1.15 : 1;
+        R.anchors.push(R.add(g, limbGeo(len, r0 * .82, r1 * .82 * k, dir, .18), R.M.core));
+        const rows = Math.max(2, Math.round(len / (Math.max(r0, r1) * R.c.slab)));
+        ROCK.shell(R, g, len, r0, r1 * k, dir, rows, R.c.tex === 'plates' ? 3 : 4);
+    },
+    torso(R, g) {
+        const D = R.D, T = D.torso, W = D.chestW, Hp = D.hipW, zs = D.chestD / W;
+        R.anchors.push(R.add(g, latheGeo(`rock${rd(W)},${rd(Hp)},${rd(T)}`, [[0, -.04], [Hp * .9, -.03], [Hp, .06], [Hp * .82, T * .28],
+            [W * .92, T * .6], [W, T * .8], [W * .78, T * .96], [W * .3, T * 1.04], [0, T * 1.05]], 12, zs), R.M.chest));
+        const rows = Math.round(3 / R.c.slab);
+        ROCK.shell(R, g, T * .9, Hp * 1.1, W * 1.05, 1, rows, R.c.tex === 'plates' ? 4 : 6, zs);
+        for (const s of [1, -1]) {                                                      // shoulder boulders
+            ROCK.chunk(R, g, D.armR * R.c.shoulder, s * D.shX * .9, D.shY + D.armR * .35, 0, .8);
+            if (R.M.moss) ROCK.moss(R, g, D.armR * 1.2, s * D.shX * .9, D.shY + D.armR * 1.15, -D.armR * .1);
         }
-        ROCK.chunk(R, g, D.chestW * .72, 0, T * .78, D.chestD * .4, .55);
-        if (R.M.moss) ROCK.moss(R, g, D.chestW * .35, 0, T * .95, -D.chestD * .25);
+        if (R.M.moss) { ROCK.moss(R, g, W * .5, 0, T * .95, -D.chestD * .6); ROCK.moss(R, g, W * .4, -W * .3, T * .8, -D.chestD * .85); }
     },
     pelvis(R, g) {
         const D = R.D;
+        R.add(g, lumpGeo(3, .12, 1.5, 1), R.M.core, 0, -.02, 0).scale.set(D.hipW * 1.05, D.hipW * .7, D.chestD * .85);
         for (let k = 0; k < 3; k++) {
             const a = k * TAU / 3 + .5;
-            ROCK.chunk(R, g, D.hipW * .62, Math.cos(a) * D.hipW * .4, -.02, Math.sin(a) * D.chestD * .3, .75);
+            ROCK.chunk(R, g, D.hipW * .45, Math.cos(a) * D.hipW * .6, -.04, Math.sin(a) * D.chestD * .45, .6);
         }
     },
     hand(R, h, s) {
-        const r = R.D.hand;
-        ROCK.chunk(R, h, r, 0, -r * .7, r * .1, 1);
-        for (let i = -1; i <= 1; i++) ROCK.chunk(R, h, r * .42, i * r * .5, -r * 1.5, r * .4, 1.1);
-        ROCK.chunk(R, h, r * .42, -s * r * .8, -r * .95, r * .45, 1);
+        const r = R.D.hand, c = R.c;
+        R.add(h, lumpGeo(5, .15, 1.6, 2), R.M.stone2, 0, -r * .7, 0).scale.set(r * 1.05, r, r * .85);
+        ROCK.chunk(R, h, r * .8, 0, -r * .55, r * .25, .9);
+        for (let i = -1; i <= 1; i++) {                                                 // thick blunt fingers / claws
+            const f = R.add(h, limbGeo(r * c.finger, r * .3, r * .2, -1, .1, 6), R.M.stone, i * r * .48, -r * 1.2, r * .25);
+            f.rotation.x = .35;
+        }
+        R.add(h, limbGeo(r * .8, r * .28, r * .2, -1, .1, 6), R.M.stone, -s * r * .85, -r * .8, r * .4).rotation.z = s * .6;
     },
     foot(R, f) {
-        const D = R.D, r = D.legR * 1.35;
-        ROCK.chunk(R, f, r, 0, -D.foot * .45, D.legR * .4, D.foot * .5 / r);
-        ROCK.chunk(R, f, r * .6, 0, -D.foot * .55, D.legR * 1.3, D.foot * .4 / (r * .6));
+        const D = R.D, r = D.legR * 1.3;
+        R.add(f, lumpGeo(6, .12, 1.6, 1, .3), R.M.stone2, 0, -D.foot * .55, D.legR * .5).scale.set(r, D.foot * .75, r * 1.5);
+        ROCK.chunk(R, f, r * .75, 0, -D.foot * .4, D.legR * 1.1, D.foot * .5 / (r * .75));
     },
     head(R, h) {
-        const r = R.D.head;
-        ROCK.chunk(R, h, r, 0, r * .75, 0, .95);
-        ROCK.chunk(R, h, r * .95, 0, r * 1.05, r * .35, .38);
-        ROCK.chunk(R, h, r * .72, 0, r * .25, r * .45, .55);
-        if (R.c.eye) for (const s of [1, -1]) {
-            R.add(h, G.sph(r * .13, 6, 5), R.M.eye, s * r * .38, r * .75, r * .9);
-            halo(h, R.c.crack, r * 1.1, .55, s * r * .38, r * .75, r * 1.0);
+        const r = R.D.head, c = R.c;
+        R.anchors.push(R.add(h, lumpGeo(8, .1, 1.4, 2), R.M.stone, 0, r * .8, r * .05));
+        h.children[h.children.length - 1].scale.set(r * .85, r * 1.05, r * .95);
+        ROCK.chunk(R, h, r * .9, 0, r * 1.25, -r * .1, .45);                           // skull plate
+        for (const s of [1, -1]) {                                                       // heavy brow slabs, cheek plates
+            ROCK.chunk(R, h, r * .5, s * r * .38, r * 1.0, r * .62, .35).rotation.z = s * c.brow;
+            ROCK.chunk(R, h, r * .45, s * r * .55, r * .45, r * .35, .7);
+            R.add(h, G.sph(rd(r * .16), 6, 5), c.eye ? R.M.eye : R.M.hole, s * r * .34, r * .82, r * .8).scale.set(1, .7, .6);
+            if (c.eye) halo(h, c.crack, r * 1.1, .5, s * r * .34, r * .82, r * .95);
         }
-        if (R.M.moss) ROCK.moss(R, h, r * .6, 0, r * 1.25, -r * .15);
+        ROCK.chunk(R, h, r * .55, 0, r * .25, r * .45, .55);                            // jaw
+        if (R.M.moss && R.c.chestGlow) ROCK.moss(R, h, r * .7, 0, r * 1.5, -r * .3);
     },
     animate(R, q, state, t) {
-        R.M.core.emissiveIntensity = R.c.glow * (1 + .2 * Math.sin(t * 2.3) + q.harden * 1.8 + q.fx * 1.2);
+        const k = 1 + .2 * Math.sin(t * 2.3) + q.harden * 1.8 + q.fx * 1.2;
+        R.M.core.emissiveIntensity = R.c.glow * k + q.harden * .4;
+        if (R.M.chest !== R.M.core) R.M.chest.emissiveIntensity = R.c.chestGlow * k;
     },
     death: R => ({ mode: 'pile', n: 60, geo: rockGeo(1), mat: R.M.stone, size: [R.D.armR * .6, R.D.armR * 1.15], at: .45, hide: true,
         R: R.D.chestW * 1.7, heap: R.D.chestW * 1.3, spin: 6, jit: R.D.armR * .4, stretch: [1, .75, 1] }),
@@ -548,29 +735,37 @@ const ROCK = {
 const GOLEM = {
     mats(R) {
         const c = R.c;
-        R.M.metal = mat(c.metal, { roughness: .5, metalness: .55 });
-        R.M.dark = mat(c.dark, { roughness: .55, metalness: .5 });
+        R.M.metal = mat(c.metal, { roughness: .42, metalness: .45 });
+        R.M.dark = mat(c.dark, { roughness: .5, metalness: .4 });
         R.M.glow = new THREE.MeshStandardMaterial({ color: c.glow, emissive: c.glow, emissiveIntensity: 1.6 });
     },
     seg(R, g, len, r0, r1, dir, part) {
         const r2 = r1 * (part === 'fore' ? 1.45 : part === 'shin' ? 1.3 : 1);
         R.add(g, G.sph(rd(r0 * 1.08), 12, 9), R.M.dark);
-        R.anchors.push(R.tube(g, len * .88, r0, r2, dir, R.M.metal, 12));
-        for (const t of [.25, .55, .85]) {
-            const r = (r0 + (r2 - r0) * t) * 1.04;
-            R.add(g, G.torus(rd(r), rd(r * .1), 5, 16), R.M.dark, 0, dir * t * len * .88, 0).rotation.x = Math.PI / 2;
+        R.anchors.push(R.add(g, limbGeo(len * .86, r0 * .95, r2, dir, part === 'fore' || part === 'shin' ? .02 : .15, 12), R.M.metal));
+        for (const t of [.12, .62]) {                                                // plate seams
+            const r = (r0 + (r2 - r0) * t) * 1.02;
+            R.add(g, G.torus(rd(r), rd(r * .07), 4, 16), R.M.dark, 0, dir * t * len * .86, 0).rotation.x = Math.PI / 2;
+        }
+        if (part === 'shin' || part === 'thigh') {                                  // piston rods at the back
+            for (const s of [1, -1]) R.add(g, G.cyl(rd(r0 * .14), rd(r0 * .14), rd(len * .75), 6), R.M.dark, s * r0 * .55, dir * len * .45, -r0 * .9);
         }
     },
     torso(R, g) {
         const D = R.D, T = D.torso;
-        for (let i = 0; i < 4; i++) R.add(g, G.torus(rd(D.hipW * .62), .035, 6, 16), R.M.glow, 0, .03 + i * .05, 0).rotation.x = Math.PI / 2;
-        R.add(g, G.cyl(rd(D.hipW * .5), rd(D.hipW * .5), .2, 10), R.M.glow, 0, .1, 0);
-        R.add(g, G.cyl(rd(D.chestW * .6), rd(D.hipW * .62), rd(T * .14), 12), R.M.dark, 0, .23, 0);
-        const chest = R.add(g, G.sph(1, 16, 12), R.M.metal, 0, T * .62, 0);
-        chest.scale.set(D.chestW, T * .42, D.chestD);
+        for (let i = 0; i < 5; i++) R.add(g, G.torus(rd(D.hipW * .6), .03, 6, 16), R.M.glow, 0, .02 + i * .045, 0).rotation.x = Math.PI / 2;
+        R.add(g, G.cyl(rd(D.hipW * .45), rd(D.hipW * .45), .22, 10), R.M.glow, 0, .11, 0);
+        R.add(g, G.cyl(rd(D.chestW * .62), rd(D.hipW * .6), rd(T * .1), 12), R.M.dark, 0, .25, 0);
+        const chest = R.add(g, G.sph(1, 16, 12), R.M.metal, 0, T * .7, 0);
+        chest.scale.set(D.chestW, T * .38, D.chestD);
         R.anchors.push(chest);
-        R.add(g, G.box(rd(D.chestW * 1.1), rd(T * .3), .08), R.M.dark, 0, T * .58, D.chestD * .86).rotation.x = -.15;
-        for (let i = -2; i <= 2; i++) R.add(g, G.sph(.02, 5, 4), R.M.metal, i * D.chestW * .22, T * .72, D.chestD * .93);
+        R.add(g, G.box(rd(D.chestW * 1.1), rd(T * .26), .08), R.M.dark, 0, T * .68, D.chestD * .86).rotation.x = -.15;
+        for (let i = -2; i <= 2; i++) R.add(g, G.sph(.02, 5, 4), R.M.metal, i * D.chestW * .22, T * .8, D.chestD * .9);
+        for (let i = 0; i < 3; i++) {                                                // ribbed belly plates
+            const rb = R.add(g, G.torus(rd(D.chestW * (.82 - i * .1)), .022, 4, 16, Math.PI), R.M.dark, 0, T * (.45 - i * .06), D.chestD * .05);
+            rb.scale.set(1, D.chestD / D.chestW * 1.1, 1);
+            rb.rotation.x = Math.PI / 2 + .2;
+        }
         for (const s of [1, -1]) {
             const p = R.add(g, G.sph(rd(D.armR * 1.9), 12, 9), R.M.metal, s * D.shX, D.shY + D.armR * .4, 0);
             p.scale.set(1, .85, 1);
@@ -585,9 +780,18 @@ const GOLEM = {
     },
     hand(R, h, s) {
         const r = R.D.hand;
-        R.add(h, G.box(rd(r * 1.3), rd(r * 1.1), rd(r * 1.1)), R.M.metal, 0, -r * .55, 0);
-        for (let i = -1; i <= 1; i++) R.add(h, G.box(rd(r * .32), rd(r * .7), rd(r * .32)), R.M.dark, i * r * .42, -r * 1.35, r * .15).rotation.x = .3;
-        R.add(h, G.box(rd(r * .3), rd(r * .55), rd(r * .3)), R.M.dark, -s * r * .7, -r * .8, r * .35).rotation.z = s * .4;
+        R.add(h, G.box(rd(r * 1.25), rd(r * 1.0), rd(r * .9)), R.M.metal, 0, -r * .5, 0);
+        for (let i = -1; i <= 1; i++) {                                              // three jointed claws, curled in
+            const f = R.grp(h, i * r * .42, -r * .95, r * .1);
+            f.rotation.set(.25, 0, -i * .12);
+            R.add(f, limbGeo(r * .6, r * .16, r * .13, -1, .05, 6), R.M.dark);
+            const tip = R.grp(f, 0, -r * .6, 0);
+            tip.rotation.x = .7;
+            R.add(tip, G.cone(rd(r * .13), rd(r * .55), 5), R.M.metal, 0, -r * .27, 0).rotation.x = Math.PI;
+        }
+        const th = R.grp(h, -s * r * .65, -r * .7, r * .3);
+        th.rotation.set(.6, 0, s * .5);
+        R.add(th, limbGeo(r * .55, r * .15, r * .12, -1, .05, 6), R.M.dark);
     },
     foot(R, f) {
         const D = R.D;
@@ -598,6 +802,7 @@ const GOLEM = {
         R.add(h, G.sph(r, 14, 9, 0, TAU, 0, Math.PI / 2), R.M.metal, 0, r * .55, 0);
         R.add(h, G.cyl(r, rd(r * .9), rd(r * .7), 14), R.M.metal, 0, r * .2, 0);
         R.add(h, G.box(rd(r * 1.7), rd(r * .16), rd(r * .4)), R.M.dark, 0, r * .62, r * .78);
+        R.add(h, G.box(rd(r * .16), rd(r * .3), rd(r * 1.6)), R.M.dark, 0, r * 1.45, 0);           // crest ridge
         R.add(h, G.box(rd(r * .9), rd(r * .12), .03), R.M.dark, 0, r * .1, r * .9);
         for (const s of [1, -1]) {
             R.add(h, G.sph(rd(r * .2), 8, 6), R.M.glow, s * r * .4, r * .38, r * .84);
@@ -615,9 +820,9 @@ const GOLEM = {
 const AUTOMATON = {
     mats(R) {
         const c = R.c;
-        R.M.metal = mat(c.metal, { roughness: .4, metalness: .7 });
-        R.M.plate = mat(c.plate, { roughness: .35, metalness: .75 });
-        R.M.brass = mat(c.brass, { roughness: .35, metalness: .8 });
+        R.M.metal = mat(c.metal, { roughness: .38, metalness: .5 });
+        R.M.plate = mat(c.plate, { roughness: .3, metalness: .55 });
+        R.M.brass = mat(c.brass, { roughness: .35, metalness: .6, emissive: 0x2a1a06, emissiveIntensity: .5 });
         R.M.glow = new THREE.MeshStandardMaterial({ color: c.glow, emissive: c.glow, emissiveIntensity: 2 });
     },
     gear(R, g, r, x, y, z, ry = 0, sp = 1.2) {
@@ -644,10 +849,13 @@ const AUTOMATON = {
             rb.rotation.set(Math.PI / 2, 0, -.2 * Math.PI);
             rb.scale.set(1, D.chestD / D.chestW, 1);
         }
-        R.add(g, G.box(rd(D.chestW * 1.5), rd(T * .3), .05), R.M.plate, 0, T * .8, D.chestD * .8);
-        AUTOMATON.gear(R, g, D.chestW * .5, 0, T * .55, D.chestD * .95, 0, 1.2);
+        R.add(g, G.box(rd(D.chestW * 1.5), rd(T * .22), .05), R.M.plate, 0, T * .86, D.chestD * .8);
+        AUTOMATON.gear(R, g, D.chestW * .62, 0, T * .55, D.chestD * .95, 0, 1.2);                  // big chest gear
+        AUTOMATON.gear(R, g, D.chestW * .3, D.chestW * .55, T * .32, D.chestD * .85, 0, -2.4);
+        R.add(g, G.cyl(rd(D.chestW * .14), rd(D.chestW * .14), .04, 8), R.M.metal, 0, T * .55, D.chestD * 1.02).rotation.x = Math.PI / 2;
         for (const s of [1, -1]) {
-            R.add(g, G.box(rd(D.shX * .6), .08, rd(D.chestD * 1.4)), R.M.plate, s * D.shX * .6, D.shY + .05, 0);
+            R.add(g, G.sph(rd(D.armR * 2.2), 10, 6, 0, TAU, 0, Math.PI / 2), R.M.plate, s * D.shX, D.shY + .01, 0).scale.set(1, .7, 1.1);
+            R.add(g, G.box(rd(D.shX * .7), .04, rd(D.chestD * 1.1)), R.M.metal, s * D.shX * .5, D.shY + .02, 0);
             AUTOMATON.gear(R, g, D.armR * 1.6, s * (D.shX + D.armR * 1.2), D.shY, 0, Math.PI / 2, s * 2);
         }
     },
@@ -668,16 +876,19 @@ const AUTOMATON = {
     },
     head(R, h) {
         const r = R.D.head;
-        R.add(h, G.box(rd(r * 1.5), rd(r * 1.5), rd(r * 1.45)), R.M.metal, 0, r * .75, 0);
+        R.add(h, lumpGeo(11, .06, 1.2, 2), R.M.metal, 0, r * .8, 0).scale.set(r * .78, r * .82, r * .8);
+        R.add(h, G.box(rd(r * 1.1), rd(r * .5), rd(r * .9)), R.M.plate, 0, r * .3, r * .25);          // jaw
         R.add(h, G.sph(rd(r * .8), 10, 6, 0, TAU, 0, Math.PI / 2), R.M.plate, 0, r * 1.45, 0).scale.set(.95, .6, .9);
-        R.add(h, G.box(rd(r * 1.3), rd(r * .9), .03), R.M.plate, 0, r * .85, r * .74);
+        R.add(h, G.box(rd(r * 1.1), rd(r * .55), .04), R.M.plate, 0, r * .95, r * .76);
         for (const s of [1, -1]) {
-            R.add(h, G.sph(rd(r * .17), 8, 6), R.M.glow, s * r * .32, r * 1.0, r * .76);
+            R.add(h, G.sph(rd(r * .17), 8, 6), R.M.glow, s * r * .32, r * 1.0, r * .84);
             halo(h, R.c.glow, r * 1.4, .75, s * r * .32, r * 1.0, r * .9);
         }
-        R.add(h, G.box(rd(r * .18), rd(r * .7), .04), R.M.glow, 0, r * .42, r * .76);
-        AUTOMATON.gear(R, h, r * .55, -r * .8, r * 1.1, -r * .1, Math.PI / 2, 1.5);
-        AUTOMATON.gear(R, h, r * .32, r * .3, r * 1.62, -r * .2, Math.PI / 2, -2.5);
+        R.add(h, G.box(rd(r * .2), rd(r * .55), .04), R.M.glow, 0, r * .38, r * .72);                   // mouth vent
+        for (const s of [1, -1]) R.add(h, G.cyl(rd(r * .24), rd(r * .24), rd(r * .2), 10), R.M.plate, s * r * .32, r * 1.0, r * .76).rotation.x = Math.PI / 2;
+        AUTOMATON.gear(R, h, r * .6, -r * .75, r * 1.15, -r * .1, Math.PI / 2, 1.5);
+        AUTOMATON.gear(R, h, r * .45, r * .2, r * 1.62, -r * .15, Math.PI / 2 - .3, -2.5);
+        AUTOMATON.gear(R, h, r * .3, r * .7, r * 1.35, r * .1, Math.PI / 2, 3);
     },
     animate(R, q, state, t, dt, g) {
         R.M.glow.emissiveIntensity = 2 + .4 * Math.sin(t * 5) + q.harden + q.fx;
@@ -695,15 +906,21 @@ const FIRE = {
         R.M.eye = mat(0xfff4c0, { emissive: 0xfff0a0, emissiveIntensity: 2.5 });
         R.M.ember = new THREE.MeshStandardMaterial({ color: 0x1a0804, emissive: c.ember, emissiveIntensity: 2, emissiveMap: lavaTex(60), roughness: .9 });
     },
+    // curved additive flame tongue in a group (the group's scale flickers, the mesh carries the size)
     flame(R, g, x, y, z, size) {
-        const f = flameTongue(g, x, y, z, size, R.c.flame);
+        const f = R.grp(g, x, y, z);
+        const m = R.add(f, flameGeo(R.ri(3)), flameMat(R.c.fop), 0, -size * .1, 0);
+        m.scale.set(size * 1.1, size * 1.5, size * 1.1);
+        m.rotation.y = R.rnd() * TAU;
+        m.castShadow = false;
+        m.raycast = () => {};
+        f.userData.seed = R.rnd() * 10;
         R.flames.push(f);
         return f;
     },
     seg(R, g, len, r0, r1, dir, part) {
-        R.add(g, G.sph(rd(r0), 10, 8), R.M.core);
-        R.anchors.push(R.tube(g, len, r0, r1, dir, R.M.core, 9));
-        R.tube(g, len, r0, r1, dir, R.M.shell, 8, 1.55).castShadow = false;
+        R.anchors.push(R.add(g, limbGeo(len, r0, r1, dir, .12, 9), R.M.core));
+        R.add(g, limbGeo(len, r0 * 1.5, r1 * 1.6, dir, .1, 8), R.M.shell).castShadow = false;
         const n = Math.max(1, Math.round(len / .2 * R.c.fl));
         for (let i = 0; i < n; i++) {
             const t = (i + .6) / n, a = R.rnd() * TAU, r = r0 + (r1 - r0) * t;
@@ -712,10 +929,10 @@ const FIRE = {
     },
     torso(R, g) {
         const D = R.D, T = D.torso, c = R.c;
-        const chest = R.add(g, G.sph(1, 14, 10), R.M.core, 0, T * .62, 0);
-        chest.scale.set(D.chestW, T * .4, D.chestD);
-        R.anchors.push(chest, R.tube(g, T * .55, D.hipW * .85, D.chestW * .7, 1, R.M.core, 10));
-        R.add(g, G.sph(1, 12, 8), R.M.shell, 0, T * .6, 0).scale.set(D.chestW * 1.35, T * .55, D.chestD * 1.4);
+        R.anchors.push(R.add(g, torsoGeo(D, .75), R.M.core));
+        const sh = R.add(g, torsoGeo(D, .75), R.M.shell, 0, -T * .07, 0);
+        sh.scale.set(1.3, 1.14, 1.35);
+        sh.castShadow = false;
         for (const s of [1, -1]) {
             FIRE.flame(R, g, s * D.shX * .8, D.shY + .02, 0, D.armR * 3.6 * c.fs);
             FIRE.flame(R, g, s * D.chestW * .5, T * .7, -D.chestD * .6, D.armR * 3 * c.fs);
@@ -747,6 +964,10 @@ const FIRE = {
         for (const s of [1, -1]) {
             R.add(h, G.sph(rd(r * .14), 6, 5), R.M.eye, s * r * .35, r * .85, r * .82);
             halo(h, 0xffe080, r * 1.3, .8, s * r * .35, r * .85, r * .95);
+        }
+        if (c.horns) for (const s of [1, -1]) {                                       // flame horns
+            const f = FIRE.flame(R, h, s * r * .45, r * 1.3, 0, r * 2.2 * c.fs);
+            f.rotation.set(-.2, 0, -s * .7);
         }
         for (let i = 0; i < 7; i++) {                                               // hair of flame, swept back
             const f = FIRE.flame(R, h, (i - 3) * r * .24, r * (1.45 - Math.abs(i - 3) * .1), -r * .15 - (i % 2) * r * .3, r * (1.5 + (i % 3) * .3) * c.fs);
@@ -806,77 +1027,100 @@ const FIRE = {
 const WATER = {
     mats(R) {
         const c = R.c;
-        R.M.water = new THREE.MeshStandardMaterial({ color: c.water, transparent: true, opacity: .62, roughness: .06, metalness: .25,
-            emissive: c.deep, emissiveIntensity: .6 });
-        R.M.foam = mat(c.foam, { roughness: .5, emissive: 0x4a6a7a, emissiveIntensity: .35 });
+        R.M.water = new THREE.MeshStandardMaterial({ color: c.water, transparent: true, opacity: .74, roughness: .08, metalness: .15,
+            emissive: c.glint, emissiveMap: streakTex(), emissiveIntensity: .7 });
+        R.M.foam = tmat(c.foam, { roughness: .6, map: smokeTex(), emissive: 0x5a7a8a, emissiveIntensity: .45 });
         R.M.eye = mat(c.eye, { emissive: c.eye, emissiveIntensity: 2.5 });
-        R.M.dark = mat(0x0a2030, { roughness: .3 });
+        R.M.dark = mat(0x06202e, { roughness: .3 });
     },
     foam(R, g, n, o) { R.motes.push(new Motes(g, G.sph(1, 5, 4), R.M.foam, n, { radial: [.95, 1.12], speed: [.5, 1.5], size: [.012, .025], wobble: .05, ...o }, R.rnd)); },
-    seg(R, g, len, r0, r1, dir) {
-        R.add(g, G.sph(rd(r0), 10, 8), R.M.water);
-        R.anchors.push(R.tube(g, len, r0, r1, dir, R.M.water, 10));
-        WATER.foam(R, g, Math.round(len * 30), { len, r0, r1, dir, flow: .35 });
+    // streaming water ribbon hanging from a limb, waving (wigglers)
+    stream(R, parent, x, y, z, len, rx = 0, rz = 0) {
+        const g = R.grp(parent, x, y, z);
+        R.add(g, tendrilGeo(R.ri(3)), R.M.water).scale.set(len * 1.6, len, len * 1.6);
+        g.rotation.set(rx, 0, rz);
+        R.wigglers.push({ g, ph: R.rnd() * TAU, amp: .25, rz, rx });
+        return g;
+    },
+    seg(R, g, len, r0, r1, dir, part) {
+        R.anchors.push(R.add(g, limbGeo(len, r0, r1 * (part === 'fore' ? 1.15 : 1), dir, .15, 10), R.M.water));
+        WATER.foam(R, g, Math.round(len * 18), { len, r0, r1, dir, flow: .35 });
+        if (part === 'fore') for (let i = 0; i < 2; i++) WATER.stream(R, g, 0, -len * (.35 + i * .35), -r0 * .6, .3 + i * .1, .5, 0);
     },
     torso(R, g) {
         const D = R.D, T = D.torso;
-        const chest = R.add(g, G.sph(1, 14, 10), R.M.water, 0, T * .62, 0);
-        chest.scale.set(D.chestW, T * .42, D.chestD);
-        R.anchors.push(chest, R.add(g, G.cyl(rd(D.chestW * .8), rd(D.hipW), rd(T * .65), 12), R.M.water, 0, T * .3 - .05, 0));
-        WATER.foam(R, g, 26, { len: T, r0: D.hipW, r1: D.chestW, dir: 1, zs: D.chestD / D.chestW, flow: -.3 });
+        R.anchors.push(R.add(g, torsoGeo(D, .7), R.M.water));
+        WATER.foam(R, g, 18, { len: T, r0: D.hipW, r1: D.chestW, dir: 1, zs: D.chestD / D.chestW, flow: -.3 });
+        for (const s of [1, -1]) {                                                       // shoulder spray swept back
+            const sp = R.add(g, lumpGeo(31, .3, 2.5, 2), R.M.foam, s * D.shX * .85, D.shY + .02, -D.chestD * .3);
+            sp.scale.set(D.armR * 1.3, D.armR * .8, D.armR * 1.6);
+        }
     },
     column(R) {
         const D = R.D, H = R.H, J = R.j;
         J.low = R.grp(R.root);
-        const geo = new THREE.CylinderGeometry(D.hipW, D.hipW * 2.8, H, 14, 6, true), p = geo.attributes.position;
-        for (let i = 0; i < p.count; i++) {
-            const y = p.getY(i) / H + .5, a = Math.atan2(p.getZ(i), p.getX(i));
-            const k = 1 + .08 * Math.sin(a * 3 + y * 9);
-            p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k);
+        // rising swell: narrow under the hips, flaring into a breaking wave at the ground
+        const geo = cachedGeo(`wave${rd(D.hipW)},${rd(H)}`, () => {
+            const g = new THREE.LatheGeometry([[2.6, 0], [2.4, .08], [1.5, .25], [1.0, .5], [.9, .8], [.85, 1.02]]
+                .map(([r, y]) => new THREE.Vector2(D.hipW * r, H * y)), 16), p = g.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+                const y = p.getY(i) / H, a = Math.atan2(p.getZ(i), p.getX(i)), k = 1 + .1 * Math.sin(a * 3 + y * 8) * (1 - y);
+                p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k);
+            }
+            g.computeVertexNormals();
+            return g;
+        });
+        R.anchors.push(R.add(J.low, geo, R.M.water));
+        const crown = R.grp(J.low);                                                // churning foam ring at the base
+        for (let i = 0; i < 14; i++) {
+            const a = i * TAU / 14, rr = D.hipW * (2.3 + (i % 3) * .25), s = .07 + (i % 4) * .025;
+            const m = R.add(crown, lumpGeo(40 + (i % 4), .35, 2.2, 1, .3), R.M.foam, Math.cos(a) * rr, s * .3, Math.sin(a) * rr);
+            m.scale.set(s * 1.6, s * .7, s * 1.3);
         }
-        geo.computeVertexNormals();
-        R.anchors.push(R.add(J.low, geo, R.M.water, 0, H / 2, 0));
-        const crown = R.grp(J.low);                                                // splash crown at the base
-        for (let i = 0; i < 12; i++) {
-            const a = i * TAU / 12, rr = D.hipW * 2.7, h = .1 + (i % 3) * .05;
-            const sp = R.add(crown, G.cone(.04, rd(h * 1.8), 5), i % 2 ? R.M.foam : R.M.water, Math.cos(a) * rr, h * .7, Math.sin(a) * rr);
-            sp.rotation.set(Math.sin(a) * .7, 0, -Math.cos(a) * .7);
+        R.spin.push({ o: crown, ax: 'y', sp: .6 });
+        // curling crest behind the body
+        const crest = R.grp(J.low, 0, 0, -D.hipW * 1.2);
+        R.add(crest, taperTube([[0, .1, 0], [0, H * .35, -.12], [0, H * .62, -.05], [0, H * .72, .12], [0, H * .64, .22]], .16, .03, 12, 8), R.M.water).scale.set(2.2, 1, 1);
+        R.add(crest, lumpGeo(44, .4, 2.5, 2), R.M.foam, 0, H * .66, .14).scale.set(.18, .08, .1);
+        const spiral = [];                                                          // foam streak spiralling up the swell
+        for (let i = 0; i <= 12; i++) {
+            const t = i / 12, r = D.hipW * (2.4 - 1.5 * Math.sqrt(t)) * 1.04, a = t * TAU * 1.3;
+            spiral.push([Math.cos(a) * r, H * t * .9 + .03, Math.sin(a) * r]);
         }
-        R.add(J.low, G.torus(rd(D.hipW * 2.75), .035, 5, 20), R.M.foam, 0, .03, 0).rotation.x = Math.PI / 2;
-        R.spin.push({ o: crown, ax: 'y', sp: .8 });
-        for (const [y, sp] of [[.3, -2], [.62, 2.5]]) {
-            const r = D.hipW * (2.8 - 1.8 * y) * 1.03;
-            const w = R.add(J.low, G.torus(rd(r), .025, 5, 16, 4), R.M.foam, 0, H * y, 0);
-            w.rotation.x = Math.PI / 2;
-            R.spin.push({ o: w, ax: 'z', sp });
-        }
-        WATER.foam(R, J.low, 46, { len: H, r0: D.hipW * 2.8, r1: D.hipW, dir: 1, speed: [1.5, 3], size: [.015, .03], flow: -.4 });
+        const sw = R.grp(J.low);
+        R.add(sw, taperTube(spiral, .03, .012, 30, 5), R.M.foam);
+        R.spin.push({ o: sw, ax: 'y', sp: -1.6 });
+        WATER.foam(R, J.low, 40, { len: H, r0: D.hipW * 2.6, r1: D.hipW, dir: 1, speed: [1.5, 3], size: [.015, .03], flow: -.4 });
     },
     head(R, h) {
         const r = R.D.head;
-        R.anchors.push(R.add(h, G.sph(r, 12, 9), R.M.water, 0, r * .85, 0));
-        h.children[h.children.length - 1].scale.set(.95, 1.1, 1);
-        for (let i = 0; i < 5; i++) {                                               // wave crest swept back
-            const cr = R.add(h, G.cone(rd(r * (.4 - Math.abs(i - 2) * .06)), rd(r * (1.9 - Math.abs(i - 2) * .3)), 6), i === 2 ? R.M.foam : R.M.water,
-                (i - 2) * r * .28, r * 1.35, -r * .45);
-            cr.rotation.set(-1.9 + Math.abs(i - 2) * .15, 0, -(i - 2) * .25);
+        R.anchors.push(R.add(h, lumpGeo(12, .06, 1.3, 3), R.M.water, 0, r * .85, 0));
+        h.children[h.children.length - 1].scale.set(r * .9, r * 1.1, r);
+        for (let i = 0; i < 7; i++) {                                               // hair of water streaming back
+            const x = (i - 3) * r * .26, g = R.grp(h, x, r * 1.45 - Math.abs(i - 3) * r * .14, -r * .2);
+            R.add(g, taperTube([[0, 0, 0], [x * .3, r * .35, -r * .7], [x * .7, r * .1, -r * 1.6], [x * 1.2, -r * .7, -r * 2.4], [x * 1.4, -r * 1.6, -r * 2.7]],
+                r * .26, r * .03, 10, 6),
+                i % 3 === 1 ? R.M.foam : R.M.water);
+            R.wigglers.push({ g, ph: i * 1.1, amp: .12, rz: 0, rx: 0 });
         }
         for (const s of [1, -1]) {
-            R.add(h, G.sph(rd(r * .13), 6, 5), R.M.eye, s * r * .34, r * .95, r * .85);
-            halo(h, 0xc0f4ff, r * .9, .7, s * r * .34, r * .95, r * .98);
+            R.add(h, G.sph(rd(r * .15), 6, 5), R.M.eye, s * r * .34, r * .98, r * .8);
+            halo(h, 0xc0f4ff, r * 1.1, .8, s * r * .34, r * .98, r * .95);
         }
-        R.add(h, G.sph(rd(r * .2), 8, 6), R.M.dark, 0, r * .45, r * .82).scale.set(1, 1.3, .5);
+        R.add(h, G.sph(rd(r * .24), 8, 6), R.M.dark, 0, r * .42, r * .78).scale.set(.9, 1.4, .5);       // screaming mouth
     },
     hand(R, h) {
         const r = R.D.hand;
-        R.add(h, G.sph(r, 8, 6), R.M.water, 0, -r * .5, 0).scale.set(1, 1.1, .75);
-        for (let i = -1; i <= 1; i++) R.add(h, G.cone(rd(r * .25), rd(r * .9), 6), R.M.water, i * r * .42, -r * 1.2, 0).rotation.x = Math.PI;
+        R.add(h, lumpGeo(13, .1, 1.5, 2), R.M.water, 0, -r * .5, 0).scale.set(r, r * 1.1, r * .75);
+        for (let i = -1; i <= 1; i++) R.add(h, limbGeo(r * .9, r * .22, r * .06, -1, 0, 6), R.M.water, i * r * .42, -r * .9, 0);
     },
     animate(R, q) {
-        R.M.water.opacity = .62 + q.harden * .25;
-        R.M.water.emissiveIntensity = .6 + q.harden * .8;
+        R.M.water.opacity = .74 + q.harden * .2;
+        R.M.water.emissiveIntensity = .7 + q.harden * .8 + q.fx * .5;
+        R.M.water.emissiveMap.offset.y = -R.moteClock * .25;
         R.moteSpeed = 1 + q.harden + q.fx * 2;
         R.spinMul = 1 + q.fx * 2;
+        R.wigMul = 1 + q.fx + R.scatter;
     },
     extras(R) {
         R.puddle = R.add(R.root, new THREE.CircleGeometry(1, 20), R.M.water, 0, .012, 0);
@@ -895,75 +1139,94 @@ const WATER = {
 const AIR = {
     mats(R) {
         const c = R.c;
-        R.M.air = new THREE.MeshStandardMaterial({ color: c.air, transparent: true, opacity: .5, depthWrite: false, roughness: 1,
-            emissive: 0x30363c, emissiveIntensity: .4 });
-        R.M.cloud = mat(c.cloud, { roughness: 1, emissive: 0x2a3036, emissiveIntensity: .5 });
-        R.M.dark = mat(0x1e2228, { roughness: 1 });
+        R.M.cloud = tmat(c.cloud, { roughness: 1, map: smokeTex(), emissive: 0x3a4046, emissiveIntensity: .55 });
+        R.M.cloud2 = tmat(c.air, { roughness: 1, map: smokeTex(), emissive: 0x2a3036, emissiveIntensity: .5 });
+        R.M.air = new THREE.MeshStandardMaterial({ color: c.cloud, transparent: true, opacity: .38, depthWrite: false, roughness: 1,
+            emissive: 0x50565c, emissiveIntensity: .5, map: streakTex(1), side: THREE.DoubleSide });
+        R.M.dark = mat(0x1a1d22, { roughness: 1 });
         R.M.dust = mat(c.dust, { roughness: 1 });
     },
-    swirl(R, g, r, y, sp, tube = .18) {
-        const s = R.add(g, G.torus(rd(r), rd(r * tube), 5, 16, 4.2), R.M.air, 0, y, 0);
-        s.rotation.set(Math.PI / 2 + (R.rnd() - .5) * .3, 0, R.rnd() * TAU);
-        s.castShadow = false;
-        R.spin.push({ o: s, ax: 'z', sp });
-        return s;
+    puff(R, g, r, x, y, z, sy = 1, m = R.M.cloud) {
+        const p = R.add(g, lumpGeo(50 + R.ri(5), .24, 2.2, 3), m, x, y, z);
+        p.scale.set(r, r * sy, r);
+        p.rotation.y = R.rnd() * TAU;
+        return p;
     },
-    seg(R, g, len, r0, r1, dir) {
-        R.add(g, G.sph(rd(r0), 10, 8), R.M.air);
-        R.anchors.push(R.tube(g, len, r0, r1, dir, R.M.air, 10));
-        AIR.swirl(R, g, (r0 + r1) * .7, dir * len * .5, 5 * (R.rnd() < .5 ? -1 : 1));
-        for (let i = 0; i < 3; i++) {
-            const t = (i + .3) / 3, r = (r0 + (r1 - r0) * t) * (.8 + R.rnd() * .3), a = R.rnd() * TAU;
-            R.add(g, G.sph(1, 8, 6), R.M.cloud, Math.cos(a) * r * .5, dir * t * len, Math.sin(a) * r * .5).scale.set(r, r * 1.2, r);
+    // transparent smoke wisp spiralling around an axis, spinning
+    wisp(R, g, r, y0, h, sp, turns = 1) {
+        const pts = [];
+        for (let i = 0; i <= 10; i++) { const t = i / 10, a = t * TAU * turns; pts.push([Math.cos(a) * r, y0 + h * t, Math.sin(a) * r]); }
+        const w = R.grp(g);
+        const m = R.add(w, taperTube(pts, r * .25, r * .05, 24, 5), R.M.air);
+        m.castShadow = false;
+        R.spin.push({ o: w, ax: 'y', sp });
+        return w;
+    },
+    seg(R, g, len, r0, r1, dir, part) {
+        R.anchors.push(R.add(g, limbGeo(len, r0, r1, dir, .2, 10), R.M.cloud2));
+        AIR.puff(R, g, r0 * 1.2, 0, dir * len * .1, 0, .9);
+        for (let i = 0; i < 2; i++) {                                                  // billows along the limb
+            const t = .4 + i * .3, a = R.rnd() * TAU, r = (r0 + (r1 - r0) * t) * .9;
+            AIR.puff(R, g, r, Math.cos(a) * r * .45, dir * t * len, Math.sin(a) * r * .45, 1.1, R.M.cloud2);
         }
+        if (part === 'fore') AIR.wisp(R, g, r1 * 1.4, -len, len * .8, 5 * (R.rnd() < .5 ? -1 : 1), 1.2);
     },
     torso(R, g) {
         const D = R.D, T = D.torso;
-        const chest = R.add(g, G.sph(1, 14, 10), R.M.air, 0, T * .62, 0);
-        chest.scale.set(D.chestW, T * .42, D.chestD);
-        R.anchors.push(chest, R.add(g, G.cyl(rd(D.chestW * .8), rd(D.hipW), rd(T * .65), 12), R.M.air, 0, T * .3 - .05, 0));
-        AIR.swirl(R, g, D.chestW * 1.1, T * .55, 4, .08);
-        AIR.swirl(R, g, D.hipW * 1.25, T * .15, -6, .1);
-        for (const s of [1, -1]) R.add(g, G.sph(rd(D.armR * 1.5), 8, 6), R.M.cloud, s * D.shX * .9, D.shY + D.armR * .5, 0).scale.set(1, .7, 1);
-        [[.5, .7, .3, .45], [-.45, .75, .25, .42], [.2, .45, .45, .4], [-.25, .3, .35, .38], [0, .9, -.4, .5], [.4, .2, -.3, .4], [-.4, .5, -.35, .42]]
-            .forEach(([x, y, z, s]) => R.add(g, G.sph(1, 8, 6), R.M.cloud, x * D.chestW, y * T, z * D.chestD).scale.setScalar(s * D.chestW));
+        R.anchors.push(R.add(g, torsoGeo(D, .65), R.M.cloud2));
+        for (const s of [1, -1]) AIR.puff(R, g, D.armR * 1.7, s * D.shX * .85, D.shY + D.armR * .3, 0, .75);
+        [[.4, .7, .45, .32], [-.45, .55, .4, .3], [0, .85, -.5, .42], [.3, .25, .4, .26], [-.2, .35, -.45, .3]]
+            .forEach(([x, y, z, k]) => AIR.puff(R, g, k * D.chestW, x * D.chestW, y * T, z * D.chestD, .8));
+        AIR.wisp(R, g, D.chestW * 1.15, T * .1, T * .7, 3, .9);
+        for (let i = 0; i < 5; i++) {                                                  // smoke boiling off the hips
+            const a = i * TAU / 5 + .4;
+            AIR.puff(R, g, D.hipW * .75, Math.cos(a) * D.hipW, -T * .05, Math.sin(a) * D.chestD, .8, R.M.cloud2);
+        }
     },
     column(R) {
         const D = R.D, H = R.H, J = R.j;
         J.low = R.grp(R.root);
-        for (let i = 0; i < 8; i++) {
-            const t = i / 7, r = .07 + (D.hipW * 1.1 - .07) * Math.pow(t, 1.3);
-            const s = R.add(J.low, G.torus(rd(r), rd(r * .4 + .02), 5, 16, 4.6), R.M.air, 0, H * (.14 + .86 * t), 0);
-            s.rotation.set(Math.PI / 2, 0, i * 1.3);
-            s.castShadow = false;
-            R.spin.push({ o: s, ax: 'z', sp: (7 - 3 * t) * (i % 2 ? 1 : -1.3) });
-            if (i % 3 === 0) R.anchors.push(s);
+        // vortex funnel: open lathe, narrow at the ground, opening into the hips; spins
+        const fun = R.grp(J.low);
+        const f = R.add(fun, latheGeo(`funnel${rd(D.hipW)},${rd(H)}`, [[D.hipW * .35, 0], [D.hipW * .5, H * .3], [D.hipW * .8, H * .65], [D.hipW * 1.15, H * 1.02]], 14),
+            R.M.air);
+        f.castShadow = false;
+        R.spin.push({ o: fun, ax: 'y', sp: 6 });
+        const core = R.add(J.low, limbGeo(H * .9, D.hipW * .32, D.hipW * .7, 1, .1, 10), R.M.cloud2, 0, H * .12, 0);
+        R.anchors.push(core);
+        AIR.wisp(R, J.low, D.hipW * 1.3, H * .1, H * .8, -5, 1.6);
+        // mist bank on the ground
+        for (let i = 0; i < 9; i++) {
+            const a = i * TAU / 9 + .3, rr = D.hipW * (1.6 + (i % 2) * 1.1), s = D.hipW * (1.2 + (i % 3) * .35);
+            R.add(J.low, lumpGeo(60 + i % 3, .24, 2.2, 3, .3), R.M.cloud, Math.cos(a) * rr, s * .3, Math.sin(a) * rr).scale.set(s, s * .55, s);
         }
-        R.add(J.low, G.cyl(rd(D.hipW * .9), .05, rd(H * .9), 10, true), R.M.air, 0, H * .55, 0).castShadow = false;
-        for (let i = 0; i < 7; i++) {
-            const a = i * TAU / 7, rr = .2 + (i % 2) * .1;
-            R.add(J.low, G.sph(1, 8, 6), R.M.cloud, Math.cos(a) * rr, .1, Math.sin(a) * rr).scale.set(.2, .13, .2);
-        }
+        R.add(J.low, lumpGeo(63, .24, 2.2, 3, .3), R.M.cloud, 0, D.hipW * .66, 0).scale.set(D.hipW * 2, D.hipW * 1.2, D.hipW * 2);
+        AIR.puff(R, J.low, D.hipW * 1.3, 0, H * .35, 0, .9, R.M.cloud2);
         R.motes.push(new Motes(J.low, G.sph(1, 4, 3), R.M.dust, 40, { len: H * .9, r0: .32, r1: D.hipW * 1.3, dir: 1,
             radial: [1, 1.8], speed: [3, 6], size: [.012, .03], flow: .15, signed: false }, R.rnd));
     },
     head(R, h) {
         const r = R.D.head;
-        R.anchors.push(R.add(h, G.sph(rd(r * .85), 12, 9), R.M.cloud, 0, r * .7, 0));
-        for (const s of [1, -1]) R.add(h, G.sph(rd(r * .2), 6, 5), R.M.dark, s * r * .32, r * .8, r * .62).scale.set(1, 1.2, .6);
-        R.add(h, G.sph(rd(r * .22), 6, 5), R.M.dark, 0, r * .38, r * .66).scale.set(1, 1.4, .6);
-        [[0, 2.0, -.1, 1.1], [.85, 1.75, 0, .8], [-.85, 1.75, 0, .8], [.5, 2.3, -.5, .8], [-.55, 2.35, -.45, .75], [0, 2.6, .2, .7],
-            [0, 1.6, -.75, .8], [1.2, 1.5, -.3, .55], [-1.2, 1.5, -.3, .55], [0, 1.55, .55, .6]]
-            .forEach(([x, y, z, s]) => R.add(h, G.sph(1, 10, 8), R.M.cloud, x * r, y * r, z * r).scale.setScalar(s * r));
+        R.anchors.push(AIR.puff(R, h, r * .78, 0, r * .7, r * .05, 1.15));             // face
+        for (const s of [1, -1]) R.add(h, G.sph(rd(r * .2), 8, 6), R.M.dark, s * r * .3, r * .82, r * .66).scale.set(1, 1.3, .6);
+        R.add(h, G.sph(rd(r * .2), 8, 6), R.M.dark, 0, r * .35, r * .7).scale.set(.9, 1.6, .6);
+        // mushroom cloud: a wide billowing cap over a smoky stalk
+        AIR.puff(R, h, r * .75, 0, r * 1.45, -r * .15, 1.2);
+        AIR.puff(R, h, r * 2.5, 0, r * 2.6, -r * .3, .7);
+        [[1.4, 2.2, .3, 1.05], [-1.4, 2.25, .2, 1], [.8, 3.1, -.4, 1.1], [-.9, 3.0, -.5, 1.05], [0, 3.35, .2, 1], [1.7, 2.7, -.9, .85],
+            [-1.7, 2.75, -.8, .9], [.2, 2.3, 1.1, .85], [0, 2.8, -1.4, .95], [-.6, 2.0, .9, .7], [.9, 2.0, .8, .65]]
+            .forEach(([x, y, z, k]) => AIR.puff(R, h, r * k * 1.2, x * r * 1.25, y * r * 1.1, z * r * 1.2, .9));
     },
     hand(R, h) {
         const r = R.D.hand;
-        for (let i = 0; i < 3; i++) R.add(h, G.sph(rd(r * (.8 - i * .15)), 8, 6), i ? R.M.air : R.M.cloud, (i - 1) * r * .35, -r * (.5 + i * .4), 0);
+        AIR.puff(R, h, r * .8, 0, -r * .5, 0, 1.1, R.M.cloud2);
+        for (let i = -1; i <= 1; i++) R.add(h, limbGeo(r, r * .22, r * .05, -1, 0, 6), R.M.cloud2, i * r * .4, -r * .9, 0);
     },
     animate(R, q) {
         R.spinMul = 1 + q.harden * 2 + q.fx * 2;
         R.moteSpeed = 1 + q.harden * 1.5 + q.fx * 2;
         R.moteSpread = 1 + q.fx * .4 + R.scatter * .5;
+        R.M.air.map.offset.y = -R.moteClock * .4;
     },
     death: R => ({ mode: 'dust', n: 56, geo: G.sph(1, 5, 4), mat: R.M.dust, size: [.025, .05], at: .3, hide: true, R: R.D.chestW * 3,
         far: 1.2, spin: 4, jit: .08 })
@@ -985,7 +1248,7 @@ const VESTRAD = {
         R.anchors.push(R.tube(g, T, D.hipW, D.chestW * .9, 1, R.M.robe, 12));
         R.add(g, G.cyl(rd(D.chestW * .6), rd(D.shX * 1.15), rd(T * .38), 12), R.M.robe, 0, T * .8, 0);
         R.glows.push(halo(g, R.c.bolt, D.chestW * 4, .25, 0, T * .55, D.chestD * .6));
-        R.bolts.push({ b: new Bolts(g, 7, 5, R.c.bolt, { len: .45, width: .008, spread: D.chestW, cy: T * .5 }), fwd: false });
+        R.bolts.push({ b: new Bolts(g, 10, 5, R.c.bolt, { len: .6, width: .008, spread: D.chestW * 1.2, cy: T * .5 }), fwd: false });
         R.shield = R.add(g, G.sph(1, 16, 12), glowMat(R.c.bolt, .14), 0, T * .4, 0);
         R.shield.scale.setScalar(.001);
         R.shield.castShadow = false;
@@ -1016,8 +1279,8 @@ const VESTRAD = {
     hand(R, h) {
         const r = R.D.hand;
         R.anchors.push(R.add(h, G.sph(r, 10, 8), R.M.glow, 0, -r * .6, 0));
-        R.glows.push(halo(h, R.c.bolt, r * 9, .7, 0, -r * .6, 0));
-        R.bolts.push({ b: new Bolts(h, 9, 6, R.c.bolt, { len: .8, width: .011, cy: -r * .6 }), fwd: true });
+        R.glows.push(halo(h, R.c.bolt, r * 12, .75, 0, -r * .6, 0));
+        R.bolts.push({ b: new Bolts(h, 13, 7, R.c.bolt, { len: 1.25, width: .011, cy: -r * .6 }), fwd: true });
     },
     animate(R, q, state, t, dt) {
         const dead = state === 'death' ? clamp01(1 - R.stateTime * .9) : 1;
@@ -1033,19 +1296,19 @@ const VESTRAD = {
 
 const SWARM = {
     mats(R) {
-        R.M.core = mat(0xffffff, { roughness: .8, map: bugTex() });
-        R.M.mask = mat(0x9a9a96, { roughness: .85, map: bugTex() });
+        R.M.core = tmat(0xffffff, { roughness: .8, map: bugTex() });
+        R.M.mask = tmat(0x9a9a96, { roughness: .85, map: bugTex() });
         R.M.hole = mat(0x020202, { roughness: 1 });
     },
     bugs(R, g, n, o, arm = false) {
-        const m = new Motes(g, insectGeo(), insectMat(), n, { radial: [.92, 1.35], speed: [1.5, 4], size: [.06, .09], wobble: .12, ...o }, R.rnd);
+        const m = new Motes(g, insectGeo(), insectMat(), n, { radial: [.92, 1.3], speed: [1.2, 3.5], size: [.075, .11], wobble: .1, ...o }, R.rnd);
         m.arm = arm;
         R.motes.push(m);
     },
     seg(R, g, len, r0, r1, dir, part) {
         R.add(g, G.sph(rd(r0 * .85), 8, 6), R.M.core);
         R.anchors.push(R.tube(g, len, r0, r1, dir, R.M.core, 8, .85));
-        SWARM.bugs(R, g, Math.round(len * (r0 + r1) * 420), { len, r0, r1, dir }, part === 'fore');
+        SWARM.bugs(R, g, Math.round(len * (r0 + r1) * 500), { len, r0, r1, dir }, part === 'fore');
     },
     torso(R, g) {
         const D = R.D, T = D.torso;
@@ -1091,8 +1354,8 @@ const SWARM = {
 const MAGGOT = {
     mats(R) {
         const c = R.c;
-        R.M.flesh = mat(c.flesh, { roughness: .55 });
-        R.M.worm = mat(0xffffff, { map: wormTex(c.worm), roughness: .45 });
+        R.M.flesh = mat(c.flesh, { roughness: .55, emissive: 0x2a1c1a, emissiveIntensity: .4 });
+        R.M.worm = tmat(0xffffff, { map: wormTex(c.worm), roughness: .45 });
         R.M.wormPlain = mat(c.worm, { roughness: .5 });
         R.M.hole = mat(0x1a0c0a, { roughness: 1 });
     },
@@ -1103,15 +1366,14 @@ const MAGGOT = {
             const ring = R.add(g, G.torus(rd(r), rd(wr), 5, 14, 5.5), R.M.worm, 0, dir * t * len, 0);
             ring.rotation.set(Math.PI / 2 + (R.rnd() - .5) * .5, (R.rnd() - .5) * .4, R.rnd() * TAU);
             ring.scale.y = zs;
-            R.spin.push({ o: ring, ax: 'z', sp: (R.rnd() - .5) * .9 });
             R.anchors.push(ring);
         }
     },
-    tendril(R, parent, x, y, z, len, rz = 0) {
+    tendril(R, parent, x, y, z, len, rz = 0, rx = 0, thick = 1) {
         const g = R.grp(parent, x, y, z);
-        R.add(g, tendrilGeo(R.ri(3)), R.M.worm).scale.setScalar(len);
-        g.rotation.z = rz;
-        R.wigglers.push({ g, ph: R.rnd() * TAU, amp: .3, rz });
+        R.add(g, tendrilGeo(R.ri(3)), R.M.worm).scale.set(len * thick, len, len * thick);
+        g.rotation.set(rx, 0, rz);
+        R.wigglers.push({ g, ph: R.rnd() * TAU, amp: .3, rz, rx });
     },
     crawl(R, g, n, o) {
         R.motes.push(new Motes(g, G.sph(1, 6, 4), R.M.wormPlain, n, { radial: [1.05, 1.18], speed: [.3, .8], size: [.018, .026],
@@ -1120,9 +1382,10 @@ const MAGGOT = {
     seg(R, g, len, r0, r1, dir, part) {
         R.add(g, G.sph(rd(r0 * .8), 8, 6), R.M.flesh);
         R.tube(g, len, r0, r1, dir, R.M.flesh, 8, .8);
-        MAGGOT.rings(R, g, len, r0, r1, dir, Math.max(.02, r0 * .34));
+        MAGGOT.rings(R, g, len, r0, r1, dir, Math.max(.022, r0 * .4));
         MAGGOT.crawl(R, g, 5, { len, r0, r1, dir });
-        if (part === 'fore') for (let i = 0; i < 2; i++) MAGGOT.tendril(R, g, (i - .5) * r0, -len * (.3 + i * .3), -r0 * .5, .22 + i * .08);
+        if (part === 'fore') for (let i = 0; i < 4; i++) MAGGOT.tendril(R, g, (i % 2 - .5) * r0 * 1.4, -len * (.15 + i * .22), r0 * .3, .32 + i * .07, (i % 2 - .5) * .5, -.25, 1.6);
+        if (part === 'upper') MAGGOT.tendril(R, g, 0, -len * .6, r0 * .4, .4, 0, -.25, 1.6);
     },
     torso(R, g) {
         const D = R.D, T = D.torso;
@@ -1133,7 +1396,7 @@ const MAGGOT = {
         MAGGOT.crawl(R, g, 10, { len: T, r0: D.hipW, r1: D.chestW, dir: 1, zs: D.chestD / D.chestW });
         for (const s of [1, -1]) {
             R.add(g, G.sph(rd(D.armR * 1.4), 8, 6), R.M.flesh, s * D.shX * .9, D.shY, 0);
-            for (let i = 0; i < 3; i++) MAGGOT.tendril(R, g, s * (D.shX * .7 + i * .04), D.shY + .03, -.04 + i * .03, .2 + i * .07, s * .3);
+            for (let i = 0; i < 5; i++) MAGGOT.tendril(R, g, s * (D.shX * .6 + i * .035), D.shY + .03, -.06 + i * .03, .34 + (i % 3) * .1, s * .3, 0, 1.6);
         }
     },
     pelvis(R, g) {
@@ -1143,22 +1406,23 @@ const MAGGOT = {
     },
     head(R, h) {
         const r = R.D.head;
-        R.anchors.push(R.add(h, G.sph(r, 12, 9), R.M.flesh, 0, r * .85, 0));
+        R.anchors.push(R.add(h, G.sph(r, 12, 9), R.M.wormPlain, 0, r * .85, 0));
         h.children[h.children.length - 1].scale.set(.82, 1.12, .95);
         const n0 = h.children.length;
         MAGGOT.rings(R, h, r * 1.1, r * 1.12, r * .85, 1, .022);
         h.children.slice(n0).forEach(c => { c.position.y += r * .4; });
         for (const s of [1, -1]) R.add(h, G.sph(rd(r * .2), 6, 5), R.M.hole, s * r * .3, r * .95, r * .72).scale.set(1, .85, .5);
         R.add(h, G.box(rd(r * .45), rd(r * .08), .03), R.M.hole, 0, r * .45, r * .85);
-        for (let i = 0; i < 6; i++) {
-            const a = Math.PI * .65 + i * Math.PI * .14;
-            MAGGOT.tendril(R, h, Math.cos(a) * r * .75, r * 1.2, Math.sin(a) * r * .75 - r * .1, .32 + (i % 3) * .1, (Math.cos(a) > 0 ? .3 : -.3));
+        for (let i = 0; i < 13; i++) {                                              // worm dreadlocks around the skull
+            const a = -Math.PI * .15 - i * Math.PI * 1.3 / 12;
+            MAGGOT.tendril(R, h, Math.cos(a) * r * .8, r * (1.35 - Math.abs(i - 6) * .03), Math.sin(a) * r * .8 - r * .05, .55 + (i % 3) * .15,
+                Math.cos(a) * .3, -Math.sin(a) * .3, 2);
         }
     },
     hand(R, h) {
         const r = R.D.hand;
         R.add(h, G.sph(rd(r * .8), 8, 6), R.M.flesh, 0, -r * .4, 0).scale.set(1, 1, .7);
-        for (let i = 0; i < 4; i++) MAGGOT.tendril(R, h, (i - 1.5) * r * .35, -r * .7, r * .1, .14 + (i % 2) * .05);
+        for (let i = 0; i < 5; i++) MAGGOT.tendril(R, h, (i - 2) * r * .3, -r * .7, r * .1, .26 + (i % 2) * .08, (i - 2) * .15, 0, 1.4);
     },
     foot(R, f) {
         const D = R.D;
@@ -1186,7 +1450,7 @@ export class ProceduralElemental extends QuadrupedRig {
         this.legged = !!D.legs;
         this.heavy = k === 'rock' || k === 'golem';
         const S = { ...BASE_STAND, neckX: 0, headX: 0, jaw: 0, tailX: 0, spine: D.spine, twist: 0,
-            lX: .05, lZ: D.armZ, lK: -.25, rX: .05, rZ: D.armZ, rK: -.25, harden: 0, col: 1, fx: 0 };
+            lX: .05, lZ: D.armZ, lK: -.25, rX: .05, rZ: D.armZ, rK: -.25, harden: 0, col: 1, fx: 0, ...(c.stand || {}) };
         let H, gait;
         if (this.legged) {
             const [a, b] = D.legs, [L0, L1, L2] = D.bend;
@@ -1228,18 +1492,19 @@ export class ProceduralElemental extends QuadrupedRig {
         if (this.legged) {
             const a = D.legs[0];
             this.KNEEL = P({ by: a + D.legR * .9 + D.hipDrop - H, HL0: -.05, HL1: 1.6, HL2: -.35, spine: sp + .25, neckX: -.1,
-                lX: -.5, lK: -.5, rX: this.heavy ? -.3 : -.5, rK: this.heavy ? -.05 : -.5, rZ: this.heavy ? .1 : D.armZ });
-            this.LIE = P({ bx: -1.5, by: D.chestD - H, HL0: .2, HL1: .1, HL2: .1, HLz: .12, spine: 0, neckX: 0,
+                lX: -.5, lK: -.5, rX: this.heavy ? -.3 : -.5, rK: this.heavy ? -.05 : -.5, rZ: this.heavy ? .1 : D.armZ,
+                ...(D.arm[0] + D.arm[1] > 1 ? { lX: -.6, lK: -1.05, rX: -.6, rK: -1.05 } : {}) });
+            this.LIE = P({ bx: -1.5, by: D.chestD * (k === 'rock' ? 1.45 : 1) - H, HL0: -.15, HL1: .15, HL2: 0, HLz: .12, spine: 0, neckX: k === 'maggot' ? -.6 : 0,
                 lX: .2, lZ: .45, lK: -.25, rX: .2, rZ: .45, rK: -.25 });
             this.DEAD = k === 'golem' || k === 'automaton'
-                ? P({ bx: 1.45, by: D.chestD * (k === 'golem' ? 1.1 : 1.3) - H, HL0: -.2, HL1: .05, HL2: .2, HLz: .1, spine: 0, neckX: -.3, neckY: 1.0,
-                    lX: -.25, lZ: .5, lK: -.4, rX: -.2, rZ: .35, rK: -.2 })
+                ? P({ bx: 1.45, by: D.chestD * (k === 'golem' ? 1.1 : 1.3) - H, HL0: .1, HL1: .05, HL2: 1.5, HLz: .1, spine: 0, neckX: -.3, neckY: 1.0,
+                    lX: .3, lZ: .45, lK: -.15, rX: .25, rZ: .35, rK: -.1 })
                 : P({ ...crouch(.6), bz: .05, spine: sp + .55, neckX: .5, lX: .25, lK: -.1, rX: .25, rK: -.1 });
         } else {
             this.KNEEL = P({ by: -H * .3, col: .7, spine: sp + .3, neckX: -.1, lX: -.4, lK: -.6, rX: -.4, rK: -.6 });
             this.LIE = P({ by: -H * .62, col: .35, spine: sp + .55, neckX: -.35, lX: -1.0, lZ: .7, lK: -.2, rX: -1.0, rZ: .7, rK: -.2 });
             this.DEAD = k === 'vestrad'
-                ? P({ by: -H + .14, spine: 1.35, neckX: .4, lX: .3, lZ: .8, rX: .3, rZ: .8 })
+                ? P({ by: -H + .14, spine: 1.35, neckX: .4, lX: -1.2, lZ: 1.3, lK: 0, rX: -1.2, rZ: 1.3, rK: 0 })
                 : P({ by: -H * .45, col: .5, spine: sp + .6, neckX: .5, lX: .3, rX: .3 });
         }
         // attacks: wind-up A1 → strike A2 (fx = effect: slam chips, flame jet, bolt, insect stream) → follow-through A3
@@ -1247,8 +1512,9 @@ export class ProceduralElemental extends QuadrupedRig {
         if (k === 'rock' || k === 'golem') {                                           // two-handed overhead slam
             const cr = crouch(.35);
             A1 = P({ ...crouch(.05), bx: -.1, spine: sp - .45, neckX: -.15, lX: -2.9, lZ: .15, lK: -.6, rX: -2.9, rZ: .15, rK: -.6 });
-            A2 = P({ ...cr, bz: .18, bx: .08, spine: sp + .55, neckX: .1, lX: -.55, lZ: -.12, lK: -.1, rX: -.55, rZ: -.12, rK: -.1, fx: 1 });
-            A3 = P({ ...cr, bz: .16, bx: .06, spine: sp + .5, lX: -.5, lZ: -.1, lK: -.15, rX: -.5, rZ: -.1, rK: -.15, fx: .5 });
+            const lx = D.arm[0] + D.arm[1] > 1 ? -.9 : -.55;                          // long arms strike further forward
+            A2 = P({ ...cr, bz: .18, bx: .08, spine: sp + .55, neckX: .1, lX: lx, lZ: -.12, lK: -.1, rX: lx, rZ: -.12, rK: -.1, fx: 1 });
+            A3 = P({ ...cr, bz: .16, bx: .06, spine: sp + .5, lX: lx + .05, lZ: -.1, lK: -.15, rX: lx + .05, rZ: -.1, rK: -.15, fx: .5 });
         } else if (k === 'automaton') {                                                // right jab, left guards
             A1 = P({ ...crouch(.1), bz: -.05, twist: -.5, spine: sp + .05, rX: -.6, rZ: .2, rK: -2.0, lX: -1.2, lK: -1.8 });
             A2 = P({ ...crouch(.15), bz: .15, twist: .5, spine: sp + .2, rX: -1.55, rZ: -.15, rK: -.05, lX: -.3, lK: -1.6, fx: 1 });
@@ -1323,6 +1589,49 @@ export class ProceduralElemental extends QuadrupedRig {
         this.debris = new Debris(this.root, o.geo, o.mat, o.n);
         this.burst = new Burst(this.root, o.geo, o.mat, 10, o.stretch);
         this.chip = (o.size[0] + o.size[1]) * .4;
+        this.mergeStatic();
+    }
+
+    // Fewer draw calls: inside every joint group, static meshes sharing a material are merged into one (cached per
+    // variant, the build is deterministic). Spinning / scaled-at-runtime meshes keep their own; merged anchors leave a marker.
+    mergeStatic() {
+        const keep = new Set([this.shield, this.puddle, ...(this.j.jetCones || []), ...this.spin.map(s => s.o)]);
+        const groups = [];
+        this.root.traverse(o => { if (o.isGroup) groups.push(o); });
+        groups.forEach((g, gi) => {
+            const buckets = new Map();
+            for (const c of g.children) {
+                if (!c.isMesh || c.isInstancedMesh || keep.has(c) || !c.geometry.attributes.uv || !c.geometry.attributes.normal) continue;
+                const k = c.material.uuid + c.castShadow;
+                if (!buckets.has(k)) buckets.set(k, []);
+                buckets.get(k).push(c);
+            }
+            let bi = 0;
+            for (const list of buckets.values()) {
+                bi++;
+                if (list.length < 2) continue;
+                const geo = cachedGeo(`merged:${this.variant}:${gi}:${bi}`, () => mergeGeometries(list.map(c => {
+                    c.updateMatrix();
+                    const src = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone();
+                    const out = new THREE.BufferGeometry();
+                    for (const a of ['position', 'normal', 'uv']) out.setAttribute(a, src.attributes[a]);
+                    return out.applyMatrix4(c.matrix);
+                })));
+                if (!geo) continue;
+                const m = this.add(g, geo, list[0].material);
+                m.castShadow = list[0].castShadow;
+                for (const c of list) {
+                    const ai = this.anchors.indexOf(c);
+                    if (ai >= 0) {
+                        const mk = new THREE.Object3D();
+                        mk.position.copy(c.position);
+                        g.add(mk);
+                        this.anchors[ai] = mk;
+                    }
+                    g.remove(c);
+                }
+            }
+        });
     }
 
     statePose(state, c) {
@@ -1399,7 +1708,9 @@ export class ProceduralElemental extends QuadrupedRig {
         if (J.low) {
             J.low.position.z = J.body.position.z;
             J.low.scale.y = Math.max(.05, J.body.position.y / this.H);
-            J.low.rotation.x = g * .1 + run * .08;
+            const tilt = g * .08 + run * .06;
+            J.low.rotation.x = tilt;
+            J.low.position.y = Math.sin(tilt) * this.D.hipW * 2.7;
         }
         if (J.robe) {
             const sy = Math.min(1, Math.max(.06, (J.body.position.y - .1) / this.robeLen));
@@ -1413,7 +1724,7 @@ export class ProceduralElemental extends QuadrupedRig {
             for (const s of this.spin) s.o.rotation[s.ax] += s.sp * dt * this.spinMul;
             for (const m of this.motes) m.update(this.moteClock, this.moteSpread, m.arm ? this.reach : 0);
             for (const wg of this.wigglers) {
-                wg.g.rotation.x = Math.sin(t * 2.2 + wg.ph) * wg.amp * this.wigMul;
+                wg.g.rotation.x = (wg.rx || 0) + Math.sin(t * 2.2 + wg.ph) * wg.amp * this.wigMul;
                 wg.g.rotation.z = wg.rz + Math.cos(t * 1.7 + wg.ph * 1.3) * wg.amp * .7 * this.wigMul;
             }
         }

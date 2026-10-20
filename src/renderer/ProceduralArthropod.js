@@ -180,7 +180,7 @@ export class ProceduralArthropod extends QuadrupedRig {
             br.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         }
         if (c.torso) {                                                                        // urxuquer: gaunt human torso instead of the head
-            this.torso = humanTorso(J.head, { skin: 0xb8b0a8, eye: 0xff2a1a, glowEye: true, gaunt: true, crown: 0x1a1a22, plates: 0x22222c, claws: true, ears: 'pointy', scale: 1 / c.scale * 1.35 });
+            this.torso = humanTorso(J.head, { skin: 0x56605a, eye: 0xff2a1a, glowEye: true, gaunt: true, crown: 0x14161c, plates: 0x1c1e26, claws: true, ears: 'pointy', head: 'demon', scale: 1 / c.scale * 1.35 });
             this.torso.T.position.set(0, b * .2, -b * .2);
             return;
         }
@@ -443,7 +443,7 @@ export class ProceduralArthropod extends QuadrupedRig {
         if (this.torso) {                                                                               // urxuquer: arms of the torso
             const mode = dead ? 'dead' : state === 'attack' ? 'attack' : state === 'defend' ? 'defend' : state === 'hit' ? 'hit' : g > .3 ? 'walk' : 'idle';
             poseTorsoArms(this.torso, mode, state === 'attack' ? Math.max(0, Math.min(1, (1.1 - q.front) / .8)) : 0, t);
-            this.torso.T.rotation.x = -q.bx * .7;
+            this.torso.T.rotation.x = .22 - q.bx * .7;
         }
         if (J.wings) {                                                                                  // buzzing wings, hovering bob
             const buzz = grounded ? 0 : 1;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { G, TAU, mat, clothMat } from './kit.js';
 import { taperTube, hornGeo } from '../renderer/creatureParts.js';
 import { boneMats, boneSkull } from './undead.js';
+import { limbGeo, scaleKeys, sculptHand, sculptFoot, buildOf, beastHair, lingerie, armour, robe, tunic, skirtGroup } from './beastSculpt.js';
 
 /*
  * Monster parts of the humanoid avatar (flags of avatar/beastBodies.js, built into the ProceduralAvatar rig):
@@ -23,7 +24,7 @@ import { boneMats, boneSkull } from './undead.js';
  *   animateBeast(avatar, state, c, dt)           wings, fish tail, tongue, jaw, mandibles, tendrils … per frame
  */
 
-const UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0), _d = new THREE.Vector3();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
 const lerp = (a, b, k) => a + (b - a) * k;
 const hex = c => '#' + c.toString(16).padStart(6, '0');
@@ -181,29 +182,51 @@ export function beastSkinMat(b) {
 const glowMat = c => mat(c, { emissive: c, emissiveIntensity: 2.4, roughness: .3 });
 
 // ------------------------------------------------------------------ legs
-// Goat / digitigrade leg on the joints of the shared rig: thick thigh, shin back to a raised heel (hock), hoof or paw.
+// Sculpted limb from point a to point b of the parent (keys of limbGeo, radius scaled by k).
+function limbTo(add, parent, a, b, keys, key, m) {
+    _d.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    const len = _d.length();
+    const mesh = add(parent, limbGeo(key, len, keys, 0), m, a[0], a[1], a[2]);
+    mesh.quaternion.setFromUnitVectors(DOWN, _d.normalize());
+    return mesh;
+}
+// Leg material of goat / digitigrade legs: fur pattern (body.legFur) or plain.
+export function legMat(b, skin) {
+    if (b.legFur) return patternMat('fur', b.legColor ?? b.skin, shadeHex(b.legColor ?? b.skin, .55));
+    return b.legColor ? mat(b.legColor) : skin;
+}
+// Goat / digitigrade leg on the joints of the shared rig: heavy thigh, shin back to a raised heel (hock),
+// long thin cannon down to the hoof (shaggy fetlock, cloven hoof) or a clawed paw.
 export function beastLeg(add, J, s, side, b, m, k, L) {
-    const hip = J[s + 'Hip'], knee = J[s + 'Knee'], ankle = J[s + 'Ankle'];
-    add(hip, G.sph(.11 * k, 10, 8), m);
-    add(hip, G.cyl(.105 * k, .078 * k, .4 * L, 10), m, 0, -.2 * L, .01);
-    const hock = [0, -.19 * L, -.11 * L], foot = [0, -.38 * L, 0];
-    add(knee, G.sph(.075 * k, 8, 6), m);
-    seg(add, knee, [0, 0, 0], hock, .07 * k, .05 * k, m);
-    add(knee, G.sph(.05 * k, 8, 6), m, ...hock);
-    seg(add, knee, hock, foot, .046 * k, .036 * k, m);
+    const hip = J[s + 'Hip'], knee = J[s + 'Knee'], ankle = J[s + 'Ankle'], kk = k * (b.legK || 1);
+    m = legMat(b, m);
+    add(hip, G.sph(.112 * kk, 12, 9), m);
+    add(hip, limbGeo('bth' + kk, .4 * L + .03, scaleKeys([[0, .118, 0, 0], [.22, .11, .036, .03], [.55, .094, .028, .02], [.85, .07, .01, .004], [1, .062, 0, 0]], kk), .03), m);
+    const hock = [0, -.2 * L, -.13 * L], foot = [0, -.38 * L, 0];
+    add(knee, G.sph(.064 * kk, 10, 8), m);
+    limbTo(add, knee, [0, 0, 0], hock, scaleKeys([[0, .064, 0, 0], [.25, .06, 0, .018], [.7, .045, 0, .006], [1, .04, 0, 0]], kk), 'bsh' + kk, m);
+    add(knee, G.sph(.04 * kk, 8, 6), m, ...hock);
+    limbTo(add, knee, hock, foot, scaleKeys([[0, .038, 0, 0], [.5, .031, 0, 0], [1, .03, 0, 0]], kk), 'bmt' + kk, m);
     if (b.legs === 'goat') {
-        const hoof = mat(b.hoof ?? 0x141010, { roughness: .5 });
-        add(ankle, G.sph(.052 * k, 8, 6), m, 0, -.005, 0);                                // fetlock
-        add(ankle, G.cyl(.05, .068, .085, 8), hoof, 0, -.048, .03).scale.z = 1.15;          // hoof
-        add(ankle, G.box(.008, .086, .05), mat(0x060404), 0, -.048, .085);                  // split of the hoof
-    } else {
-        const claw = mat(b.claws ?? 0x2a2018, { roughness: .4 });
-        add(ankle, G.box(.12, .06, .17), m, 0, -.06, .07);                                  // paw
-        for (const x of [-.04, 0, .04]) {
-            const c = add(ankle, G.cone(.014, .07, 5), claw, x, -.075, .17);
-            c.rotation.x = Math.PI / 2 + .3;
+        const hoof = mat(b.hoof ?? 0x141010, { roughness: .45 });
+        const tuft = cachedGeo('fetlock', () => {                     // shaggy fur around the fetlock
+            const g = new THREE.SphereGeometry(.05, 12, 8), p = g.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+                const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(x, z);
+                const shag = 1 + (y < 0 ? .35 * Math.max(0, Math.sin(a * 7)) * (-y / .05) : 0);
+                p.setXYZ(i, x * shag, y * (y < 0 ? 1 + .5 * Math.max(0, Math.sin(a * 7 + 1)) : 1.3), z * shag);
+            }
+            g.computeVertexNormals();
+            return g;
+        });
+        add(ankle, tuft, m, 0, .014, .005).scale.setScalar(kk);
+        for (const x of [1, -1]) {                                       // cloven hoof
+            const h = add(ankle, G.cyl(.02, .03, .062, 8), hoof, x * .019, -.059, .016);
+            h.scale.set(1, 1, 1.35); h.rotation.x = -.18;
         }
-        add(ankle, G.cone(.012, .05, 5), claw, 0, -.03, -.03).rotation.x = -Math.PI / 2;    // dew claw on the heel
+    } else {
+        sculptFoot(add, ankle, { ...b, female: false }, m, 1.15 * Math.sqrt(kk));
+        if (b.claws) add(ankle, G.cone(.012, .05, 5), mat(b.claws, { roughness: .4 }), 0, -.03, -.04).rotation.x = -Math.PI / 2;   // dew claw
     }
 }
 
@@ -429,7 +452,7 @@ function beastTail(add, grp, J, b, skin) {
     J.tail = [];
     for (let i = 0; i < n; i++) {
         seg_ = grp(seg_, 0, i ? -.01 : -.05, i ? -L : -.15);
-        seg_.rotation.x = i ? -(T.curve ?? -.1) : (T.lift ?? -.4);           // + lifts the tail, - lets it hang
+        seg_.rotation.x = seg_.userData.rx = i ? -(T.curve ?? -.1) : (T.lift ?? -.4);   // + lifts the tail, - lets it hang
         const rr = T.tip === 'brush' ? r * (1 + Math.sin(i / (n - 1) * Math.PI) * .6) : r;
         add(seg_, G.cyl(rr * .8, rr, L * 1.12, 7), m, 0, 0, -L / 2).rotation.x = Math.PI / 2;
         if (T.tip === 'spikes' && i > 0) add(seg_, G.cone(r * .55, r * 2, 5), mat(0x161010), 0, rr * .8, -L / 2).rotation.x = -.5;
@@ -466,11 +489,23 @@ function fishTail(add, grp, J, b) {
 }
 
 // ------------------------------------------------------------------ other parts
+// Ram horn: spirals back, down and forward around the ear, flaring outwards (left side, mirror with scale.x = -1).
+function ramHornGeo(R, r) {
+    return cachedGeo('ram' + R + r, () => {
+        const pts = [];
+        for (let i = 0; i <= 10; i++) {
+            const t = i / 10, f = t * Math.PI * 1.55, rr = R * (1 - .42 * t);
+            pts.push([.03 + .13 * Math.sin(t * Math.PI * .6), rr * Math.cos(f) - R, -rr * Math.sin(f) + .02 * t]);
+        }
+        return taperTube(pts, r, r * .3, 20, 8);
+    });
+}
 function horns(add, F, b) {
     for (const h of [].concat(b.horn)) {
         const m = mat(h.color ?? 0x2a2020, { roughness: .55 });
         for (const s of [1, -1]) {
-            const mesh = add(F, hornGeo(h.len, h.r, h.up, h.fwd, h.curl || 0), m, (h.x ?? .11) * s, h.y ?? .17, h.z ?? .02);
+            const g = h.ram ? ramHornGeo(h.len, h.r) : hornGeo(h.len, h.r, h.up, h.fwd, h.curl || 0);
+            const mesh = add(F, g, m, (h.x ?? .11) * s, h.y ?? .17, h.z ?? .02);
             if (s < 0) mesh.scale.x = -1;
         }
     }
@@ -504,14 +539,9 @@ function spikes(add, J, b, D) {
         for (let i = 0; i < n; i++) add(J[s + 'El'], G.cone(.022, .11, 5), m, .02 * side, -.05 - i * .06, -.05).rotation.x = -1.9;
         if (lvl > 2) add(J[s + 'Knee'], G.cone(.03, .12, 5), m, 0, -.02, .07).rotation.x = 1.2;
     }
-    if (lvl > 1) for (let i = 0; i < (lvl > 2 ? 5 : 3); i++) add(J.spine, G.cone(.03, .13, 5), m, 0, .4 - i * .09, -D.chestR * .74 - .02).rotation.x = -1.9;
-}
-function claws(add, J, b) {
-    const m = mat(b.claws, { roughness: .4 }), big = b.head === 'insect' || b.head === 'wolf' ? 1.3 : 1;
-    for (const [s, side] of [['l', 1], ['r', -1], ['l2', 1], ['r2', -1]]) {
-        const hand = J[s + 'Hand'];
-        if (!hand) continue;
-        for (const x of [-.03, 0, .03]) add(hand, G.cone(.011 * big, .07 * big, 5), m, x * side, -.1, .035).rotation.x = Math.PI - .35;
+    if (lvl > 1) for (let i = 0; i < (lvl > 2 ? 5 : 3); i++) {                    // back spikes fold flat when lying
+        const c = add(J.spine, G.cone(.03, .13, 5), m, 0, .4 - i * .09, -D.chestR * .74 - .02);
+        c.rotation.x = -1.9; c.userData.fold = true;
     }
 }
 function furTufts(add, J, b, D) {
@@ -530,17 +560,17 @@ function pustules(add, J, b, D) {
     }
 }
 function extraArms(add, grp, J, b, D, skin) {
-    const k = b.limb || 1;
+    const k = (b.limb || 1) * .9, B = buildOf(b);
     for (const side of [1, -1]) {
         const s = side === 1 ? 'l2' : 'r2';
         const sh = grp(J.spine, (D.shoulderX - .02) * side, .2, .03, 'XZY');
         const el = grp(sh, 0, -.26, 0), hand = grp(el, 0, -.25, 0);
         J[s + 'Sh'] = sh; J[s + 'El'] = el; J[s + 'Hand'] = hand;
-        add(sh, G.sph(.08 * k, 10, 8), skin);
-        add(sh, G.cyl(.066 * k, .055 * k, .25, 10), skin, 0, -.125, 0);
-        add(el, G.sph(.055 * k, 8, 6), skin);
-        add(el, G.cyl(.053 * k, .046 * k, .23, 10), skin, 0, -.115, 0);
-        add(hand, G.sph(.055, 10, 8), skin, 0, -.025, .005).scale.set(.95, 1.1, 1.15);
+        add(sh, G.sph(B.delt * k * .9, 10, 8), skin);
+        add(sh, limbGeo(b.build + 'ua2' + k, .3, scaleKeys(B.arm, k), .03), skin);
+        add(el, G.sph(B.fore[0][1] * k, 8, 6), skin);
+        add(el, limbGeo(b.build + 'fa2' + k, .25, scaleKeys(B.fore, k), .015, 1.08), skin);
+        sculptHand(add, hand, b, skin, side, Math.sqrt(k));
     }
 }
 function smokeTendrils(add, grp, J, b, D) {
@@ -550,7 +580,7 @@ function smokeTendrils(add, grp, J, b, D) {
         add(J.spine, G.sph(.13 * sc, 8, 6), m, x, y, -D.chestR * .6).scale.set(1.2, .8, .7);
     }
     for (let i = 0; i < S.n; i++) {
-        const onHead = S.head && i % 2 === 0, onArm = !S.head && i % 3 === 2;
+        const onHead = S.head && (S.hang || i % 2 === 0), onArm = !S.head && i % 3 === 2;
         const side = i % 2 ? 1 : -1, x = side * (.06 + r() * .2), c = (r() - .5) * .3;
         let pv, pts, r0;
         if (onArm) {                                                   // wisps hanging from the forearms
@@ -559,8 +589,15 @@ function smokeTendrils(add, grp, J, b, D) {
             pts = [[0, 0, 0], [x * .2, -l * .3, -l * .25], [x * .4 + c * .5, -l * .65, -l * .35], [x * .5 + c, -l, -l * .2]];
             r0 = .045;
             pv.userData.bx = .2; pv.userData.bz = 0;
+        } else if (S.hang) {                                           // tentacle hair hanging around the head
+            const a = (i / S.n - .5) * 4.4, l = .45 + r() * .3;
+            pv = grp(J.face, Math.sin(a) * .15, .1 - Math.abs(Math.sin(a)) * .04, Math.cos(a) * .13 - .05);
+            pts = [[0, 0, 0], [Math.sin(a) * .08, -l * .25, Math.cos(a) * .04 - .03], [Math.sin(a) * .12 + c * .3, -l * .6, -.06], [Math.sin(a) * .1 + c, -l, -.04]];
+            r0 = .028;
+            pv.userData.bx = .1; pv.userData.bz = Math.sin(a) * .25;
         } else {
             pv = onHead ? grp(J.face, x * .6, .12, -.08) : grp(J.spine, x * .7, .32 + r() * .14, -D.chestR * .62);
+            pv.userData.back = !onHead;
             const l = (onHead ? .4 : .6) + r() * .4;
             pts = [[0, 0, 0], [x * .4, l * .3, -l * .18], [x * 1.1 + c, l * .62, -l * .26], [x * 1.9 + c, l, -l * .1]];
             r0 = onHead ? .035 : .08;
@@ -597,12 +634,43 @@ function finsOf(add, J, b) {
     }
 }
 
+// Beetle body (ubeg): two pairs of jointed insect legs from the hips down to the ground, a segmented abdomen behind.
+function insectLegs(add, grp, J, b) {
+    const m = patternMat('chitin', b.skin, b.texColor, null), dark = mat(shadeHex(b.skin, .5), { roughness: .35 }), list = [];
+    const h = .92 - .78 * (1 - (b.leg || 1));                         // hip height above the ground
+    for (let i = 0; i < 2; i++) {
+        for (const side of [1, -1]) {
+            const g = grp(J.pelvis, side * .16, .0, i ? -.12 : .06);
+            const knee = [side * .3, .14, i ? -.12 : .1], foot = [side * .46, -h + .03, i ? -.34 : .3];
+            limbTo(add, g, [0, 0, 0], knee, [[0, .045, 0, 0], [.5, .04, 0, 0], [1, .03, 0, 0]], 'ilf', m);
+            add(g, G.sph(.032, 8, 6), dark, ...knee);
+            limbTo(add, g, knee, foot, [[0, .036, 0, 0], [.6, .027, 0, 0], [1, .01, 0, 0]], 'ilt' + i + h, m);
+            for (let k = 1; k < 4; k++) {                               // spines along the shin
+                const q = k / 4, c = add(g, G.cone(.008, .05, 4), dark, knee[0] + (foot[0] - knee[0]) * q, knee[1] + (foot[1] - knee[1]) * q, knee[2] + (foot[2] - knee[2]) * q);
+                c.rotation.z = side * 1.2;
+            }
+            g.userData.side = side; g.userData.i = i; g.userData.h = h;
+            list.push(g);
+        }
+    }
+    const ab = grp(J.pelvis, 0, -.04, -.12);                          // abdomen segments behind the hips (folded down when lying)
+    for (let i = 0; i < 4; i++) {
+        const r = .2 - i * .035;
+        add(ab, G.sph(r, 14, 9), m, 0, -i * .06, -.08 - i * .12).scale.set(1.15, .7, .75);
+    }
+    list.abdomen = ab;
+    return list;
+}
+
 // Everything else of the body → parts state for animateBeast (null for a plain body).
+const HEAD_K = { muscle: .8, fat: .8, lean: .86, female: .88, animal: .94 };
 export function buildBeast(add, grp, J, b, D, skin, B = {}) {
     const F = J.face;
+    J.head.scale.setScalar(b.headK ?? HEAD_K[b.head && b.head !== 'skull' ? 'animal' : b.build || (b.female ? 'female' : 'muscle')]);   // monsters: smaller heads on big bodies
     B.wings = []; B.insect = false;
+    if (b.hair) beastHair(add, J, b);
     if (b.horn && b.head !== 'none') horns(add, F, b);
-    if (b.fangs && !b.head) fangs(add, F);
+    if (b.fangs && !b.head && !b.maw) fangs(add, F);
     if (b.eyesN) {
         for (let i = 0; i < b.eyesN; i++) {
             const eye = grp(F, (i - (b.eyesN - 1) / 2) * .07, .1, .175);
@@ -611,8 +679,8 @@ export function buildBeast(add, grp, J, b, D, skin, B = {}) {
             J.eyes.push(eye);
         }
     }
-    if (b.tongue) B.tongue = tongue(add, grp, F, b, b.head ? -.1 : -.1, b.head ? .2 : .16);
-    if (b.paunch) {
+    if (b.tongue) B.tongue = b.maw ? tongue(add, grp, B.bjaw, b, -.02, .06) : tongue(add, grp, F, b, -.1, b.head ? .2 : .16);
+    if (b.paunch && b.build !== 'fat') {
         const pm = b.paunchColor ? mat(b.paunchColor) : skin, P = b.paunch;
         add(J.spine, G.sph(.27 * P, 14, 10), pm, 0, .12, .07 * P).scale.set(1.05, .95, .92);
         add(J.spine, G.sph(.02, 6, 4), mat(0x3a2020), 0, .1, .07 * P + .245 * P);           // navel
@@ -624,9 +692,8 @@ export function buildBeast(add, grp, J, b, D, skin, B = {}) {
     if (b.pustules) pustules(add, J, b, D);
     if (b.extraArms) extraArms(add, grp, J, b, D, skin);
     if (b.spikes) spikes(add, J, b, D);
-    if (b.claws) claws(add, J, b);
     if (b.fur) furTufts(add, J, b, D);
-    if (b.tail && b.tail !== true) beastTail(add, grp, J, b, skin);
+    if (b.tail && b.tail !== true) { beastTail(add, grp, J, b, skin); B.tail = J.tail; B.tailK = 0; }
     if (b.legs === 'fish') B.fish = fishTail(add, grp, J, b);
     if (b.wings) {
         const w = b.wings;
@@ -644,14 +711,35 @@ export function buildBeast(add, grp, J, b, D, skin, B = {}) {
             e.rotation.set(-Math.PI / 2 - .12, 0, -.1 * s); e.scale.set(.5, .45, 1.3);
         }
     }
+    B.skirts = []; B.folds = []; B.flats = [];
+    B.hornTilt = Math.min(.6, Math.max(b.head === 'bull' ? .4 : 0, ...[].concat(b.horn || []).map(h => (h.len || 0) * 1.1)));
+    if (b.lingerie) lingerie(add, J, b);
+    if (b.armour) armour(add, J, b);
+    if (b.robe) robe(add, J, b);
+    if (b.tunic) tunic(add, J, b);
+    if (b.insectLegs) { B.ilegs = insectLegs(add, grp, J, b); B.abdomen = B.ilegs.abdomen; }
     if (b.collar) add(J.spine, G.cyl(.17, .14, .2, 12, true), clothMat(b.collar), 0, .52, -.01).scale.z = .85;
-    if (b.shroud) add(J.pelvis, G.cyl(.21, .3, .62, 14, true), clothMat(b.shroud), 0, -.3, 0).scale.z = .82;
-    if (b.skirt) add(J.pelvis, G.cyl(.2 * (b.bulk || 1), .27 * (b.bulk || 1), .3, 10, true), clothMat(b.skirt), 0, -.12, 0).scale.z = .82;
-    if (b.silverback) add(J.spine, G.sph(D.chestR * .9, 12, 8), patternMat('fur', b.silverback, shadeHex(b.silverback, .6)), 0, .2, D.chestR * .2).scale.set(.95, 1.15, .7);
+    if (b.shroud) add(skirtGroup(J, .61, .26), G.cyl(.21, .3, .62, 14, true), clothMat(b.shroud), 0, -.3, 0).scale.z = .82;
+    if (b.skirt) add(skirtGroup(J, .27, .23 * (b.bulk || 1)), G.cyl(.2 * (b.bulk || 1), .27 * (b.bulk || 1), .3, 10, true), clothMat(b.skirt), 0, -.12, 0).scale.z = .82;
+    if (b.silverback) {
+        const sb = add(J.spine, G.sph(D.chestR * .9, 12, 8), patternMat('fur', b.silverback, shadeHex(b.silverback, .6)), 0, .2, -D.chestR * .5);
+        sb.scale.set(.95, 1.1, .6); sb.userData.flat = .6;
+    }
+    for (const c of J.pelvis.children) if (c.userData.skirt) B.skirts.push(c);
+    for (const c of J.spine.children) if (c.userData.fold) B.folds.push(c);
+    for (const c of [...J.face.children, ...J.spine.children]) if (c.userData.flat) { c.userData.sz = c.scale.z; B.flats.push(c); }
     return B;
 }
 
 // ------------------------------------------------------------------ animation
+// Pelvis height above the avatar's ground and the world-up components of its y / z axes (avatar units, no allocation).
+const GF = { y: 0, a: 1, c: 0 };
+function groundFrame(av) {
+    av.j.pelvis.updateWorldMatrix(true, false);
+    const r = av.root.matrixWorld.elements, p = av.j.pelvis.matrixWorld.elements, s = Math.hypot(r[4], r[5], r[6]) || 1;
+    GF.y = (p[13] - r[13]) / s; GF.a = p[5] / s; GF.c = p[9] / s;
+    return GF;
+}
 const WING_POSE = {                                                    // open, flap, sweep
     walk: [.12, .04, 0], kneel: [.08, 0, 0], hit: [.8, -.35, 0], lie: [1, -.62, 0], death: [1, -.62, 0]
 };
@@ -662,11 +750,12 @@ export function animateBeast(av, state, c, dt) {
     const p = state === 'attack' ? 1 - c.actionTime / Math.max(c.actionDuration, .001) : 0;
     const k = 1 - Math.exp(-7 * dt), kf = 1 - Math.exp(-18 * dt);
     const lying = state === 'lie' || state === 'death';
+    const flat = Math.min(1, Math.abs(P.bodyRX) / (Math.PI / 2));   // 1 when lying on the back
 
     if (B.wings.length) {
         let open, flap, sweep = 0;
         if (B.insect) {
-            open = lying || state === 'kneel' ? 0 : 1;
+            open = lying ? 1.67 : state === 'kneel' ? 0 : 1;              // flat on the ground when lying
             flap = open ? Math.sin(t * 31) * (state === 'idle' ? .5 : .35) : 0;
         } else if (state === 'attack') {
             open = 1; sweep = -.15;
@@ -682,20 +771,50 @@ export function animateBeast(av, state, c, dt) {
         for (const w of B.wings) w.set(B.wingOpen, B.wingFlap, B.wingSweep, B.wingTilt);
     }
 
+    const gf = B.fish || B.skirts.length || B.ilegs ? groundFrame(av) : null;
     if (B.fish) {                                                    // tail down to the ground, then along it; straight when lying
-        const h = av.hipY + P.hipsY * av.legK + P.bodyY, flat = Math.min(1, Math.abs(P.bodyRX) / (Math.PI / 2));
-        const R = .28, s0 = h - .14 - R, arc = Math.PI / 2 * R;
+        const h = av.hipY + P.hipsY * av.legK + P.bodyY;
+        const R = .28, s0 = (h - .14 - R) * (1 - flat), arc = Math.PI / 2 * R;
         const moving = state === 'walk' || state === 'run';
         const amp = moving ? (state === 'run' ? .32 : .22) : lying ? .05 : .08;
         const ph = moving ? av.phase * 1.5 : t * 1.4;
-        let prev = 0;
+        const Rr = Math.hypot(gf.a, gf.c) || 1, d = Math.atan2(gf.c, gf.a);
+        let prev = 0, y = gf.y - .08 * gf.a;
         B.fish.forEach((g, i) => {
-            const n = B.fish.length - 1;
-            const A = (Math.PI / 2) * clamp01(((i + .5) * FISH_L - s0) / arc) * (1 - flat);
-            g.rotation.x = A - prev - (i >= n - 1 ? (.22 + Math.sin(t * 1.7) * .1) * (1 - flat) : 0);
+            const n = B.fish.length - 1, len = i < n ? FISH_L : .32;
+            let A = (Math.PI / 2) * clamp01(((i + .5) * FISH_L - s0) / arc) * (1 - flat) + (i >= n - 1 ? (.22 + Math.sin(t * 1.7) * .1) * (1 - flat) : 0);
+            const need = ((i < n ? .175 * (1 - (i + 1) / FISH_N * .78) * .82 : .01) + .005 - y) / len;   // lowest slope that stays above the ground
+            if (-Rr * Math.cos(A - d) < need) {
+                const w = Math.acos(Math.max(-1, Math.min(1, -need / Rr)));
+                A = d + (A - d >= 0 ? w : -w);
+            }
+            y -= len * Rr * Math.cos(A - d);
+            g.rotation.x = A - prev;
             prev = A;
             g.rotation.z = Math.sin(ph - i * .8) * amp * (i / n) * (i > 2 || flat > .5 ? 1 : .3);
         });
+    }
+
+    if (B.tail) {                                                    // lifted when kneeling, laid out sideways on the ground when lying
+        B.tailK += ((state === 'kneel' ? 1 : 0) - B.tailK) * k;
+        B.tail.forEach((g, i) => {
+            const rx = g.userData.rx, kneel = i ? rx : Math.max(rx, -.05);
+            g.rotation.x = lerp(lerp(rx, kneel, B.tailK), 0, flat);       // lying: straight out to the side, a little raised
+            g.rotation.y = lerp(g.rotation.y, i ? 0 : 1.8, Math.min(1, flat * 2.5));
+        });
+    }
+
+    if (B.hornTilt) J.head.rotation.x += B.hornTilt * flat;         // big horns: chin tucked when lying on the back
+    if (B.hornTilt || B.flats.length) J.head.rotation.y *= 1 - .7 * flat;   // and the head barely turned (horns, long hair)
+    for (const f of B.folds) f.scale.setScalar(1 - .8 * flat);       // back spikes fold, long hair flattens
+    for (const f of B.flats) { f.scale.z = f.userData.sz * (1 - f.userData.flat * flat); if (f.parent === J.face) f.scale.x = 1 - .2 * flat; }
+    if (B.abdomen) B.abdomen.rotation.x = -1.3 * flat;
+    if (B.skirts.length) {                                           // skirts never reach below the ground
+        const avail = gf.y - .015, uy = Math.max(0, gf.a), uz = Math.abs(gf.c);
+        for (const g of B.skirts) {
+            const [len, zr] = g.userData.skirt, f = Math.min(1, Math.max(.12, avail / (len * uy + zr * uz + 1e-3)));
+            g.scale.set(1, f, lerp(1, f, uz));
+        }
     }
 
     if (B.tongue) {
@@ -710,8 +829,9 @@ export function animateBeast(av, state, c, dt) {
     }
 
     if (B.bjaw) {                                                    // animal jaw: snarl, bite, hang open
-        const want = state === 'attack' ? (p > .25 && p < .62 ? .55 : .08) : state === 'defend' ? .3 + Math.sin(t * 9) * .04
-            : state === 'hit' ? .4 : lying ? (state === 'death' ? .45 : .06) : state === 'run' ? .22 : .05 + Math.max(0, Math.sin(t * .7)) * .05;
+        const maw = av.body.maw ? .22 : 0;                           // a monster maw hangs half open
+        const want = state === 'attack' ? (p > .25 && p < .62 ? .55 + maw * 1.5 : .08 + maw) : state === 'defend' ? .3 + maw + Math.sin(t * 9) * .04
+            : state === 'hit' ? .4 + maw : lying ? (state === 'death' ? .45 : .06) : state === 'run' ? .22 + maw : .05 + maw + Math.max(0, Math.sin(t * .7)) * .05;
         B.bjaw.rotation.x += (want - B.bjaw.rotation.x) * kf;
     }
     if (B.mandibles) {
@@ -722,17 +842,29 @@ export function animateBeast(av, state, c, dt) {
             a.rotation.z = Math.sin(t * 1.3 + i * 2) * .15;
         });
     }
+    if (B.ilegs) {                                                   // beetle legs: tripod gait while moving, twitching at rest
+        const moving = state === 'walk' || state === 'run';
+        B.ilegs.forEach(g => {
+            const u = g.userData, ph = (moving ? av.phase * 1.5 : t * 2) + (u.i ? Math.PI : 0) + (u.side > 0 ? 0 : Math.PI);
+            const a = moving ? .32 : lying ? .05 : .04;
+            g.rotation.y = Math.sin(ph) * a * u.side;
+            g.rotation.z = (moving ? Math.max(0, Math.cos(ph)) * .18 : 0) * u.side + (state === 'defend' ? .2 * u.side : 0);
+            g.rotation.x = -.6 * flat; g.scale.z = 1 - .7 * flat;    // lying on the back: legs drawn in, up in the air
+            g.scale.y = Math.min(1, Math.max(.3, (gf.y - .01) / (u.h - .02)) + flat);   // knees spread when the body sinks
+        });
+    }
     if (B.smoke) {
         const lean = state === 'run' ? -.5 : state === 'walk' ? -.25 : 0, size = lying ? .55 : state === 'attack' || state === 'defend' ? 1.25 : 1;
         B.smoke.forEach(pv => {
             const u = pv.userData;
-            pv.rotation.x = u.bx + lean + Math.sin(t * 1.1 + u.seed) * .22;
+            pv.rotation.x = lerp(u.bx + lean, u.back ? 1.1 : u.bx - .5, flat) + Math.sin(t * 1.1 + u.seed) * .22;
             pv.rotation.z = u.bz + Math.sin(t * 1.5 + u.seed * 2) * .25;
             pv.scale.setScalar(pv.scale.x + (size - pv.scale.x) * k);
         });
     }
     if (B.shadow) {
         B.shadow.position.y = .98 + Math.sin(t * 1.2) * .04;
+        B.shadow.position.z = lerp(-.3, .3, flat);                   // rises above the body lying on its back
         B.shadow.rotation.y = Math.sin(t * .5) * .3;
         const s = state === 'attack' ? 1.2 : lying ? .4 : 1;
         B.shadow.scale.setScalar(B.shadow.scale.x + (s - B.shadow.scale.x) * k);

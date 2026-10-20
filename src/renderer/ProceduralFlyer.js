@@ -8,17 +8,22 @@ import { haloSprite } from './LightProps.js';
 /*
  * ProceduralFlyer — birds and bats flying over the battlefield (hovering 1–2 m above the ground).
  * Kinds:
- *   bird    — eagle (giant royal eagle: dark brown, golden nape, white tail with a dark band),
- *             phoenix (huge golden-red bird: glowing feathers, flame tongues on the wing tips, crest and the long
- *             tail plumes, halo; attack adds a fiery wing buffet and a jet of flame from the beak)
- *   gryffon — eagle front (head with ear tufts, feathered chest, bird fore-legs with talons, wings) on a lion's body
- *             (hind legs with paws, tufted tail). Walks on four legs with folded wings, flies when running / attacking.
- *   harpy   — woman's head and torso (face, long hair, cloth wrap) on a bird's body with feathered thighs,
- *             taloned legs, tail fan; the arms are wings.
- *   bat     — giant bat, vampire in bat form, elder vampire (bigger, darker, glowing red eyes): furry body,
- *             big ears, fanged jaw, membrane wings (one membrane per wing, re-shaped every frame from the finger bones).
- * Feather wings: arm ─ forearm ─ hand bones carrying tertials, secondaries, coverts and fanned primaries; every feather
- * is a thin two-tone blade (vertex colours: top / underside / tip band). Both wing kinds fold back along the flank.
+ *   bird    — eagle (giant royal eagle: blackish brown, golden head and nape, pale-fringed coverts, white tail with a
+ *             dark band, feathered legs), phoenix (huge crimson bird: glowing feathers with golden flame tips, flame
+ *             tongues on the wing tips, crest, long streaming red-to-gold tail plumes, halo; attack adds a fiery wing
+ *             buffet and a jet of flame from the beak)
+ *   gryffon — eagle front (brown head with white cheeks and ear tufts, white bib, bird fore-legs with talons, barred
+ *             wings held raised) on a tawny lion's body (muscular hind legs with paws, tufted tail). Walks on four legs
+ *             with folded wings, flies when running / attacking.
+ *   harpy   — woman (face, long wind-blown hair, sleeveless tunic) whose bare arms carry the white, brown-barred wings;
+ *             feathered bird legs with talons below the tunic, barred tail.
+ *   bat     — giant bat (reddish fur, huge ears, brown membranes), vampire in bat form, elder vampire (bigger, darker,
+ *             glowing red eyes): furry body, pointed snout, fanged jaw, veined membrane wings (one membrane per wing,
+ *             re-shaped every frame from the finger bones).
+ * Bodies, heads, necks and limbs are smooth spine tubes (spineGeo: rings along a Catmull-Rom spine, vertex colours for
+ * back / belly / throat, canvas feather or fur texture). Feather wings: arm ─ forearm ─ hand bones carrying tertials,
+ * secondaries, coverts and fanned primaries; every feather is a thin blade with vertex colours (top / underside / pale
+ * fringe / bars / tip band). Both wing kinds fold back along the flank.
  *
  *   root (yaw, scale)
  *   └─ body (height y, lunge bz, pitch bx, roll)
@@ -35,22 +40,24 @@ import { haloSprite } from './LightProps.js';
  */
 
 export const FLYER_VARIANTS = {
-    eagle: { kind: 'bird', scale: 1.5, hover: 1.05, body: 0x3a2616, belly: 0x46301c, head: 0xb5874a, feather: 0x3b2717, under: 0x6a5440,
-        covert: 0x54381e, tip: 0x15100c, tail: 0xf0ece4, tailTip: 0x2a1c12, beak: 0xe8b830, beakTip: 0x3a3028, leg: 0xe8b830, eye: 0xc88a20 },
-    phoenix: { kind: 'bird', phoenix: true, scale: 2, hover: 1.1, body: 0xd8561a, belly: 0xf2a630, head: 0xf2b23c, feather: 0xe8601a,
-        under: 0xffb040, covert: 0xf2b632, tip: 0xd02a10, tail: 0xf0a028, tailTip: 0xd8300e, beak: 0xf0d060, beakTip: 0x8a4a10, leg: 0x9a3a10,
-        eye: 0xfff0a0, glow: 0xff7a20 },
-    gryffon: { kind: 'gryffon', scale: 1.6, hover: 1.1, body: 0x5a3a1e, belly: 0xece4d4, head: 0x6a4424, face: 0xf0ead8, coat: 0xc8964a,
-        coatLight: 0xe0c08a, feather: 0x5a3a1e, under: 0xe4d8c0, covert: 0xb08848, tip: 0x2a1c12, beak: 0xe8c040, beakTip: 0x5a4a30,
-        leg: 0xe0b030, eye: 0xd09020, tuft: 0x3a2414 },
-    harpy: { kind: 'harpy', scale: 1, hover: 1.35, body: 0x6e6862, feather: 0x77706a, under: 0xe8e4dc, covert: 0x8a8278, tip: 0x2a2624,
-        tail: 0x5e5852, tailTip: 0x222020, leg: 0x6a6460, skin: 0xe6c2a4, hair: 0x4a3020, cloth: 0xd8d2c4, lips: 0xa03038, eye: 0x3a5a30 },
-    'giant-bat': { kind: 'bat', scale: 1.05, hover: 1.25, fur: 0x5a4a44, face: 0x9a6a5a, membrane: 0x4a3a36, bone: 0x3a2e2a, ear: 0x8a5e52,
-        eye: 0x100a08 },
-    'vampire-bat-form': { kind: 'bat', scale: 1.15, hover: 1.2, fur: 0x1e1618, face: 0x2e2024, membrane: 0x3a1828, bone: 0x1a1014,
-        ear: 0x3e2030, eye: 0xff2010, glowEye: true },
-    'vampire-elder-bat-form': { kind: 'bat', scale: 1.45, hover: 1.1, fur: 0x0e0a0c, face: 0x1c1216, membrane: 0x2a0c16, bone: 0x120a0c,
-        ear: 0x2e0e1a, eye: 0xff1008, glowEye: true, elder: true }
+    eagle: { kind: 'bird', scale: 1.5, hover: 1.05, body: 0x2e2016, belly: 0x3a2818, head: 0xb8894a, throat: 0x4a3420, feather: 0x2a1d13,
+        under: 0x9a8a78, covert: 0x4a321c, edge: 0xa07a48, tip: 0x120d09, tail: 0xeeeae2, tailTip: 0x1e150e, beak: 0xe2b838, beakTip: 0x34302c,
+        leg: 0xe8b830, eye: 0xc88a20 },
+    phoenix: { kind: 'bird', phoenix: true, scale: 2, hover: 1.1, body: 0xb01810, belly: 0xd84018, chest: 0xe86020, head: 0xc01c10, throat: 0xd84018,
+        feather: 0xd02818, under: 0xff9a30, covert: 0xe04818, edge: 0xffa030, tip: 0xffc040, tail: 0xd8281a, tailTip: 0xffb030, beak: 0xf0c860,
+        beakTip: 0x8a4a10, leg: 0x7a2008, eye: 0xfff0a0, glow: 0xff7a20 },
+    gryffon: { kind: 'gryffon', scale: 1.6, hover: 1.1, body: 0x5e3c1e, belly: 0xf2ece0, head: 0x5a3a1c, face: 0xf0ead8, coat: 0xc48a3a,
+        coatLight: 0xe4c088, feather: 0xe6dcc8, bars: 3, bar: 0x8a6c4c, under: 0xe8e0d0, covert: 0x6a4424, edge: 0xc8a070, tip: 0x3a2a1c,
+        beak: 0xe8c040, beakTip: 0x5a4a30, leg: 0xe0b030, eye: 0xd09020, tuft: 0x3a2414 },
+    harpy: { kind: 'harpy', scale: 1, hover: 1.35, body: 0x7a5a40, feather: 0xece6da, bars: 3, bar: 0x7a5a40, under: 0xf2eee6, covert: 0x8a6a4c,
+        edge: 0xe2d6c2, tip: 0x4a3626, tail: 0xe8e0d4, tailTip: 0x3a2a1c, leg: 0x6a5a4a, skin: 0xe2bc9c, hair: 0x5a3a22, cloth: 0xd8cfbc,
+        lips: 0xb0545a, eye: 0x3a5a30 },
+    'giant-bat': { kind: 'bat', scale: 1.05, hover: 1.25, fur: 0x9a5e46, belly: 0xb8846a, face: 0x8a5240, membrane: 0x7a5442, bone: 0x3a2620,
+        ear: 0xa86a5a, eye: 0x100a08, ears: 1.25, glowThrough: .45 },
+    'vampire-bat-form': { kind: 'bat', scale: 1.15, hover: 1.2, fur: 0x1c1418, belly: 0x2e2226, face: 0x2c1e22, membrane: 0x4e2440, bone: 0x1a0e14,
+        ear: 0x4a2034, eye: 0xff2010, glowEye: true, ears: 1.2 },
+    'vampire-elder-bat-form': { kind: 'bat', scale: 1.45, hover: 1.1, fur: 0x120c0e, belly: 0x1e1418, face: 0x1c1216, membrane: 0x40182c, bone: 0x100a0c,
+        ear: 0x34101e, eye: 0xff1008, glowEye: true, elder: true }
 };
 
 // Every pose key (the kinds add their values in makePoses).
@@ -66,23 +73,30 @@ const cached = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()
 const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
 // Feather blade along -z (quill at the origin): top face coloured `top`, underside `under`, the last `frac` of its length `tip`.
-function featherGeo(len, w, top, under, tip = top, frac = 0) {
-    return cached(`f${len},${w},${top},${under},${tip},${frac}`, () => {
-        const ts = [0, .12, .35, .6, .82, 1];
-        if (frac > 0) { const b = 1 - frac; ts.push(b, b + .002); ts.sort((a, b2) => a - b2); }
+// o.edge: colour of the top face's side edges (pale fringe); o.bars + o.bar: number of dark cross bars and their colour.
+function featherGeo(len, w, top, under, tip = top, frac = 0, o = {}) {
+    const { edge = null, bars = 0, bar = 0 } = o;
+    return cached(`f${len},${w},${top},${under},${tip},${frac},${edge},${bars},${bar}`, () => {
+        const rows0 = [0, .12, .35, .6, .82, 1].map(t => [t, 0]);
+        const cut = t => { rows0.push([t, -1], [t + .002, 1]); };
+        if (frac > 0) cut(1 - frac);
+        const end = 1 - frac;
+        for (let i = 0; i < bars; i++) { cut(end * (i + .62) / bars); cut(end * (i + .82) / bars); }
+        rows0.sort((a, b) => a[0] - b[0]);
         const pos = [], col = [], idx = [], cTop = new THREE.Color(top), cUnder = new THREE.Color(under), cTip = new THREE.Color(tip);
+        const cEdge = edge === null ? null : new THREE.Color(edge), cBar = new THREE.Color(bar);
         const th = Math.max(.0015, w * .025), ridge = w * .08;
-        const rows = ts.map(t => {
+        const zone = t => frac > 0 && t > end ? 2 : bars && t < end && (t / end * bars) % 1 > .62 && (t / end * bars) % 1 < .82 ? 1 : 0;
+        const rows = rows0.map(([t, sd]) => {
             const hw = w / 2 * Math.sin(Math.min(1, (t + .1) / .5) * Math.PI / 2) * (t > .72 ? 1 - (t - .72) / .28 * .8 : 1);
-            return { z: -len * t, hw, tip: frac > 0 && t > 1 - frac + .001 };
+            return { z: -len * t, hw, zone: zone(t + sd * .0005) };
         });
-        // top row vertices (L, C, R) then bottom
-        for (const r of rows) {
-            const c = r.tip ? cTip : cTop;
-            for (const [x, y] of [[-r.hw, th], [0, th + ridge], [r.hw, th]]) { pos.push(x, y, r.z); col.push(c.r, c.g, c.b); }
+        for (const r of rows) {                                                 // top row vertices (L, C, R) then bottom
+            const c = r.zone === 2 ? cTip : r.zone === 1 ? cBar : cTop, ce = r.zone === 0 && cEdge ? cEdge : c;
+            for (const [x, y, cc] of [[-r.hw, th, ce], [0, th + ridge, c], [r.hw, th, ce]]) { pos.push(x, y, r.z); col.push(cc.r, cc.g, cc.b); }
         }
         for (const r of rows) {
-            const c = r.tip ? cTip : cUnder;
+            const c = r.zone === 2 ? cTip : r.zone === 1 ? cBar : cUnder;
             for (const [x, y] of [[-r.hw, -th], [0, -th - ridge * .3], [r.hw, -th]]) { pos.push(x, y, r.z); col.push(c.r, c.g, c.b); }
         }
         const n = rows.length, B = n * 3;
@@ -99,6 +113,186 @@ function featherGeo(len, w, top, under, tip = top, frac = 0) {
         return g;
     });
 }
+
+// Flat plume ribbon along -z from width w0 to w1, colour c0 → c1 (two-sided via a thin ridge).
+function stripGeo(len, w0, w1, c0, c1) {
+    return cached(`st${len},${w0},${w1},${c0},${c1}`, () => {
+        const pos = [], col = [], idx = [], A = new THREE.Color(c0), B = new THREE.Color(c1), c = new THREE.Color();
+        const n = 4;
+        for (let i = 0; i <= n; i++) {
+            const t = i / n, hw = (w0 + (w1 - w0) * t) / 2, z = -len * t;
+            c.copy(A).lerp(B, t);
+            for (const [x, y] of [[-hw, 0], [0, hw * .25], [hw, 0], [0, -hw * .25]]) { pos.push(x, y, z); col.push(c.r, c.g, c.b); }
+        }
+        for (let i = 0; i < n; i++) {
+            const a = i * 4, b = a + 4;
+            for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; idx.push(a + k, b + k, a + k2, a + k2, b + k, b + k2); }
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        return g;
+    });
+}
+
+// Catmull-Rom on arrays of numbers (spine points [x, y, z, rx, ry]).
+function crArr(p0, p1, p2, p3, t, out) {
+    const t2 = t * t, t3 = t2 * t;
+    for (let i = 0; i < p1.length; i++) {
+        out[i] = .5 * (2 * p1[i] + (-p0[i] + p2[i]) * t + (2 * p0[i] - 5 * p1[i] + 4 * p2[i] - p3[i]) * t2 + (-p0[i] + 3 * p1[i] - 3 * p2[i] + p3[i]) * t3);
+    }
+    return out;
+}
+
+// Smooth closed body along a spine: pts = [[x, y, z, rx, ry], ...] (rx sideways, ry towards `up`), subdivided `sub` times
+// per span; rings of `seg` vertices. col(t, a, out) writes the vertex colour for spine parameter t (0..1) and ring angle a
+// (0 = top, π = underside). UVs: u around (uRep repeats), v along the length (vRep repeats per metre). Ends are capped.
+function spineGeo(key, pts, { seg = 14, sub = 3, col = null, uRep = 2, vRep = 6, up = [0, 1, 0] } = {}) {
+    return cached('sp' + key, () => {
+        const S = [];
+        const n = pts.length;
+        for (let i = 0; i < n - 1; i++) {
+            for (let k = 0; k < sub; k++) {
+                S.push(crArr(pts[Math.max(0, i - 1)], pts[i], pts[i + 1], pts[Math.min(n - 1, i + 2)], k / sub, []));
+            }
+        }
+        S.push(pts[n - 1].slice());
+        const pos = [], uv = [], colA = [], idx = [];
+        const T = new THREE.Vector3(), N = new THREE.Vector3(...up), B = new THREE.Vector3(), P = new THREE.Vector3(), v = new THREE.Vector3();
+        const cc = new THREE.Color(1, 1, 1);
+        let len = 0;
+        const R = seg + 1;
+        S.forEach((s, i) => {
+            const a = S[Math.max(0, i - 1)], b = S[Math.min(S.length - 1, i + 1)];
+            T.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]).normalize();
+            N.addScaledVector(T, -N.dot(T)).normalize();                       // parallel transport of the up vector
+            B.crossVectors(T, N);
+            if (i > 0) len += Math.hypot(s[0] - S[i - 1][0], s[1] - S[i - 1][1], s[2] - S[i - 1][2]);
+            P.set(s[0], s[1], s[2]);
+            const t = i / (S.length - 1);
+            for (let j = 0; j <= seg; j++) {
+                const ang = j / seg * TAU, ca = Math.cos(ang), sa = Math.sin(ang);
+                v.copy(P).addScaledVector(N, ca * s[4]).addScaledVector(B, sa * s[3]);
+                pos.push(v.x, v.y, v.z);
+                uv.push(j / seg * uRep, len * vRep);
+                if (col) col(t, ang <= Math.PI ? ang : TAU - ang, cc);
+                colA.push(cc.r, cc.g, cc.b);
+            }
+            if (i > 0) for (let j = 0; j < seg; j++) {
+                const p = (i - 1) * R + j, q = i * R + j;
+                idx.push(p, p + 1, q, p + 1, q + 1, q);
+            }
+        });
+        // caps
+        for (const [ri, dir] of [[0, -1], [S.length - 1, 1]]) {
+            const c = pos.length / 3, s = S[ri];
+            pos.push(s[0], s[1], s[2]);
+            const o = ri * R;
+            const a = S[Math.max(0, ri - 1)], b = S[Math.min(S.length - 1, ri + 1)];
+            uv.push(.5, ri ? len * vRep : 0);
+            colA.push(colA[o * 3], colA[o * 3 + 1], colA[o * 3 + 2]);
+            for (let j = 0; j < seg; j++) dir < 0 ? idx.push(c, o + j, o + j + 1) : idx.push(c, o + j + 1, o + j);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        g.setAttribute('color', new THREE.Float32BufferAttribute(colA, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        const nm = g.attributes.normal;                                        // weld the seam normals
+        for (let i = 0; i < S.length; i++) {
+            const p = i * R, q = p + seg;
+            v.set(nm.getX(p) + nm.getX(q), nm.getY(p) + nm.getY(q), nm.getZ(p) + nm.getZ(q)).normalize();
+            nm.setXYZ(p, v.x, v.y, v.z); nm.setXYZ(q, v.x, v.y, v.z);
+        }
+        return g;
+    });
+}
+
+// Colour helpers for spineGeo: blend between `top` and `under` around the ring (`edge` = angle where it switches),
+// optionally towards `end` over the spine from t0 to t1.
+const _ca = new THREE.Color(), _cb = new THREE.Color();
+function ringCol(top, under, edge = 1.9, soft = .5, end = null, t0 = 0, t1 = 1) {
+    const A = new THREE.Color(top), U = new THREE.Color(under), E = end === null ? null : new THREE.Color(end);
+    return (t, a, out) => {
+        out.copy(A).lerp(U, smooth((a - edge + soft / 2) / soft));
+        if (E) out.lerp(E, smooth((t - t0) / (t1 - t0)));
+    };
+}
+
+// Material cache keyed by texture uuid (kit's mat() would serialize the canvas into its key).
+const tmatCache = new Map();
+function tmat(color, opts) {
+    const key = color + '|' + Object.entries(opts).map(([k, v]) => k + ':' + (v && v.isTexture ? v.uuid : v)).join(',');
+    if (!tmatCache.has(key)) tmatCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: .78, metalness: 0, ...opts }));
+    return tmatCache.get(key);
+}
+
+// Grey-scale canvas textures multiplied with the vertex colours (null outside a browser).
+const texCache = new Map();
+function canvasTex(name, size, draw) {
+    if (texCache.has(name)) return texCache.get(name);
+    let tex = null;
+    if (typeof document !== 'undefined') {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = size;
+        draw(cv.getContext('2d'), size);
+        tex = new THREE.CanvasTexture(cv);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+    }
+    texCache.set(name, tex);
+    return tex;
+}
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+// overlapping contour feathers (scallops pointing back = -v)
+const featherTex = () => canvasTex('feather', 128, (g, S) => {
+    g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, S, S);
+    const w = S / 4, h = S / 6;
+    for (let r = -1; r < 8; r++) for (let c = -1; c < 5; c++) {
+        const x = c * w + (r % 2 ? w / 2 : 0), y = r * h;
+        const gr = g.createLinearGradient(0, y - h, 0, y + h * .9);
+        gr.addColorStop(0, '#ffffff'); gr.addColorStop(.75, '#e4e4e4'); gr.addColorStop(1, '#8a8a8a');
+        g.fillStyle = gr;
+        g.beginPath(); g.moveTo(x - w * .55, y - h); g.lineTo(x - w * .55, y + h * .2);
+        g.quadraticCurveTo(x, y + h * 1.35, x + w * .55, y + h * .2); g.lineTo(x + w * .55, y - h); g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(x, y - h * .6); g.lineTo(x, y + h * .6); g.stroke();
+    }
+});
+// short fur strands
+const furTex = () => canvasTex('fur', 128, (g, S) => {
+    g.fillStyle = '#b8b8b8'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 900; i++) {
+        const x = rnd() * S, y = rnd() * S, l = 3 + rnd() * 6, v = 120 + rnd() * 135 | 0;
+        g.strokeStyle = `rgb(${v},${v},${v})`; g.lineWidth = 1 + rnd();
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - .5) * 2, y + l); g.stroke();
+    }
+});
+// wing membrane: blotches and branching veins
+const membraneTex = () => canvasTex('membrane', 256, (g, S) => {
+    g.fillStyle = '#c8c8c8'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 60; i++) {
+        const x = rnd() * S, y = rnd() * S, r = 8 + rnd() * 30, v = 110 + rnd() * 145 | 0;
+        const gr = g.createRadialGradient(x, y, 0, x, y, r);
+        gr.addColorStop(0, `rgba(${v},${v},${v},.7)`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
+        g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    const vein = (x, y, a, l, w, d) => {
+        if (d > 4 || l < 6) return;
+        g.strokeStyle = `rgba(30,20,20,${.75 - d * .1})`; g.lineWidth = w;
+        g.beginPath(); g.moveTo(x, y);
+        let px = x, py = y;
+        for (let k = 0; k < 4; k++) { a += (rnd() - .5) * .6; px += Math.cos(a) * l / 4; py += Math.sin(a) * l / 4; g.lineTo(px, py); }
+        g.stroke();
+        vein(px, py, a - .5 - rnd() * .4, l * .7, w * .7, d + 1);
+        vein(px, py, a + .4 + rnd() * .4, l * .6, w * .7, d + 1);
+    };
+    for (let i = 0; i < 10; i++) vein(rnd() * S, rnd() * S, rnd() * TAU, 60 + rnd() * 50, 3, 0);
+});
 
 // Hooked talon / claw pointing +z, curling down.
 const talonGeo = (r, l) => taperTube([[0, 0, 0], [0, -l * .08, l * .5], [0, -l * .42, l * .86], [0, -l * .86, l * .92]], r, r * .12, 6, 5);
@@ -157,27 +351,35 @@ export class ProceduralFlyer {
     /* ---------- parts ---------- */
 
     // Feather wing at the shoulder (x, y, z); side +1 = left (+x). set(spread 0..1, flap rad (+ up), sweep (+ back), pitch)
-    featherWing(parent, s, { x, y, z, len, feather, under, covert, tip }) {
+    // edge: pale fringe of tertials / coverts; bars + bar: barred flight feathers; arm: material of a visible (human) arm.
+    featherWing(parent, s, { x, y, z, len, feather, under, covert, tip, edge = null, bars = 0, bar = 0, arm: armM = null }) {
         const add = this.add, grp = this.grp, fm = this.featherMat;
-        const a = len * .24, f = len * .3;
+        const a = len * .24, f = len * .3, fo = { edge, bars, bar }, co = { edge };
         const root = grp(parent, x, y, z);
         root.rotation.order = 'YZX';
         const arm = grp(root), elbow = grp(arm, s * a, 0, 0), hand = grp(elbow, s * f, 0, 0);
-        const bone = this.m(covert);
-        const lim = (g, l, r) => { add(g, G.cyl(r * .75, r, l, 7), bone, s * l / 2, 0, -r * .3).rotation.z = Math.PI / 2; };
-        lim(arm, a, len * .045);
-        lim(elbow, f, len * .032);
-        add(hand, G.sph(len * .03, 7, 5), bone).scale.set(1.6, .7, 1);
+        const bone = armM ?? this.m(covert);
+        const lim = (g, l, r0, r1) => {
+            add(g, spineGeo(`lim${l},${r0},${r1}`, [[0, 0, 0, r0 * .9, r0 * .8], [l * .3, 0, 0, r0, r0 * .9], [l * .75, 0, 0, r1 * 1.05, r1 * .95], [l, 0, 0, r1 * .8, r1 * .8]],
+                { seg: 8, sub: 2 }), bone, 0, 0, -r0 * .3).scale.x = s;
+        };
+        const th = armM ? .66 : 1;
+        lim(arm, a, len * .05 * th, len * .036 * th);
+        lim(elbow, f, len * .036 * th, len * .026 * th);
+        if (armM) {                                                          // human hand gripping the wing's leading edge
+            add(hand, G.sph(len * .028, 8, 6), armM, s * len * .02, 0, len * .005).scale.set(1.5, .55, 1.1);
+            for (let i = 0; i < 4; i++) add(hand, G.cyl(len * .006, len * .007, len * .05, 5), armM, s * len * (.055 + .004 * i), -len * .004, len * (.016 - i * .011)).rotation.z = Math.PI / 2;
+        } else add(hand, G.sph(len * .03, 7, 5), bone).scale.set(1.6, .7, 1);
         const pivots = [], prim = [], sec = [];
         for (let i = 0; i < 4; i++) {                                       // tertials on the arm (fold forward)
             const pv = grp(arm, s * a * (i + .6) / 4, -.003, 0);
-            add(pv, featherGeo(len * (.3 - i * .01), len * .1, feather, under), fm, 0, 0, -len * .02).rotation.y = s * .08;
+            add(pv, featherGeo(len * (.3 - i * .01), len * .12, covert, under, covert, 0, co), fm, 0, 0, -len * .02).rotation.y = s * .08;
             pivots.push([pv, -1]);
         }
         for (let i = 0; i < 6; i++) {                                       // secondaries along the forearm
             const pv = grp(elbow, s * f * (i + .5) / 6, -.004 - (i % 2) * .002, 0);
             const l = len * (.36 + i * .008);
-            const mesh = add(pv, featherGeo(l, len * .1, feather, under, tip, .18), fm, 0, 0, -len * .01);
+            const mesh = add(pv, featherGeo(l, len * .12, feather, under, tip, .18, fo), fm, 0, 0, -len * .01);
             mesh.rotation.y = -s * .06 * i / 5;
             mesh.userData.len = l;
             pivots.push([pv, 1]);
@@ -186,14 +388,14 @@ export class ProceduralFlyer {
         for (let i = 0; i < 5; i++) {                                       // coverts: short top layer on arm and forearm
             const onArm = i < 2, g = onArm ? arm : elbow, l0 = onArm ? a : f;
             const pv = grp(g, s * l0 * ((onArm ? i : i - 2) + .5) / (onArm ? 2 : 3), .012, 0);
-            add(pv, featherGeo(len * .18, len * .1, covert, under), fm, 0, 0, len * .03);
+            add(pv, featherGeo(len * .2, len * .11, covert, under, covert, 0, co), fm, 0, 0, len * .03);
             pivots.push([pv, onArm ? -1 : 1]);
         }
         const nP = 6;
         for (let i = 0; i < nP; i++) {                                       // primaries fanned from the hand
             const pv = grp(hand, s * len * .02 * i, -.006 - .003 * i, 0);
             const l = len * (.52 - i * .035);
-            const mesh = add(pv, featherGeo(l, len * .085, feather, under, tip, .4), fm);
+            const mesh = add(pv, featherGeo(l, len * .095, feather, under, tip, .4, fo), fm);
             mesh.userData.len = l;
             prim.push(pv);
         }
@@ -247,7 +449,7 @@ export class ProceduralFlyer {
         geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         //   0 shoulder 1 elbow 2 wrist 3 d2 4 d3 5 s34 6 d4 7 s45 8 d5 9 s5h 10 hip
         geo.setIndex([2, 3, 4, 2, 4, 5, 2, 5, 6, 2, 6, 7, 2, 7, 8, 2, 8, 9, 2, 9, 10, 1, 2, 10, 0, 1, 10]);
-        const mem = add(root, geo, mat(membrane, { roughness: .85, side: THREE.DoubleSide }));
+        const mem = add(root, geo, this.membraneMat(membrane));
         mem.frustumCulled = false;
         const P = [];
         for (let i = 0; i < 11; i++) P.push(new THREE.Vector3());
@@ -278,8 +480,8 @@ export class ProceduralFlyer {
                 root.updateMatrix();
                 _m2.copy(root.matrix).invert();
                 P[10].copy(hipV).applyMatrix4(_m2);
-                P[5].copy(P[4]).lerp(P[6], .5).lerp(P[2], .14);                 // scalloped trailing edge
-                P[7].copy(P[6]).lerp(P[8], .5).lerp(P[2], .14);
+                P[5].copy(P[4]).lerp(P[6], .5).lerp(P[2], .2);                  // scalloped trailing edge
+                P[7].copy(P[6]).lerp(P[8], .5).lerp(P[2], .2);
                 P[9].copy(P[8]).lerp(P[10], .5).lerp(P[2], .12);
                 for (let i = 0; i < 11; i++) set3(i, P[i]);
                 geo.attributes.position.needsUpdate = true;
@@ -287,15 +489,30 @@ export class ProceduralFlyer {
             }
         };
         wing.set(1);
+        const uv = new Float32Array(11 * 2);                                    // texture laid out on the spread wing
+        for (let i = 0; i < 11; i++) { uv[i * 2] = Math.abs(pos[i * 3]) / len * 1.6; uv[i * 2 + 1] = pos[i * 3 + 2] / len * 1.6 + .5; }
+        geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
         return wing;
     }
 
+    // wing membrane: mottled, veined, faintly lit through (emissive)
+    membraneMat(color) {
+        const tex = membraneTex();
+        return tmat(color, { roughness: .85, side: THREE.DoubleSide, map: tex, emissive: color, emissiveMap: tex, emissiveIntensity: this.c.glowThrough ?? .3 });
+    }
+
     // Bird leg on `parent`: feathered thigh, scaly shank, three toes forward + one back, hooked talons.
-    birdLeg(parent, x, y, z, { th, sh, toe, r, upper, scale, talon, thighR = r * 2.4 }) {
+    // trousers: feathered down to the ankle (eagle, harpy).
+    birdLeg(parent, x, y, z, { th, sh, toe, r, upper, scale, talon, thighR = r * 2.4, trousers = false }) {
         const add = this.add, grp = this.grp;
         const top = grp(parent, x, y, z);
-        add(top, G.sph(thighR, 9, 7), upper, 0, -th * .4, 0).scale.set(.85, th / thighR * .7, 1);
+        const uc = typeof upper === 'number' ? upper : 0xffffff, col = ringCol(uc, new THREE.Color(uc).multiplyScalar(.8).getHex(), 1.6, 1.5);
+        if (typeof upper === 'number') upper = this.bodyMat(featherTex());
+        add(top, spineGeo(`thigh${th},${thighR},${uc}`, [[0, thighR * .3, 0, thighR * .6, thighR * .6], [0, -th * .25, .005, thighR * .85, thighR],
+            [0, -th * .7, 0, thighR * .7, thighR * .75], [0, -th * 1.05, -.005, thighR * .3, thighR * .3]], { seg: 10, sub: 2, up: [0, 0, 1], uRep: 2, vRep: 10, col }), upper);
         const knee = grp(top, 0, -th, 0);
+        if (trousers) add(knee, spineGeo(`trou${sh},${thighR},${uc}`, [[0, .01, 0, thighR * .55, thighR * .6], [0, -sh * .35, -.004, thighR * .5, thighR * .55],
+            [0, -sh * .62, -.008, thighR * .42, thighR * .45], [0, -sh * .75, -.01, thighR * .1, thighR * .1]], { seg: 9, sub: 2, up: [0, 0, 1], uRep: 2, vRep: 10, col }), upper);
         add(knee, G.cyl(r * .85, r, sh, 7), scale, 0, -sh / 2, 0);
         const foot = grp(knee, 0, -sh, 0);
         add(foot, G.sph(r * 1.15, 7, 5), scale);
@@ -312,47 +529,53 @@ export class ProceduralFlyer {
         return { top, knee, foot, toes };
     }
 
-    // Bird head: skull, hooked beak (+ lower mandible on J.jaw), fierce eyes under a brow ridge.
+    // Bird head: smooth skull (paler throat / `face`), hooked two-tone beak (+ lower mandible on J.jaw), fierce eyes under
+    // a brow ridge.
     birdHead(head, r, { color, beak, beakTip, eye, face = null }) {
         const add = this.add, J = this.j, k = r / .075;
-        const hm = this.m(color), bm = mat(beak, { roughness: .45 }), tm = mat(beakTip, { roughness: .4 });
-        add(head, G.sph(r, 14, 10), hm, 0, 0, 0).scale.set(.86, .9, 1.15);
-        add(head, G.sph(r * .7, 10, 8), face ? this.m(face) : hm, 0, -r * .35, r * .25).scale.set(1, .9, 1.2);   // cheeks / throat
-        const up = add(head, taperTube([[0, .0, 0], [0, .006 * k, .03 * k], [0, -.004 * k, .058 * k], [0, -.03 * k, .068 * k]], .03 * k, .004 * k, 10, 7), bm, 0, -r * .05, r * .82);
-        up.scale.x = .7;
-        add(head, G.sph(.009 * k, 6, 5), tm, 0, -.032 * k - r * .05, .066 * k + r * .82);                       // dark hook tip
-        add(head, G.sph(r * .33, 8, 6), bm, 0, r * .05, r * .78).scale.set(1, .8, .6);                          // cere
+        const cHead = new THREE.Color(color), cFace = new THREE.Color(face ?? color);
+        const skull = spineGeo(`head${k},${color},${face}`, [[0, .004, -.078, .015, .015], [0, .01, -.062, .048, .05], [0, .014, -.025, .066, .068],
+            [0, .01, .02, .062, .064], [0, -.004, .052, .046, .046], [0, -.012, .074, .028, .028], [0, -.014, .082, .01, .01]].map(p => p.map(v => v * k)),
+        { seg: 14, sub: 3, uRep: 1, vRep: 40 / k, col: (t, a, out) => out.copy(cHead).lerp(cFace, smooth((a - 1.7) / .8) * (face ? 1 : .35)) });
+        add(head, skull, this.bodyMat(featherTex()));
+        const beakGeo = spineGeo(`beak${k},${beak},${beakTip}`, [[0, .004, -.01, .02, .024], [0, .007, .012, .019, .022], [0, .006, .034, .014, .017],
+            [0, -.002, .052, .009, .011], [0, -.018, .064, .005, .006], [0, -.032, .066, .0015, .002]].map(p => p.map(v => v * k)),
+        { seg: 10, sub: 3, col: ringCol(beak, beak, 9, 1, beakTip, .55, .9) });
+        add(head, beakGeo, mat(0xffffff, { vertexColors: true, roughness: .4 }), 0, -r * .04, r * .88);
+        add(head, G.sph(r * .24, 8, 6), mat(beak, { roughness: .5 }), 0, r * .04, r * .84).scale.set(1, .7, .7);    // cere
         J.jaw = this.grp(head, 0, -r * .3, r * .8);
-        add(J.jaw, taperTube([[0, 0, 0], [0, -.003 * k, .025 * k], [0, -.004 * k, .045 * k]], .018 * k, .004 * k, 6, 6), bm).scale.x = .75;
+        add(J.jaw, spineGeo(`mand${k},${beak}`, [[0, .004, -.005, .014, .008], [0, .0, .02, .012, .007], [0, -.003, .042, .006, .004],
+            [0, -.004, .05, .001, .001]].map(p => p.map(v => v * k)), { seg: 8, sub: 2, col: ringCol(beak, beak) }), mat(0xffffff, { vertexColors: true, roughness: .45 }));
         const em = mat(eye, { roughness: .15, emissive: eye, emissiveIntensity: this.c.phoenix ? .9 : .15 }), dark = mat(0x0a0806, { roughness: .2 });
-        const brow = this.m(new THREE.Color(color).multiplyScalar(.75).getHex());
+        const brow = this.m(cHead.clone().multiplyScalar(.7).getHex());
         J.eyes = [];
         for (const s of [1, -1]) {
-            J.eyes.push(add(head, G.sph(r * .2, 8, 6), em, s * r * .58, r * .2, r * .5));
-            add(head, G.sph(r * .1, 6, 5), dark, s * r * .7, r * .21, r * .58);
-            const b = add(head, G.box(r * .3, r * .1, r * .45), brow, s * r * .55, r * .38, r * .5);
-            b.rotation.set(0, s * .35, -s * .3);
+            J.eyes.push(add(head, G.sph(r * .19, 8, 6), em, s * r * .74, r * .2, r * .5));
+            add(head, G.sph(r * .1, 6, 5), dark, s * r * .85, r * .21, r * .56);
+            const b2 = add(head, G.sph(r * .26, 8, 6), brow, s * r * .66, r * .36, r * .42);            // jutting brow ridge
+            b2.scale.set(.6, .32, 1.25);
+            b2.rotation.set(-.15, s * .3, -s * .3);
         }
     }
 
     // Tail fan of n feathers at (x, y, z); J.tailF animated by tailFan.
-    tailFan(parent, x, y, z, n, len, w, top, under, tip, frac) {
+    tailFan(parent, x, y, z, n, len, w, top, under, tip, frac, o = {}) {
         const J = this.j;
         J.tail = this.grp(parent, x, y, z);
         J.tailF = [];
         for (let i = 0; i < n; i++) {
             const d = i - (n - 1) / 2;
             const pv = this.grp(J.tail, 0, -Math.abs(d) * .004, 0);
-            this.add(pv, featherGeo(len * (1 - Math.abs(d) * .04), w, top, under, tip, frac), this.featherMat);
+            this.add(pv, featherGeo(len * (1 - Math.abs(d) * .04), w, top, under, tip, frac, o), this.featherMat);
             pv.userData.d = d;
             J.tailF.push(pv);
         }
     }
 
     // Overlapping contour feathers on the back (breaks up the smooth body).
-    backFeathers(parent, rows, color, under, tip) {
+    backFeathers(parent, rows, color, under, tip, edge = null) {
         for (const [x, y, z, l, w, rx] of rows) {
-            const m = this.add(parent, featherGeo(l, w, color, under, tip, .3), this.featherMat, x, y, z);
+            const m = this.add(parent, featherGeo(l, w, color, under, tip, .3, { edge }), this.featherMat, x, y, z);
             m.rotation.set(rx, x * 2, 0);
         }
     }
@@ -372,32 +595,40 @@ export class ProceduralFlyer {
 
     /* ---------- bodies ---------- */
 
+    // vertex-coloured material for smooth spine bodies (the phoenix glows)
+    bodyMat(tex, opts = {}) {
+        return tmat(0xffffff, { vertexColors: true, map: tex, roughness: .9, ...(this.c.phoenix ? { emissive: 0x7a1400, emissiveIntensity: .55 } : {}), ...opts });
+    }
+
     buildBird() {
         const c = this.c, J = this.j, add = this.add, grp = this.grp;
-        const body = this.m(c.body), belly = this.m(c.belly), headM = this.m(c.head);
         const legM = mat(c.leg, { roughness: .6 }), talon = mat(0x141210, { roughness: .35 });
+        const fmat = this.bodyMat(featherTex());
         J.body = grp(this.root, 0, c.hover, 0);
-        add(J.body, G.sph(.15, 14, 10), body, 0, 0, -.03).scale.set(1, .95, 1.85);
-        add(J.body, G.sph(.14, 12, 9), belly, 0, -.025, .13).scale.set(1, 1.05, 1.1);                      // chest
-        add(J.body, G.sph(.1, 10, 8), body, 0, -.05, -.2).scale.set(1, .85, 1.4);                         // vent
+        // one smooth torso: tail root → back / belly → chest → neck base
+        add(J.body, spineGeo(`bird${this.variant}`, [[0, -.01, -.36, .02, .02], [0, 0, -.3, .07, .065], [0, 0, -.2, .115, .11], [0, 0, -.06, .148, .145],
+            [0, .0, .07, .155, .158], [0, .02, .17, .142, .152], [0, .05, .25, .108, .118], [0, .08, .3, .065, .075], [0, .09, .32, .02, .02]],
+        { seg: 16, sub: 3, uRep: 3, vRep: 7, col: ringCol(c.body, c.belly, 1.9, 1, c.chest ?? null, .6, .9) }), fmat);
         this.backFeathers(J.body, [
-            [-.06, .12, .12, .2, .12, -.25], [.06, .12, .12, .2, .12, -.25], [0, .135, .06, .22, .14, -.2],
-            [-.07, .1, -.02, .22, .12, -.15], [.07, .1, -.02, .22, .12, -.15], [0, .12, -.08, .22, .13, -.12]
-        ], c.phoenix ? c.covert : c.body, c.belly, c.phoenix ? c.feather : c.feather);
-        // neck & head
+            [-.06, .125, .1, .2, .12, -.25], [.06, .125, .1, .2, .12, -.25], [0, .14, .04, .22, .14, -.2],
+            [-.07, .105, -.04, .22, .12, -.15], [.07, .105, -.04, .22, .12, -.15], [0, .12, -.1, .22, .13, -.12]
+        ], c.covert, c.belly, c.feather, c.edge);
+        // neck (nape colour on the back of the neck) & head
         J.neck = grp(J.body, 0, .05, .23);
-        add(J.neck, G.cyl(.07, .1, .17, 10), headM, 0, .07, 0);
-        add(J.neck, G.sph(.085, 10, 8), belly, 0, .03, .04).scale.set(1, 1.2, .8);                         // throat
+        const cB = new THREE.Color(c.body), cH = new THREE.Color(c.head), cT = new THREE.Color(c.throat ?? c.body);
+        add(J.neck, spineGeo(`neck${this.variant}`, [[0, -.12, -.05, .03, .03], [0, -.07, -.03, .09, .09], [0, .0, -.005, .088, .09], [0, .08, .01, .072, .075], [0, .15, .02, .064, .068],
+            [0, .19, .02, .03, .03]], { seg: 14, sub: 3, up: [0, 0, -1], uRep: 2, vRep: 9,
+            col: (t, a, out) => out.copy(cB).lerp(cH, smooth((t - .15) / .5)).lerp(cT, smooth((a - 1.5) / 1.2) * .85) }), fmat);
         J.head = grp(J.neck, 0, .16, .02);
         this.birdHead(J.head, .075, { color: c.head, beak: c.beak, beakTip: c.beakTip, eye: c.eye });
-        // legs
-        J.legs = [1, -1].map(s => this.birdLeg(J.body, .065 * s, -.08, .03,
-            { th: .11, sh: .14, toe: .075, r: .016, upper: body, scale: legM, talon, thighR: .055 }));
+        // legs: feathered "trousers" to the ankle, scaly yellow feet
+        J.legs = [1, -1].map(s => this.birdLeg(J.body, .065 * s, -.06, .0,
+            { th: .11, sh: .14, toe: .075, r: .016, upper: c.phoenix ? c.belly : c.body, scale: legM, talon, thighR: .058, trousers: !c.phoenix }));
         // tail
-        this.tailFan(J.body, 0, .02, -.28, 7, .38, .1, c.tail, c.tail, c.tailTip, .35);
+        this.tailFan(J.body, 0, .02, -.3, 9, .4, .1, c.tail, c.tailUnder ?? c.tail, c.tailTip, .35);
         // wings
         J.wings = [1, -1].map(s => this.featherWing(J.body, s, { x: .09 * s, y: .08, z: .1, len: 1.12,
-            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip }));
+            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip, edge: c.edge, bars: c.bars, bar: c.bar }));
         if (c.phoenix) this.buildPhoenix();
     }
 
@@ -411,17 +642,18 @@ export class ProceduralFlyer {
             if (x === 0) this.flame(pv, 0, 0, -l, .07, 0xffb030, .4);
         }
         J.plumes = [];
-        for (const [x, ry] of [[0, 0], [.04, .22], [-.04, -.22]]) {                                      // long flowing tail plumes
-            let p = grp(J.tail, x, -.01, 0);
+        const pc = [c.tail, 0xe03a14, 0xf06a1c, 0xffa030, 0xffd060, 0xfff0a0];
+        for (const [x, ry, l, w] of [[0, 0, 1, 1], [.035, .2, .85, .9], [-.035, -.2, .85, .9], [.06, .42, .65, .75], [-.06, -.42, .65, .75]]) {   // long flowing tail plumes
+            let p = grp(J.tail, x, -.012, 0);
             p.rotation.y = ry;
             const segs = [];
-            for (let i = 0; i < 4; i++) {
-                const g = grp(p);
-                add(g, featherGeo(.3, .07 + i * .012, i < 2 ? c.tail : c.feather, c.under, i === 3 ? c.tip : (i < 2 ? c.tail : c.feather), i === 3 ? .5 : 0), fm);
+            for (let i = 0; i < 5; i++) {
+                const g = grp(p), sl = .27 * l, w0 = w * (.045 + Math.sin((i + .2) / 5 * Math.PI) * .08), w1 = w * (.045 + Math.sin((i + 1.2) / 5 * Math.PI) * .08);
+                add(g, stripGeo(sl, w0, i === 4 ? .004 : w1, pc[i], pc[i + 1]), fm);
                 segs.push(g);
-                p = grp(g, 0, 0, -.29);
+                p = grp(g, 0, 0, -sl * .97);
             }
-            this.flame(p, 0, 0, 0, .09, c.glow, .2);
+            if (l === 1 || l < .7) this.flame(p, 0, 0, 0, .07, c.glow, .2);
             J.plumes.push(segs);
         }
         for (const w of J.wings) {
@@ -443,103 +675,105 @@ export class ProceduralFlyer {
 
     buildGryffon() {
         const c = this.c, J = this.j, add = this.add, grp = this.grp;
-        const fea = this.m(c.body), chest = this.m(c.belly), coat = mat(c.coat, { roughness: .95 }), light = mat(c.coatLight, { roughness: .95 });
-        const legM = mat(c.leg, { roughness: .6 }), talon = mat(0x141210, { roughness: .35 });
+        const coat = this.bodyMat(furTex(), { roughness: .95 }), fmat = this.bodyMat(featherTex());
+        const legM = mat(c.leg, { roughness: .6 }), talon = mat(0x141210, { roughness: .35 }), light = mat(c.coatLight, { roughness: .95 });
+        const coatCol = ringCol(c.coat, c.coatLight, 2.1, .9), coatC = ringCol(c.coat, c.coat);
+        const cB = new THREE.Color(c.body), cW = new THREE.Color(c.belly);
         this.H0 = .565;
         J.body = grp(this.root, 0, this.H0, 0);
-        // lion rear
-        add(J.body, G.sph(.15, 14, 10), coat, 0, 0, -.12).scale.set(.92, .92, 2.1);
-        add(J.body, G.sph(.145, 12, 9), coat, 0, .01, -.32).scale.set(.95, 1.02, 1);                       // haunches
-        add(J.body, G.sph(.12, 10, 8), light, 0, -.07, -.1).scale.set(.85, .5, 1.8);                       // belly
-        // feathered eagle front
-        add(J.body, G.sph(.17, 14, 10), fea, 0, .02, .16).scale.set(.95, 1, 1.15);
-        add(J.body, G.sph(.13, 12, 9), chest, 0, -.02, .28).scale.set(.95, 1.15, .8);                      // white chest
+        // tawny lion body: rump → loins → ribs, front end hidden under the feathers
+        add(J.body, spineGeo('gryLion', [[0, .0, -.52, .03, .03], [0, .01, -.47, .11, .11], [0, .015, -.37, .15, .155], [0, 0, -.24, .13, .14],
+            [0, -.01, -.1, .125, .13], [0, .0, .04, .14, .15], [0, .02, .14, .12, .13]], { seg: 16, sub: 3, uRep: 3, vRep: 5, col: coatCol }), coat);
+        // feathered eagle front: brown back, white bib on the chest
+        add(J.body, spineGeo('gryFront', [[0, -.02, -.06, .05, .05], [0, 0, -.01, .145, .155], [0, .02, .11, .172, .182], [0, .035, .23, .16, .172],
+            [0, .065, .32, .115, .125], [0, .1, .375, .055, .065], [0, .11, .39, .01, .01]], { seg: 16, sub: 3, uRep: 3, vRep: 7,
+            col: (t, a2, out) => out.copy(cB).lerp(cW, smooth((a2 - 1.75) / .7) * smooth((t - .42) / .2)) }), fmat);
         this.backFeathers(J.body, [
-            [-.07, .14, .2, .2, .12, -.2], [.07, .14, .2, .2, .12, -.2], [0, .16, .12, .22, .14, -.15],
-            [-.09, .1, .06, .18, .1, -.05], [.09, .1, .06, .18, .1, -.05]
-        ], c.body, c.under, c.covert);
-        // neck & head (ear tufts, white face)
+            [-.07, .15, .2, .2, .12, -.2], [.07, .15, .2, .2, .12, -.2], [0, .17, .12, .22, .14, -.15],
+            [-.1, .1, .03, .18, .11, -.05], [.1, .1, .03, .18, .11, -.05], [0, .15, .02, .2, .14, -.1]
+        ], c.covert, c.under, c.body, c.edge);
+        // neck (white throat) & head (ear tufts, white cheeks)
         J.neck = grp(J.body, 0, .1, .3);
-        add(J.neck, G.cyl(.075, .11, .2, 10), fea, 0, .09, 0);
-        add(J.neck, G.sph(.09, 10, 8), chest, 0, .05, .05).scale.set(1, 1.3, .8);
+        add(J.neck, spineGeo('gryNeck', [[0, -.12, -.05, .03, .03], [0, -.06, -.025, .11, .11], [0, .04, 0, .095, .1], [0, .14, .015, .078, .084],
+            [0, .21, .02, .035, .035]], { seg: 14, sub: 3, up: [0, 0, -1], uRep: 2, vRep: 9,
+            col: (t, a2, out) => out.copy(cB).lerp(cW, smooth((a2 - 1.7) / .9)) }), fmat);
         J.head = grp(J.neck, 0, .2, .02);
         this.birdHead(J.head, .085, { color: c.head, beak: c.beak, beakTip: c.beakTip, eye: c.eye, face: c.face });
         for (const s of [1, -1]) {
-            const pv = grp(J.head, s * .045, .05, -.05);
+            const pv = grp(J.head, s * .05, .055, -.05);
             pv.rotation.set(.75, s * .35, 0);
-            add(pv, featherGeo(.12, .045, c.tuft, c.covert, c.tuft), this.featherMat);
+            add(pv, featherGeo(.13, .032, c.tuft, c.tuft, c.tuft), this.featherMat);
         }
-        // fore-legs: eagle legs with talons; hind-legs: lion
-        J.FL = this.birdLeg(J.body, .085, -.04, .22, { th: .24, sh: .24, toe: .085, r: .022, upper: fea, scale: legM, talon, thighR: .07 });
-        J.FR = this.birdLeg(J.body, -.085, -.04, .22, { th: .24, sh: .24, toe: .085, r: .022, upper: fea, scale: legM, talon, thighR: .07 });
+        // fore-legs: eagle legs with talons; hind-legs: muscular lion legs
+        J.FL = this.birdLeg(J.body, .085, -.04, .22, { th: .24, sh: .24, toe: .085, r: .022, upper: c.body, scale: legM, talon, thighR: .062 });
+        J.FR = this.birdLeg(J.body, -.085, -.04, .22, { th: .24, sh: .24, toe: .085, r: .022, upper: c.body, scale: legM, talon, thighR: .062 });
         J.FL.side = 1; J.FR.side = -1;
         for (const [name, x] of [['HL', .085], ['HR', -.085]]) {
             const top = grp(J.body, x, 0, -.32);
-            add(top, G.sph(.1, 10, 8), coat, 0, -.07, .01).scale.set(.75, 1.15, 1.45);
-            add(top, G.cyl(.068, .046, .22, 9), coat, 0, -.11, 0);
+            add(top, spineGeo('gryThigh', [[0, .07, .02, .05, .06], [0, .0, .02, .085, .115], [0, -.11, 0, .075, .095], [0, -.21, -.01, .046, .05],
+                [0, -.24, -.01, .02, .02]], { seg: 12, sub: 2, up: [0, 0, 1], uRep: 2, vRep: 6, col: coatC }), coat);
             const knee = grp(top, 0, -.22, 0);
-            add(knee, G.sph(.045, 8, 6), coat);
-            add(knee, G.cyl(.044, .03, .22, 8), coat, 0, -.11, -.005).scale.z = 1.25;
+            add(knee, spineGeo('gryShin', [[0, .03, 0, .03, .03], [0, -.01, -.01, .046, .05], [0, -.12, -.012, .032, .038], [0, -.22, 0, .027, .029],
+                [0, -.24, 0, .01, .01]], { seg: 10, sub: 2, up: [0, 0, 1], uRep: 2, vRep: 6, col: coatC }), coat);
             const low = grp(knee, 0, -.22, 0);
-            add(low, G.sph(.03, 7, 5), coat);
-            add(low, G.cyl(.03, .028, .14, 7), coat, 0, -.07, 0);
+            add(low, spineGeo('gryPastern', [[0, .02, 0, .02, .02], [0, -.01, 0, .029, .03], [0, -.1, .006, .028, .028], [0, -.13, .012, .03, .03]],
+                { seg: 10, sub: 2, up: [0, 0, 1], col: coatC }), coat);
             add(low, G.sph(.048, 9, 7), light, 0, -.15, .025).scale.set(1, .55, 1.3);
             for (const cx of [-.022, 0, .022]) add(low, G.cone(.006, .03, 4), talon, cx, -.158, .075).rotation.x = Math.PI / 2 + .5;
             J[name] = { top, knee, low, side: x > 0 ? 1 : -1 };
         }
         // lion tail with a dark tuft
+        const tailM = mat(c.coat, { roughness: .95 });
         J.tailRoot = grp(J.body, 0, .06, -.46);
         J.tailSeg = [];
         let p = J.tailRoot;
         for (let i = 0; i < 7; i++) {
             const g = grp(p), r0 = .028 - i * .002, r1 = .028 - (i + 1) * .002;
-            add(g, G.cyl(r1, r0, .095, 7), coat, 0, -.0475, 0);
+            add(g, G.cyl(r1, r0, .095, 7), tailM, 0, -.0475, 0);
             J.tailSeg.push(g);
             p = grp(g, 0, -.095, 0);
         }
         add(p, G.sph(.04, 8, 6), mat(c.tuft, { roughness: 1 }), 0, -.02, 0).scale.set(1, 1.6, 1);
         J.wings = [1, -1].map(s => this.featherWing(J.body, s, { x: .1 * s, y: .13, z: .2, len: 1.2,
-            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip }));
+            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip, edge: c.edge, bars: c.bars, bar: c.bar }));
     }
 
     buildHarpy() {
         const c = this.c, J = this.j, add = this.add, grp = this.grp;
-        const fea = this.m(c.body), skin = mat(c.skin, { roughness: .65 }), cloth = mat(c.cloth, { roughness: .85 });
+        const skin = mat(c.skin, { roughness: .65 }), cloth = mat(c.cloth, { roughness: .85 }), vc = mat(0xffffff, { vertexColors: true, roughness: .8 });
         const hairM = mat(c.hair, { roughness: .8 }), legM = mat(c.leg, { roughness: .6 }), talon = mat(0x101010, { roughness: .35 });
+        const cC = new THREE.Color(c.cloth), cS = new THREE.Color(c.skin);
         J.body = grp(this.root, 0, c.hover, 0);
-        // bird lower body with a skirt of feathers
-        add(J.body, G.sph(.13, 12, 10), fea, 0, -.04, -.01).scale.set(1.05, 1.1, 1.15);
-        for (let i = 0; i < 12; i++) {
-            const a = i / 12 * TAU;
-            const pv = grp(J.body, Math.sin(a) * .11, .03, Math.cos(a) * .1);
-            pv.rotation.set(0, a + Math.PI, 0);
-            const m = add(pv, featherGeo(.2, .09, c.covert, c.under, c.feather, .3), this.featherMat);
-            m.rotation.x = 1.15;                                                                         // hangs down and out
-        }
-        J.legs = [1, -1].map(s => this.birdLeg(J.body, .075 * s, -.1, 0,
-            { th: .15, sh: .22, toe: .09, r: .018, upper: fea, scale: legM, talon, thighR: .065 }));
-        this.tailFan(J.body, 0, -.06, -.1, 7, .42, .09, c.tail, c.under, c.tailTip, .3);
-        // woman's torso
+        // hem of the sleeveless tunic (soft folds), feathered bird legs below it, barred tail behind
+        add(J.body, spineGeo('harpySkirt', [[0, .045, 0, .09, .07], [0, .0, 0, .104, .081], [0, -.06, -.003, .118, .092], [0, -.15, -.01, .13, .104],
+            [0, -.165, -.01, .02, .02]], { seg: 18, sub: 3, up: [0, 0, 1],
+            col: (t, a2, out) => out.copy(cC).multiplyScalar(.88 + .12 * Math.cos(a2 * 7) * smooth((t - .2) / .5)) }), vc);
+        J.legs = [1, -1].map(s => this.birdLeg(J.body, .06 * s, -.11, 0,
+            { th: .16, sh: .2, toe: .09, r: .018, upper: c.body, scale: legM, talon, thighR: .068, trousers: true }));
+        this.tailFan(J.body, 0, -.08, -.08, 7, .44, .09, c.tail, c.under, c.tailTip, .25, { bars: 3, bar: c.bar });
+        // woman's torso: one smooth body, tunic up to a low neckline, bare shoulders
         J.waist = grp(J.body, 0, .04, .0);
-        add(J.waist, G.cyl(.095, .115, .2, 12), cloth, 0, .08, 0).scale.z = .8;                          // dress
-        add(J.waist, G.cyl(.08, .095, .12, 12), skin, 0, .2, 0).scale.z = .78;                            // midriff
-        add(J.waist, G.sph(.13, 14, 10), skin, 0, .32, -.005).scale.set(1.05, .82, .72);                  // ribcage / shoulders
-        add(J.waist, G.cyl(.118, .1, .12, 12), cloth, 0, .3, .003).scale.z = .82;                         // breast wrap
+        add(J.waist, spineGeo('harpyTorso', [[0, -.05, 0, .092, .07], [0, .07, 0, .08, .062], [0, .16, .003, .095, .07], [0, .25, .006, .112, .08],
+            [0, .32, -.004, .13, .072], [0, .37, -.008, .095, .06], [0, .405, -.008, .04, .035]], { seg: 24, sub: 6, up: [0, 0, 1],
+            col: (t, a2, out) => {
+                const y = -.05 + t * .455, neck = .31 - .045 * smooth((1 - a2) / 1) - .02 * Math.pow(Math.sin(a2), 6);
+                out.copy(cC).lerp(cS, smooth((y - neck) / .012));
+            } }), vc);
         for (const s of [1, -1]) {
-            add(J.waist, G.sph(.052, 10, 8), cloth, s * .048, .3, .06).scale.set(1, .9, .85);
-            add(J.waist, G.sph(.042, 8, 6), skin, s * .125, .36, -.01);                                     // shoulders
+            add(J.waist, G.sph(.04, 10, 8), cloth, s * .042, .25, .05).scale.set(1, .85, .6);          // bust under the tunic
+            add(J.waist, G.sph(.034, 8, 6), skin, s * .122, .345, -.008);                                    // shoulders
         }
-        J.neck = grp(J.waist, 0, .41, 0);
-        add(J.neck, G.cyl(.036, .042, .1, 8), skin, 0, .04, 0);
-        J.head = grp(J.neck, 0, .1, 0);
+        J.neck = grp(J.waist, 0, .39, 0);
+        add(J.neck, spineGeo('harpyNeck', [[0, -.02, 0, .04, .038], [0, .05, .003, .034, .032], [0, .11, .01, .03, .03]], { seg: 10, sub: 2, up: [0, 0, 1] }), skin);
+        J.head = grp(J.neck, 0, .11, 0);
         const h = J.head;
         add(h, G.sph(.09, 14, 10), skin, 0, .02, .01).scale.set(.84, 1.05, .95);
         add(h, G.sph(.05, 10, 8), skin, 0, -.035, .04).scale.set(.95, .8, .9);                           // jaw line / chin
         add(h, G.sph(.014, 8, 6), skin, 0, .01, .092).scale.set(.75, 1.2, .9);                          // nose
         J.jaw = grp(h, 0, -.035, .07);
-        add(J.jaw, G.sph(.017, 8, 6), mat(0x3a1010), 0, -.004, .006).scale.set(1.3, .5, .5);            // open mouth (shows on jaw)
-        add(J.jaw, G.box(.026, .006, .01), mat(c.lips, { roughness: .5 }), 0, -.002, .014);               // lower lip
-        add(h, G.box(.028, .005, .01), mat(c.lips, { roughness: .5 }), 0, -.029, .086);                   // upper lip
+        add(J.jaw, G.sph(.015, 8, 6), mat(0x3a1010), 0, .001, .0).scale.set(1.2, .45, .5);              // mouth inside (shows when open)
+        add(J.jaw, G.sph(.012, 8, 6), mat(c.lips, { roughness: .5 }), 0, -.003, .012).scale.set(1.15, .35, .45);   // lower lip
+        add(h, G.sph(.013, 8, 6), mat(c.lips, { roughness: .5 }), 0, -.029, .083).scale.set(1.15, .3, .45);         // upper lip
         const white = mat(0xf2eee6, { roughness: .3 }), iris = mat(c.eye, { roughness: .2 }), dark = mat(0x161010);
         J.eyes = [];
         for (const s of [1, -1]) {
@@ -551,35 +785,39 @@ export class ProceduralFlyer {
             const brow = add(h, G.box(.03, .005, .008), hairM, s * .031, .052, .085);                     // angled brows: hidden malice
             brow.rotation.z = s * .38;
         }
-        // hair: cap, long locks down the back, side locks
+        // hair: cap, long wind-blown locks down the back, side locks framing the face
         add(h, G.sph(.097, 14, 10, 0, TAU, 0, Math.PI * .58), hairM, 0, .035, -.008).scale.set(.9, 1.05, 1);
-        J.hair = grp(h, 0, .06, -.06);
-        for (const [x, l, ry] of [[0, .36, 0], [.05, .32, .25], [-.05, .32, -.25], [.08, .26, .5], [-.08, .26, -.5]]) {
-            const lock = grp(J.hair, x, 0, 0);
-            lock.rotation.y = ry;
-            add(lock, G.sph(.05, 8, 6), hairM, 0, -l / 2, -.01).scale.set(.9, l / .1, .5);
+        add(h, G.sph(.085, 10, 8), hairM, 0, .0, -.04).scale.set(1, 1.05, .9);                               // back of the head
+        J.hair = grp(h, 0, .05, -.06);
+        for (const [x, l, r] of [[0, 1, .036], [.045, .9, .032], [-.045, .9, .032], [.08, .75, .026], [-.08, .75, .026], [.02, .8, .028], [-.025, .85, .03]]) {
+            add(J.hair, taperTube([[x * .6, .02, .02], [x, -.06 * l, -.04], [x * 1.3, -.16 * l, -.07], [x * 1.6 + .01, -.27 * l, -.06], [x * 1.9 + .02, -.36 * l, -.02]],
+                r, r * .15, 8, 6), hairM);
         }
-        for (const s of [1, -1]) add(h, G.sph(.03, 8, 6), hairM, s * .075, -.04, .0).scale.set(.6, 2.2, .8);
-        J.wings = [1, -1].map(s => this.featherWing(J.waist, s, { x: .14 * s, y: .36, z: -.02, len: 1.15,
-            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip }));
+        for (const s of [1, -1]) add(h, taperTube([[s * .07, .05, .03], [s * .085, -.01, .02], [s * .08, -.08, -.0], [s * .07, -.13, -.03]], .025, .006, 6, 5), hairM);
+        J.wings = [1, -1].map(s => this.featherWing(J.waist, s, { x: .13 * s, y: .345, z: -.01, len: 1.15,
+            feather: c.feather, under: c.under, covert: c.covert, tip: c.tip, edge: c.edge, bars: c.bars, bar: c.bar, arm: skin }));
     }
 
     buildBat() {
         const c = this.c, J = this.j, add = this.add, grp = this.grp;
-        const fur = mat(c.fur, { roughness: 1 }), face = mat(c.face, { roughness: .8 }), ear = mat(c.ear, { roughness: .8, side: THREE.DoubleSide });
+        const fur = tmat(c.fur, { roughness: 1, map: furTex() }), face = mat(c.face, { roughness: .8 }), ear = mat(c.ear, { roughness: .8, side: THREE.DoubleSide });
+        const furV = this.bodyMat(furTex(), { roughness: 1 }), cF = new THREE.Color(c.fur), cFace = new THREE.Color(c.face);
         const bone = mat(c.bone, { roughness: .7 }), fang = mat(0xf0ead8, { roughness: .3 }), claw = mat(0x0c0a0a, { roughness: .35 });
-        const e = c.elder ? 1.15 : 1;
+        const e = c.ears ?? (c.elder ? 1.15 : 1);
         J.body = grp(this.root, 0, c.hover, 0);
-        add(J.body, G.sph(.1, 12, 10), fur, 0, 0, 0).scale.set(1, .95, 1.75);
-        add(J.body, G.sph(.085, 10, 8), fur, 0, .01, .12).scale.set(1.15, 1.05, .9);                       // chest / shoulders
-        add(J.body, G.sph(.06, 8, 6), fur, 0, .03, .19).scale.set(1.3, 1.1, 1);                           // furry ruff
+        // furry body (paler belly), thick shoulders and a ruff around the neck
+        add(J.body, spineGeo(`bat${this.variant}`, [[0, -.02, -.21, .02, .02], [0, -.012, -.17, .06, .055], [0, 0, -.08, .095, .088], [0, .005, .02, .102, .095],
+            [0, .015, .11, .108, .1], [0, .03, .18, .085, .08], [0, .03, .235, .03, .03]], { seg: 14, sub: 3, uRep: 3, vRep: 6,
+            col: ringCol(c.fur, c.belly ?? c.fur, 1.9, 1) }), furV);
         J.neck = grp(J.body, 0, .03, .2);
         J.head = grp(J.neck, 0, 0, .06);
         const h = J.head;
         h.scale.setScalar(1.3);
-        add(h, G.sph(.07, 12, 10), fur, 0, 0, 0).scale.set(1, .9, 1.05);
-        add(h, G.sph(.04, 10, 8), face, 0, -.015, .06).scale.set(1, .85, 1.1);                           // muzzle
-        add(h, G.sph(.016, 6, 5), mat(0x140c0c), 0, -.0, .1).scale.set(1.4, .9, .7);                     // nose
+        // skull running into a pointed, fox-like snout
+        add(h, spineGeo(`batHead${this.variant}`, [[0, .0, -.075, .02, .02], [0, .006, -.058, .056, .052], [0, .006, -.02, .07, .064], [0, .0, .022, .062, .056],
+            [0, -.01, .055, .044, .04], [0, -.016, .082, .03, .027], [0, -.016, .1, .019, .017], [0, -.016, .108, .006, .006]],
+        { seg: 14, sub: 3, uRep: 2, vRep: 20, col: (t, a2, out) => out.copy(cF).lerp(cFace, smooth((t - .45) / .3)) }), furV);
+        add(h, G.sph(.014, 6, 5), mat(0x140c0c), 0, -.004, .104).scale.set(1.4, .9, .7);                // nose
         add(h, G.cone(.012, .03, 4), face, 0, .015, .095).rotation.x = -.3;                               // nose leaf
         J.ears = [];
         for (const s of [1, -1]) {
@@ -628,8 +866,9 @@ export class ProceduralFlyer {
         tg.setAttribute('position', new THREE.Float32BufferAttribute([.05, -.04, -.12, -.05, -.04, -.12, 0, -.08, -.32,
             .09, -.1, -.2, -.09, -.1, -.2], 3));
         tg.setIndex([0, 1, 2, 0, 2, 3, 1, 4, 2]);
+        tg.setAttribute('uv', new THREE.Float32BufferAttribute([.4, 0, .6, 0, .5, .7, .2, .3, .8, .3], 2));
         tg.computeVertexNormals();
-        add(J.body, tg, mat(c.membrane, { roughness: .85, side: THREE.DoubleSide }));
+        add(J.body, tg, this.membraneMat(c.membrane));
         J.wings = [1, -1].map(s => this.batWing(J.body, s, { x: .06 * s, y: .04, z: .1, len: 1.12 * (c.elder ? 1.05 : 1), bone: c.bone,
             membrane: c.membrane, hip: [s * .07, -.05, -.2] }));
     }
@@ -640,7 +879,7 @@ export class ProceduralFlyer {
         const H = this.c.hover, kind = this.kind;
         const P = o => ({ ...KEYS0, ...this.BASE, ...o });
         if (kind === 'bat') {
-            this.BASE = { y: H, bx: -.35, flapAmp: .9, flapRate: 2.3, flapBias: .05, neckX: 0, headX: 0, legX: .7, legK: .3, foot: .6, toe: .5, air: 1 };
+            this.BASE = { y: H, bx: -.35, flapAmp: .9, flapRate: 2.3, flapBias: .2, neckX: 0, headX: 0, legX: .7, legK: .3, foot: .6, toe: .5, air: 1 };
             this.STAND = P({});
             this.WALK = P({ bx: -.28, flapRate: 2.9, legX: 1.1, legK: .2 });
             this.RUN = P({ bx: -.05, flapRate: 3.5, flapAmp: .95, legX: 1.4, legK: .1, sweep: .05 });
@@ -653,7 +892,7 @@ export class ProceduralFlyer {
             this.LIE = P({ y: .125, bx: 0, wingX: -.9, spread: 0, flapAmp: 0, flapBias: 0, legX: 1.4, legK: .3, foot: 0, toe: .6, neckX: .2, headX: .1, air: 0 });
             this.DEAD = P({ y: .11, bx: .05, roll: .08, spread: 1, flapAmp: 0, flapBias: -.04, legX: 1.4, legK: .2, foot: 0, toe: .9, jaw: .6, neckX: .3, headX: .2, headY: .9, air: 0 });
         } else if (kind === 'harpy') {
-            this.BASE = { y: H, bx: 0, waist: -.05, flapAmp: .7, flapRate: 1.1, flapBias: .2, neckX: 0, headX: 0, legX: .25, legK: .25, foot: .9, toe: .4, tailX: .75, tailFan: .5, air: 1 };
+            this.BASE = { y: H, bx: 0, waist: -.05, flapAmp: .7, flapRate: 1.1, flapBias: .4, neckX: 0, headX: 0, legX: .25, legK: .25, foot: .9, toe: .4, tailX: .75, tailFan: .5, air: 1 };
             this.STAND = P({});
             this.WALK = P({ bx: .35, waist: .05, flapRate: 1.5, legX: .9, legK: .3, tailX: .5, hair: .4 });
             this.RUN = P({ bx: .75, waist: .12, flapRate: 1.95, flapAmp: .8, legX: 1.3, legK: .2, foot: 1.2, tailX: .25, tailFan: .3, hair: .8 });
@@ -665,18 +904,18 @@ export class ProceduralFlyer {
             this.KNEEL = P({ y: .5, bx: .15, waist: .05, spread: 0, flapAmp: 0, flapBias: 0, legX: -.9, legK: 1.8, foot: 0, toe: .3, tailX: .5, tailFan: .3, air: 0 });
             this.LIE = P({ y: .2, bx: .1, waist: .35, spread: 0, flapAmp: 0, flapBias: 0, legX: -1.4, legK: 2.9, foot: 0, toe: .3, tailX: .1, tailFan: .5, neckX: .1, headX: .1, air: 0 });
             this.DEAD = P({ y: .14, bx: 1.45, waist: .1, roll: .12, spread: 1, flapAmp: 0, flapBias: -.02, wingX: -1.5, legX: .2, legK: .6, foot: -.3, toe: .8, tailX: .1, tailFan: 1,
-                neckX: .2, headX: -1.2, headY: 1.1, jaw: .4, hair: -1.2, air: 0 });
+                neckX: .2, headX: -1.2, headY: 1.1, jaw: .4, hair: -2.5, air: 0 });
         } else if (kind === 'gryffon') {
             const G0 = this.H0;
             this.BASE = { y: G0, bx: 0, spread: 0, flapAmp: 0, flapBias: 0, flapRate: 1.5, neckX: .35, headX: 0, legX: 0, legK: 0, foot: 0, toe: .25, tailX: .8,
                 FL0: .05, FL1: -.05, HL0: -.5, HL1: 1.05, HL2: -.6, air: 0 };
-            this.STAND = P({});
+            this.STAND = P({ spread: .9, flapBias: 1, flapAmp: .05, flapRate: .6 });
             this.WALK = P({ neckX: .5 });
             const fly = { y: this.c.hover, bx: .2, spread: 1, flapAmp: .85, flapRate: 1.6, flapBias: .12, neckX: .9, FL0: 1.3, FL1: -1.6, toe: 1, foot: .5,
                 HL0: .9, HL1: .3, HL2: .6, tailX: 1.3, air: 1 };
             this.RUN = P(fly);
             this.A1 = P({ ...fly, y: .95, bz: -.15, bx: -.65, flapBias: .35, flapAmp: .9, flapRate: 1.8, neckX: .3, headX: .2, FL0: -.7, FL1: -.6, toe: -.2, foot: .2,
-                HL0: .1, HL1: .4, HL2: -.2, jaw: .3, tailX: .9 });
+                HL0: .1, HL1: .4, HL2: -.2, jaw: .3, tailX: 1.25 });
             this.A2 = P({ ...fly, y: .75, bz: .5, bx: .3, spread: .9, flapBias: .75, flapAmp: .08, sweep: .4, neckX: .7, headX: .2, FL0: -1.4, FL1: .2, toe: -.4, foot: -.2,
                 HL0: .7, HL1: .3, HL2: .3, jaw: .7 });
             this.A3 = P({ ...fly, y: .67, bz: .55, bx: .15, flapBias: -.3, flapAmp: .15, sweep: -.2, neckX: 1.25, headX: .6, FL0: -1.0, FL1: .1, toe: 1.25, foot: .3,
@@ -684,11 +923,11 @@ export class ProceduralFlyer {
             this.DEFEND = P({ y: .86, bz: -.12, bx: -.9, spread: 1, flapAmp: .25, flapBias: .4, wingX: .5, sweep: -.15, flapRate: 1.1, neckX: -.35, headX: -.1, jaw: .65, FL0: -.4, FL1: -1.0, toe: -.2, foot: .6,
                 HL0: .5, HL1: .9, HL2: -.55, tailX: 1.9, air: 0 });
             this.HIT = P({ y: G0 + .05, bz: -.12, bx: -.12, spread: .35, flapBias: .5, neckX: 0, headX: -.3, jaw: .45, FL0: -.2, tailX: 1.1 });
-            this.KNEEL = P({ y: .37, bz: -.1, bx: -.5, neckX: .2, FL0: -.2, FL1: .9, HL0: -1.55, HL1: 2.45, HL2: -1, tailX: 2 });
+            this.KNEEL = P({ y: .395, bz: -.1, bx: -.5, neckX: .2, FL0: -.2, FL1: .9, HL0: -1.55, HL1: 2.45, HL2: -1, tailX: 2 });
             this.LIE = P({ y: .19, bx: .02, neckX: .55, headX: .1, FL0: -1.5, FL1: .1, toe: .2, HL0: -1.35, HL1: 2.55, HL2: -2.6, tailX: 1.5 });
             this.DEAD = P({ y: .17, bx: .05, roll: .05, spread: .95, flapBias: -.06, neckX: 1.4, headX: .9, headY: 1, jaw: .4, FL0: -1.55, FL1: 0, toe: .3, HL0: 1.45, HL1: .1, HL2: .1, tailX: 1.5 });
         } else {
-            this.BASE = { y: H, bx: -.3, flapAmp: .75, flapRate: .85, flapBias: .15, neckX: .5, headX: 0, legX: .5, legK: -.2, foot: .9, toe: .4, tailX: .25, tailFan: .7, air: 1 };
+            this.BASE = { y: H, bx: -.3, flapAmp: .75, flapRate: .85, flapBias: .3, neckX: .5, headX: 0, legX: .5, legK: -.2, foot: .9, toe: .4, tailX: .25, tailFan: .7, air: 1 };
             this.STAND = P({});
             this.WALK = P({ bx: .02, flapRate: 1.2, flapAmp: .8, legX: 1.2, legK: -.3, foot: 1.5, toe: .9, neckX: 1, tailFan: .45, tailX: .05 });
             this.RUN = P({ y: H + .05, bx: .22, flapRate: 1.65, flapAmp: .85, sweep: .08, legX: 1.4, legK: -.2, foot: 1.6, toe: 1, neckX: 1.25, tailFan: .3, tailX: 0 });
@@ -734,10 +973,11 @@ export class ProceduralFlyer {
             default:
                 copy(this.STAND);
                 T.headY = this.look * .6;
-                if (this.kind === 'gryffon') {                                                           // stretches the wings now and then
+                if (this.kind === 'gryffon') {                                    // wings raised like a heraldic griffin, now and then a full beat
                     const r = Math.max(0, Math.sin(t * .35) - .85) / .15;
-                    T.spread = r * .5;
-                    T.flapBias = r * .4;
+                    T.spread += r * .45;
+                    T.flapBias -= r * .5;
+                    T.flapAmp += r * .5;
                 } else if (this.kind !== 'bat') T.flapAmp *= .7 + .3 * Math.sin(t * .4);                  // deep beats, short glides
         }
         return T;
@@ -856,8 +1096,9 @@ export class ProceduralFlyer {
         J.jet.visible = p.jet > .05;
         if (J.jet.visible) J.jet.scale.set(.6 + .4 * p.jet, .6 + .4 * p.jet, p.jet * (1 + .15 * Math.sin(t * 31)));
         const still = state === 'death' || state === 'lie';
+        const k = clamp01((p.y - .15) / (this.c.hover - .15)) * (still ? 0 : 1);       // high up the plumes hang, low they trail flat
         J.plumes.forEach((segs, j) => segs.forEach((g, i) => {
-            g.rotation.x = (still ? -.02 : .12 + i * .06) + Math.sin(t * 2.2 - i * .9 + j) * (still ? .02 : .12) - (i === 0 ? p.tailX : 0) * .3;
+            g.rotation.x = (i ? -(.04 + i * .02) * k : -(p.bx + p.tailX) - .45 * k + .06 * (1 - k)) + Math.sin(t * 2.2 - i * .9 + j) * (still ? .02 : .03 + .09 * k) + (1 - k) * (i ? .02 : .1);
             g.rotation.y = Math.sin(t * 1.7 - i * .7 + j * 2) * (still ? .03 : .12);
         }));
     }

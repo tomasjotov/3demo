@@ -433,3 +433,5 @@ Hotovo v `three1/src/server/`, spuštění `?server` (živý hof přes Vite prox
   (Stát … nájezd); `ArenaController.arenaSendActorValue` mu povolí jen příkaz `POSITION` pro vlastního aktéra v tomto okamžiku.
 - **Kůň na 2 pole (V37):** `PersonWear.getLargeY2()` vrací při `HORSE_RIDE*` alespoň 1 (pole za jezdcem). `controlled[]` tak obsahuje
   2 pole jezdce; klient s tím počítá při dělení polí mezi aktéry.
+- **Letící kouzla (V39):** `PlanActor.spell` (klíč schopnosti při `moveType = cast`), `spellX/spellY` (cíl: protivník, jinak
+  označené pole), `spellRadius` (poloměr oblasti). 3D klient pustí projektil, když sesilateli klesnou akce.

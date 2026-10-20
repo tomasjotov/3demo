@@ -2,6 +2,7 @@ import { t } from './i18n.js';
 import * as THREE from 'three';
 import { Game } from './game/Game.js';
 import { World } from './game/World.js';
+import { dirFromStep } from './game/Character.js';
 import { InputManager } from './input/InputManager.js';
 import { Renderer } from './renderer/Renderer.js';
 import { mapData } from './data/map.js';
@@ -115,6 +116,18 @@ function demoEffects(world) {
     world.effects = base;
     setTimeout(toggle, 1500);
     setInterval(toggle, 5000);
+    // projectile spells: the player throws a Fireball and a Fire bolt in turn (at another character when there is one)
+    world.spellEvents = [];
+    let n = 0;
+    setInterval(() => {
+        const other = world.characters.find(c => c !== p && !c.mountedOn);
+        const ball = n++ % 2 === 0;
+        const [tx, tz] = ball ? [p.x + 5.5, p.y - 3.5] : other ? [other.renderX, other.renderY] : [p.x - 4.5, p.y + .5];
+        if (p.isBusy()) return;
+        p.direction = dirFromStep(Math.round(tx - p.renderX), Math.round(tz - p.renderY)) || p.direction;
+        p.startAction('cast', 1.1);                          // cast pose, the spell flies out after the gathering
+        setTimeout(() => world.spellEvents.push({ spell: ball ? 'fireball' : 'fire-bolt', fx: p.renderX, fz: p.renderY, tx, tz, r: ball ? 1.5 : 0 }), 700);
+    }, 3000);
 }
 
 function statusText(mode, world, game) {
